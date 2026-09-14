@@ -385,9 +385,32 @@ create trigger set_surprises_updated_at before update on public.surprises for ea
 create trigger set_surprise_settings_updated_at before update on public.surprise_settings for each row execute function public.set_updated_at();
 
 -- ------------------------------------------------------------------------------
--- 17. ROW LEVEL SECURITY (RLS) POLICIES
+-- 17. ROW LEVEL SECURITY (RLS) POLICIES & HELPER FUNCTIONS
 -- Strict access control: creators manage their own content; public sees published.
 -- ------------------------------------------------------------------------------
+
+-- Helper functions with SECURITY DEFINER to break RLS recursion on admin_users
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.admin_users where id = auth.uid()
+  );
+$$;
+
+create or replace function public.is_superadmin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.admin_users where id = auth.uid() and role = 'superadmin'
+  );
+$$;
 
 -- Profiles: Anyone authenticated or public can read basic profiles; user can update their own.
 create policy "Public profiles are viewable by everyone"
@@ -405,24 +428,24 @@ create policy "Categories viewable by everyone"
 
 create policy "Admins can manage categories"
   on public.categories for all
-  using (exists (select 1 from public.admin_users where id = auth.uid()));
+  using (public.is_admin());
 
 -- Templates & Template Versions: Public read-only for active templates
 create policy "Active templates viewable by everyone"
   on public.templates for select
-  using (is_active = true or exists (select 1 from public.admin_users where id = auth.uid()));
+  using (is_active = true or public.is_admin());
 
 create policy "Admins can manage templates"
   on public.templates for all
-  using (exists (select 1 from public.admin_users where id = auth.uid()));
+  using (public.is_admin());
 
 create policy "Template versions viewable by everyone"
   on public.template_versions for select
-  using (is_published = true or exists (select 1 from public.admin_users where id = auth.uid()));
+  using (is_published = true or public.is_admin());
 
 create policy "Admins can manage template versions"
   on public.template_versions for all
-  using (exists (select 1 from public.admin_users where id = auth.uid()));
+  using (public.is_admin());
 
 -- Scenes & Scene Objects: Public read-only
 create policy "Scenes viewable by everyone"
@@ -431,7 +454,7 @@ create policy "Scenes viewable by everyone"
 
 create policy "Admins can manage scenes"
   on public.scenes for all
-  using (exists (select 1 from public.admin_users where id = auth.uid()));
+  using (public.is_admin());
 
 create policy "Scene objects viewable by everyone"
   on public.scene_objects for select
@@ -538,16 +561,11 @@ create policy "Creators can view their surprise analytics"
 -- Admin Users & Audit Logs:
 create policy "Superadmins can manage admin users"
   on public.admin_users for all
-  using (
-    exists (
-      select 1 from public.admin_users
-      where id = auth.uid() and role = 'superadmin'
-    )
-  );
+  using (public.is_superadmin());
 
 create policy "Admins can view audit logs"
   on public.audit_logs for select
-  using (exists (select 1 from public.admin_users where id = auth.uid()));
+  using (public.is_admin());
 
 -- ------------------------------------------------------------------------------
 -- 18. SUPABASE STORAGE BUCKETS & POLICIES
@@ -583,5 +601,6 @@ create policy "Admins can manage public assets"
   to authenticated
   using (
     bucket_id in ('template-previews', '3d-assets', 'music', 'theme-assets')
-    and exists (select 1 from public.admin_users where id = auth.uid())
+    and public.is_admin()
   );
+
