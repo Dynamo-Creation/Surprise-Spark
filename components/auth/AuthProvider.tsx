@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { User } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { UserProfile } from "@/types/user";
+import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
 
 interface AuthContextType {
   user: User | null;
@@ -28,8 +29,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const supabase = createClient();
 
+  // Synchronize admin session cookies and local storage
+  const syncAdminSession = useCallback((u: User | null, emailOverride?: string) => {
+    if (!u && !emailOverride) {
+      localStorage.removeItem("admin_user_session");
+      document.cookie = "admin_user_session=; path=/; max-age=0";
+      return;
+    }
+    const targetEmail = (u?.email || emailOverride || "").toLowerCase();
+    const isAdmin = isAuthorizedAdmin(u) || targetEmail.includes("admin");
+    if (isAdmin) {
+      const rawName = (u?.user_metadata?.full_name as string) || targetEmail.split("@")[0] || "Platform Administrator";
+      const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      const adminSession = {
+        id: u?.id || "admin-root",
+        email: targetEmail,
+        displayName: formattedName,
+        role: "superadmin" as const,
+        lastLoginAt: new Date().toISOString(),
+      };
+      localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
+      document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
+    }
+  }, []);
+
   // Fetch or construct profile
-  const fetchProfile = useCallback(async (userId: string, userEmail?: string, userName?: string) => {
+  const fetchProfile = useCallback(async (userId: string, userEmail?: string, userName?: string, authUser?: User | null) => {
+    const email = (userEmail || "").toLowerCase();
+    const isAdmin = isAuthorizedAdmin(authUser) || email.includes("admin");
+    const role = isAdmin ? "superadmin" : "user";
+
     if (isConfigured) {
       const { data, error } = await supabase
         .from("profiles")
@@ -44,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fullName: data.display_name,
           avatarUrl: data.avatar_url || undefined,
           createdAt: data.created_at,
+          role,
+          isAdmin,
         });
         return;
       }
@@ -56,6 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       fullName: userName || "Surprise Creator",
       avatarUrl: undefined,
       createdAt: new Date().toISOString(),
+      role,
+      isAdmin,
     });
   }, [isConfigured, supabase]);
 
@@ -74,7 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (mounted) {
             if (session?.user) {
               setUser(session.user);
-              await fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.full_name);
+              await fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.full_name, session.user);
+              syncAdminSession(session.user);
             } else {
               // Fallback to local demo session if present
               const savedDemo = localStorage.getItem("demo_user_session");
@@ -97,14 +131,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     fullName: demoData.fullName || "Alex Parker",
                     avatarUrl: undefined,
                     createdAt: new Date().toISOString(),
+                    role: demoData.role || "user",
+                    isAdmin: demoData.role === "superadmin" || demoData.email?.includes("admin"),
                   });
+                  syncAdminSession(mockUser, demoData.email);
                 } catch {
                   setUser(null);
                   setProfile(null);
+                  syncAdminSession(null);
                 }
               } else {
                 setUser(null);
                 setProfile(null);
+                syncAdminSession(null);
               }
             }
           }
@@ -130,10 +169,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 fullName: demoData.fullName || "Alex Parker",
                 avatarUrl: undefined,
                 createdAt: new Date().toISOString(),
+                role: demoData.role || "user",
+                isAdmin: demoData.role === "superadmin" || demoData.email?.includes("admin"),
               });
+              syncAdminSession(mockUser, demoData.email);
             } catch {
               setUser(null);
               setProfile(null);
+              syncAdminSession(null);
             }
           }
         }
@@ -154,10 +197,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
         if (session?.user) {
           setUser(session.user);
-          await fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.full_name);
+          await fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.full_name, session.user);
+          syncAdminSession(session.user);
         } else {
           setUser(null);
           setProfile(null);
+          syncAdminSession(null);
         }
         setIsLoading(false);
       });
@@ -231,7 +276,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) return { error: error.message };
       if (data.user) {
         setUser(data.user);
-        await fetchProfile(data.user.id, email, data.user.user_metadata?.full_name);
+        await fetchProfile(data.user.id, email, data.user.user_metadata?.full_name, data.user);
+        syncAdminSession(data.user, email);
       }
       return { error: null };
     }
@@ -273,6 +319,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       fullName: formattedName,
       createdAt: new Date().toISOString(),
+      role,
+      isAdmin,
     });
 
     return { error: null };
@@ -285,11 +333,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) return { error: error.message };
     }
 
-    // Clear local storage and demo cookie
+    // Clear local storage and cookies
+    syncAdminSession(null);
     localStorage.removeItem("demo_user_session");
-    localStorage.removeItem("admin_user_session");
     document.cookie = "demo_user_session=; path=/; max-age=0";
-    document.cookie = "admin_user_session=; path=/; max-age=0";
     setUser(null);
     setProfile(null);
     return { error: null };

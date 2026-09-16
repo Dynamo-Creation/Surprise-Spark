@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Gift, Lock, Mail, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { Gift, Lock, Mail, ArrowRight, AlertCircle, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -92,6 +92,18 @@ function LoginForm() {
 
       {/* Login Card */}
       <Card glass className="p-6 sm:p-8 space-y-5 border-slate-200 dark:border-slate-800">
+        {redirect.startsWith("/admin") && (
+          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-850 flex items-start gap-2.5 text-xs text-purple-700 dark:text-purple-300 animate-in fade-in duration-200">
+            <Shield className="w-4 h-4 shrink-0 mt-0.5 text-purple-500" />
+            <div>
+              <p className="font-bold">Admin Console Sign In</p>
+              <p className="text-[11px] text-purple-600/90 dark:text-purple-300/80 mt-0.5">
+                Sign in with your administrator account (e.g. <strong>admin@surprisespark.app</strong>) to access the CMS management consoles.
+              </p>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-start gap-2.5 text-xs text-red-600 dark:text-red-400 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />

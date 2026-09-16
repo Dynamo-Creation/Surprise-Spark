@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -23,9 +23,12 @@ import {
   Shield,
   Sparkles,
   ExternalLink,
+  LogOut,
+  ArrowLeft,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -50,7 +53,14 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleAdminSignOut = async () => {
+    await signOut();
+    router.push("/login");
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row">
@@ -65,14 +75,21 @@ export default function AdminLayout({
             <span className="text-[10px] text-purple-400 font-bold ml-1.5 uppercase">CMS</span>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-1.5 text-slate-400 hover:text-white"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Link href="/" title="Exit to Platform">
+            <Button variant="ghost" size="sm" className="p-1.5 text-xs text-slate-400 hover:text-white">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-1.5 text-slate-400 hover:text-white"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </Button>
+        </div>
       </header>
 
       {/* Admin Sidebar */}
@@ -191,8 +208,24 @@ export default function AdminLayout({
             </Link>
             <div className="h-4 w-px bg-slate-800" />
             <span className="text-xs text-slate-400 font-medium">
-              Logged in as <strong className="text-white">admin@surprisespark.app</strong>
+              Logged in as <strong className="text-white">{user?.email || "admin@surprisespark.app"}</strong>
             </span>
+            <div className="h-4 w-px bg-slate-800" />
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="text-xs text-slate-400 hover:text-white">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                Exit CMS
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAdminSignOut}
+              className="text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1 text-rose-400" />
+              Sign Out
+            </Button>
           </div>
         </header>
 

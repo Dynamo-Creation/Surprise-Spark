@@ -4,6 +4,8 @@ export interface UserProfile {
   fullName: string;
   avatarUrl?: string;
   createdAt: string;
+  role?: string;
+  isAdmin?: boolean;
 }
 
 export interface CreatorDashboardStats {

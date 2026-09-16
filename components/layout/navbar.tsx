@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Gift, Menu, X, Sparkles, ArrowRight, User, LogOut } from "lucide-react";
+import { Gift, Menu, X, Sparkles, ArrowRight, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS } from "@/lib/constants";
 import { useMobileNav } from "@/hooks/useMobileNav";
@@ -15,6 +15,13 @@ export function Navbar() {
   const router = useRouter();
   const { isOpen, toggle, close } = useMobileNav();
   const { user, profile, signOut } = useAuth();
+
+  const isAdmin = Boolean(
+    profile?.isAdmin ||
+    profile?.role === "superadmin" ||
+    profile?.role === "admin" ||
+    user?.email?.toLowerCase().includes("admin")
+  );
 
   const handleLogout = async () => {
     await signOut();
@@ -67,6 +74,19 @@ export function Navbar() {
 
         {/* Desktop CTA & Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
+          {isAdmin && (
+            <Link href="/admin">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-purple-500/40 text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-xs font-semibold px-2.5 py-1.5 h-8 gap-1.5"
+              >
+                <Shield className="w-3.5 h-3.5 text-purple-500" />
+                <span>Admin CMS</span>
+              </Button>
+            </Link>
+          )}
+
           {user ? (
             <div className="flex items-center gap-2">
               <Link href="/dashboard">
@@ -108,6 +128,18 @@ export function Navbar() {
 
         {/* Mobile Header Controls */}
         <div className="flex items-center gap-2 md:hidden">
+          {isAdmin && (
+            <Link href="/admin">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs px-2.5 py-1.5 h-8 border-purple-500/40 text-purple-600 dark:text-purple-300"
+              >
+                <Shield className="w-3.5 h-3.5 mr-1 text-purple-500" />
+                CMS
+              </Button>
+            </Link>
+          )}
           <Link href="/create">
             <Button
               variant="primary"
@@ -158,6 +190,16 @@ export function Navbar() {
               >
                 Dashboard
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={close}
+                  className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-base font-semibold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 transition-colors"
+                >
+                  <Shield className="w-5 h-5 text-purple-500" />
+                  <span>Admin CMS</span>
+                </Link>
+              )}
             </nav>
           </div>
 

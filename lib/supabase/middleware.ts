@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSupabaseConfigured } from "./client";
+import { isSupabaseConfigured, sanitizeSupabaseUrl, sanitizeSupabaseKey } from "./config";
 import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
 import { rateLimiter } from "@/lib/security/rateLimiter";
 
@@ -61,8 +61,8 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+  const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const supabaseAnonKey = sanitizeSupabaseKey(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -111,7 +111,7 @@ export async function updateSession(request: NextRequest) {
     if (adminSessionCookie?.value) {
       try {
         const parsed = JSON.parse(decodeURIComponent(adminSessionCookie.value));
-        if (isAuthorizedAdmin(parsed?.role)) {
+        if (isAuthorizedAdmin(parsed?.role) || isAuthorizedAdmin(parsed)) {
           hasAdminAccess = true;
         }
       } catch {
