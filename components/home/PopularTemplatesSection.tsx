@@ -32,8 +32,8 @@ export function PopularTemplatesSection() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
           <Badge variant="primary" size="md">
-            <Sparkles className="w-3.5 h-3.5 mr-1" />
-            Template Gallery
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span>Template Gallery</span>
           </Badge>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Popular Surprise Themes
@@ -114,13 +114,23 @@ export function PopularTemplatesSection() {
 
               <CardFooter className="p-5 pt-0 border-t border-slate-100 dark:border-slate-800/80 mt-2 flex items-center gap-2">
                 <Link href={`/preview?template=${template.slug}`} className="w-1/2">
-                  <Button variant="outline" size="sm" className="w-full text-xs" leftIcon={<Eye className="w-3 h-3" />}>
-                    Preview
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs whitespace-nowrap font-bold"
+                    leftIcon={<Eye className="w-3.5 h-3.5 shrink-0" />}
+                  >
+                    Live Demo
                   </Button>
                 </Link>
                 <Link href={`/create?template=${template.slug}`} className="w-1/2">
-                  <Button variant="primary" size="sm" className="w-full text-xs">
-                    Choose
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full text-xs whitespace-nowrap font-bold"
+                    rightIcon={<ArrowRight className="w-3.5 h-3.5 shrink-0" />}
+                  >
+                    Customize
                   </Button>
                 </Link>
               </CardFooter>

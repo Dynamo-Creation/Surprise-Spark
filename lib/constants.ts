@@ -1,7 +1,7 @@
 import { CategoryInfo, Template } from "@/types/template";
 import { SurpriseExperience } from "@/types/experience";
 
-export const BRAND_NAME = "SurpriseSpark";
+export const BRAND_NAME = "Partner in Crime";
 export const BRAND_HEADLINE = "DON’T JUST SEND A WISH. SEND A SURPRISE.";
 export const BRAND_SUBTITLE = "Create a tiny interactive experience for someone’s special day.";
 export const BRAND_SUPPORTING_LINE = "A message takes seconds to read. A surprise becomes a memory.";
@@ -215,6 +215,23 @@ export const MOCK_TEMPLATES: Template[] = [
     coverGradient: "from-amber-400 via-orange-500 to-rose-500",
     sceneCount: 11,
     estimatedDuration: "3 mins",
+    isFeatured: true,
+    isNew: true,
+    isPremium: false,
+    defaultScenes: [],
+  },
+  {
+    id: "tpl-sweet-celebration",
+    slug: "sweet-celebration",
+    name: "Sweet Celebration 💌",
+    category: "birthday",
+    description: "A heartwarming pastel birthday celebration with bouncing party flags, polaroid frame, animated balloons, typewriter letterbox, and real-time heart cursor trail.",
+    tagline: "A heartwarming celebration with an interactive letterbox.",
+    tags: ["Interactive Letter", "Pastel", "Typewriter", "Photo Polaroid", "Sweet", "Heart Cursor"],
+    thumbnailUrl: "/templates/sweet-celebration/thumbnail.jpg",
+    coverGradient: "from-pink-400 via-rose-400 to-amber-300",
+    sceneCount: 3,
+    estimatedDuration: "2 mins",
     isFeatured: true,
     isNew: true,
     isPremium: false,

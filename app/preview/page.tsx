@@ -15,6 +15,7 @@ const TEMPLATES_LIST = [
   { slug: "confetti-blast", name: "Confetti Blast 🎉" },
   { slug: "rainbow-surprise", name: "Rainbow Surprise 🌈" },
   { slug: "cute-character", name: "Cute Character 🧸" },
+  { slug: "sweet-celebration", name: "Sweet Celebration 💌" },
 ];
 
 function PreviewContent() {

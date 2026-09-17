@@ -1,6 +1,7 @@
 import React from "react";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
+import { CelebrationMarqueeSection } from "@/components/home/CelebrationMarqueeSection";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
 import { InteractivePreviewSection } from "@/components/home/InteractivePreviewSection";
 import { WhyDifferentSection } from "@/components/home/WhyDifferentSection";
@@ -15,6 +16,9 @@ export default function HomePage() {
 
       {/* 2. Featured Experiences */}
       <FeaturedSection />
+
+      {/* 2.5. Celebration Proof Marquee */}
+      <CelebrationMarqueeSection />
 
       {/* 3. How It Works */}
       <HowItWorksSection />

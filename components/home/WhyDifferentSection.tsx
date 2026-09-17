@@ -8,8 +8,8 @@ export function WhyDifferentSection() {
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
         <Badge variant="secondary" size="md">
-          <Sparkles className="w-3.5 h-3.5 mr-1 text-pink-500" />
-          The Difference
+          <Sparkles className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+          <span>The Difference</span>
         </Badge>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Why A Surprise Beats A Normal Wish
@@ -25,9 +25,9 @@ export function WhyDifferentSection() {
         {/* Standard Greeting Box */}
         <div className="rounded-3xl p-8 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 opacity-80 flex flex-col justify-between">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400">
-              <X className="w-3.5 h-3.5 text-slate-400" />
-              Standard Text or E-Card
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+              <X className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span>Standard Text or E-Card</span>
             </div>
             <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">
               Routine & Forgettable
@@ -64,9 +64,9 @@ export function WhyDifferentSection() {
           </div>
 
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 dark:bg-pink-950/50 text-xs font-semibold text-pink-600 dark:text-pink-400">
-              <Sparkles className="w-3.5 h-3.5 text-pink-500" />
-              SurpriseSpark Experience
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 dark:bg-pink-950/50 text-xs font-semibold text-pink-600 dark:text-pink-400 whitespace-nowrap">
+              <Sparkles className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+              <span>Partner in Crime Experience</span>
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">
               Immersive & Emotional

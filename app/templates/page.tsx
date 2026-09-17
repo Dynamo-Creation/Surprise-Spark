@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Sparkles, Filter, Layers, ArrowRight } from "lucide-react";
+import { Search, Sparkles, Filter, Layers, ArrowRight, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -29,8 +29,8 @@ export default function TemplatesPage() {
       <div className="text-center max-w-2xl mx-auto space-y-3">
         <div className="inline-flex">
           <Badge variant="primary" size="md">
-            <Sparkles className="w-3.5 h-3.5 mr-1" />
-            Template Directory
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span>Template Directory</span>
           </Badge>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -159,15 +159,25 @@ export default function TemplatesPage() {
                 </CardContent>
               </div>
 
-              <CardFooter className="p-5 pt-0 border-t border-slate-100 dark:border-slate-800/80 mt-2 flex gap-2">
+              <CardFooter className="p-5 pt-0 border-t border-slate-100 dark:border-slate-800/80 mt-2 flex items-center gap-2">
                 <Link href={`/preview?template=${template.slug}`} className="w-1/2">
-                  <Button variant="outline" size="sm" className="w-full text-xs">
-                    Preview
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs whitespace-nowrap font-bold"
+                    leftIcon={<Eye className="w-3.5 h-3.5 shrink-0" />}
+                  >
+                    Live Demo
                   </Button>
                 </Link>
                 <Link href={`/create?template=${template.slug}`} className="w-1/2">
-                  <Button variant="primary" size="sm" className="w-full text-xs">
-                    Use Template
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full text-xs whitespace-nowrap font-bold"
+                    rightIcon={<ArrowRight className="w-3.5 h-3.5 shrink-0" />}
+                  >
+                    Customize
                   </Button>
                 </Link>
               </CardFooter>

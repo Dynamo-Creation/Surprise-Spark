@@ -1,0 +1,326 @@
+/* 3D Template Card Styles - From Uiverse.io by Smit-Prajapati, enhanced for SurpriseSpark Featured Birthday Templates */
+
+.parent {
+  width: 100%;
+  min-height: 480px;
+  perspective: 1200px;
+  position: relative;
+  display: flex;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  min-height: 480px;
+  border-radius: 38px;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transform-style: preserve-3d;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 10px 30px -5px, rgba(0, 0, 0, 0.05) 0px 20px 25px -5px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Template Gradients */
+.gradientGift {
+  background: linear-gradient(135deg, #f43f5e 0%, #ec4899 45%, #8b5cf6 100%);
+  box-shadow: rgba(244, 63, 94, 0) 40px 50px 25px -40px, rgba(244, 63, 94, 0.22) 0px 25px 25px -5px;
+}
+
+.gradientCake {
+  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #8b5cf6 100%);
+  box-shadow: rgba(245, 158, 11, 0) 40px 50px 25px -40px, rgba(245, 158, 11, 0.22) 0px 25px 25px -5px;
+}
+
+.gradientBalloon {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #a855f7 100%);
+  box-shadow: rgba(59, 130, 246, 0) 40px 50px 25px -40px, rgba(59, 130, 246, 0.22) 0px 25px 25px -5px;
+}
+
+.gradientSweet {
+  background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 45%, #f43f5e 100%);
+  box-shadow: rgba(255, 117, 140, 0) 40px 50px 25px -40px, rgba(244, 63, 94, 0.22) 0px 25px 25px -5px;
+}
+
+.gradientPurple {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  box-shadow: rgba(168, 85, 247, 0.22) 0px 25px 25px -5px;
+}
+
+.gradientAmber {
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #f43f5e 100%);
+  box-shadow: rgba(234, 88, 12, 0.22) 0px 25px 25px -5px;
+}
+
+.gradientRed {
+  background: linear-gradient(135deg, #ef4444 0%, #ec4899 50%, #8b5cf6 100%);
+  box-shadow: rgba(239, 68, 68, 0.22) 0px 25px 25px -5px;
+}
+
+/* Glass Layer */
+.glass {
+  transform-style: preserve-3d;
+  position: absolute;
+  inset: 7px;
+  border-radius: 34px;
+  border-top-right-radius: 68px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translate3d(0px, 0px, 25px);
+  border-left: 2px solid rgba(255, 255, 255, 0.95);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 20px 20px 22px;
+}
+
+:global(.dark) .glass {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border-left: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Content Area */
+.content {
+  padding-right: 0px;
+  transform: translate3d(0, 0, 26px);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Bottom Action Bar */
+.bottom {
+  padding-top: 14px;
+  transform-style: preserve-3d;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  transform: translate3d(0, 0, 28px);
+  border-top: 1px solid rgba(226, 232, 240, 0.85);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+:global(.dark) .bottom {
+  border-top: 1px solid rgba(51, 65, 85, 0.65);
+}
+
+/* Social / Feature micro buttons */
+.socialButtonsContainer {
+  display: flex;
+  gap: 6px;
+  transform-style: preserve-3d;
+}
+
+.socialButton {
+  width: 30px;
+  height: 30px;
+  aspect-ratio: 1;
+  padding: 5px;
+  background: #ffffff;
+  border-radius: 50%;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  display: grid;
+  place-content: center;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 6px -2px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+}
+
+:global(.dark) .socialButton {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 4px 6px -2px;
+}
+
+.socialButton:first-child {
+  transition: transform 0.3s ease-in-out 0.1s, box-shadow 0.3s ease-in-out 0.1s, background-color 0.2s;
+}
+
+.socialButton:nth-child(2) {
+  transition: transform 0.3s ease-in-out 0.2s, box-shadow 0.3s ease-in-out 0.2s, background-color 0.2s;
+}
+
+.socialButton:nth-child(3) {
+  transition: transform 0.3s ease-in-out 0.3s, box-shadow 0.3s ease-in-out 0.3s, background-color 0.2s;
+}
+
+.socialButton:hover {
+  background: #0f172a;
+  color: #ffffff;
+  transform: scale(1.12);
+}
+
+:global(.dark) .socialButton:hover {
+  background: #ec4899;
+  color: #ffffff;
+}
+
+/* 3D Floating Cascading Orbs */
+.logo {
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.circle {
+  display: block;
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  top: 0;
+  right: 0;
+  box-shadow: rgba(100, 100, 111, 0.16) -10px 10px 20px 0px;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.circleGift {
+  background: rgba(244, 63, 94, 0.22);
+}
+
+.circleCake {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+.circleBalloon {
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.circleSweet {
+  background: rgba(255, 117, 140, 0.26);
+}
+
+.circlePurple {
+  background: rgba(168, 85, 247, 0.22);
+}
+
+.circleAmber {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+.circleRed {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+.circle1 {
+  width: 98px;
+  transform: translate3d(0, 0, 18px);
+  top: 6px;
+  right: 6px;
+}
+
+.circle2 {
+  width: 80px;
+  transform: translate3d(0, 0, 32px);
+  top: 10px;
+  right: 10px;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.circle3 {
+  width: 62px;
+  transform: translate3d(0, 0, 46px);
+  top: 14px;
+  right: 14px;
+}
+
+.circle4 {
+  width: 46px;
+  transform: translate3d(0, 0, 60px);
+  top: 18px;
+  right: 18px;
+}
+
+.circle5 {
+  width: 34px;
+  transform: translate3d(0, 0, 76px);
+  top: 22px;
+  right: 22px;
+  display: grid;
+  place-content: center;
+  border-radius: 50%;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+:global(.dark) .circle5 {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+/* Hover 3D Tilting and Parallax States */
+.parent:hover .card {
+  transform: rotateX(10deg) rotateY(-14deg) translateZ(8px);
+}
+
+.parent:hover .gradientGift {
+  box-shadow: rgba(244, 63, 94, 0.35) 30px 50px 25px -40px, rgba(139, 92, 246, 0.25) 0px 25px 35px 0px;
+}
+
+.parent:hover .gradientCake {
+  box-shadow: rgba(245, 158, 11, 0.35) 30px 50px 25px -40px, rgba(236, 72, 153, 0.25) 0px 25px 35px 0px;
+}
+
+.parent:hover .gradientBalloon {
+  box-shadow: rgba(59, 130, 246, 0.35) 30px 50px 25px -40px, rgba(168, 85, 247, 0.25) 0px 25px 35px 0px;
+}
+
+.parent:hover .gradientSweet {
+  box-shadow: rgba(255, 117, 140, 0.35) 30px 50px 25px -40px, rgba(244, 63, 94, 0.25) 0px 25px 35px 0px;
+}
+
+.parent:hover .card .glass {
+  transform: translate3d(0px, 0px, 32px);
+}
+
+.parent:hover .card .content {
+  transform: translate3d(0, 0, 36px);
+}
+
+.parent:hover .card .bottom {
+  transform: translate3d(0, 0, 40px);
+}
+
+.parent:hover .card .bottom .socialButtonsContainer .socialButton:first-child {
+  transform: translate3d(0, 0, 48px);
+  box-shadow: rgba(0, 0, 0, 0.2) -4px 14px 8px 0px;
+}
+
+.parent:hover .card .bottom .socialButtonsContainer .socialButton:nth-child(2) {
+  transform: translate3d(0, 0, 56px);
+  box-shadow: rgba(0, 0, 0, 0.2) -4px 14px 8px 0px;
+}
+
+.parent:hover .card .bottom .socialButtonsContainer .socialButton:nth-child(3) {
+  transform: translate3d(0, 0, 64px);
+  box-shadow: rgba(0, 0, 0, 0.2) -4px 14px 8px 0px;
+}
+
+.parent:hover .card .logo .circle2 {
+  transform: translate3d(-2px, 2px, 40px);
+}
+
+.parent:hover .card .logo .circle3 {
+  transform: translate3d(-5px, 5px, 55px);
+}
+
+.parent:hover .card .logo .circle4 {
+  transform: translate3d(-8px, 8px, 70px);
+}
+
+.parent:hover .card .logo .circle5 {
+  transform: translate3d(-11px, 11px, 90px) scale(1.08);
+}

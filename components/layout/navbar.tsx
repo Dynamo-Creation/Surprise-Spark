@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Gift, Menu, X, Sparkles, ArrowRight, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { NAV_LINKS } from "@/lib/constants";
 import { useMobileNav } from "@/hooks/useMobileNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,20 +36,11 @@ export function Navbar() {
         {/* Brand Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 rounded-lg"
+          className="flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 rounded-lg py-1"
           onClick={close}
+          aria-label="Partner in Crime Home"
         >
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 via-rose-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-pink-500/20 group-hover:scale-105 transition-transform duration-300">
-            <Gift className="w-5 h-5 transition-transform group-hover:rotate-12 duration-300" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-black text-lg tracking-tight text-slate-900 dark:text-white leading-tight">
-              Surprise<span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Spark</span>
-            </span>
-            <span className="text-[10px] font-semibold text-slate-400 -mt-0.5 tracking-wider uppercase">
-              Interactive Wishes
-            </span>
-          </div>
+          <BrandLogo size="md" />
         </Link>
 
         {/* Desktop Navigation Links */}
@@ -79,10 +71,10 @@ export function Navbar() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-purple-500/40 text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-xs font-semibold px-2.5 py-1.5 h-8 gap-1.5"
+                className="border-purple-500/40 text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-xs font-semibold px-2.5 py-1.5 h-8 whitespace-nowrap"
+                leftIcon={<Shield className="w-3.5 h-3.5 text-purple-500 shrink-0" />}
               >
-                <Shield className="w-3.5 h-3.5 text-purple-500" />
-                <span>Admin CMS</span>
+                Admin CMS
               </Button>
             </Link>
           )}
@@ -90,8 +82,8 @@ export function Navbar() {
           {user ? (
             <div className="flex items-center gap-2">
               <Link href="/dashboard">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 hover:border-pink-300 transition-colors cursor-pointer text-xs font-semibold">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-[11px] font-bold">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 hover:border-pink-300 transition-colors cursor-pointer text-xs font-semibold whitespace-nowrap">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
                     {profile?.fullName ? profile.fullName.charAt(0).toUpperCase() : "U"}
                   </div>
                   <span className="text-slate-800 dark:text-slate-200 max-w-[120px] truncate">
@@ -102,14 +94,14 @@ export function Navbar() {
               <button
                 onClick={handleLogout}
                 title="Log out"
-                className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
             <Link href="/login">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="whitespace-nowrap">
                 Login
               </Button>
             </Link>
@@ -119,7 +111,8 @@ export function Navbar() {
             <Button
               variant="primary"
               size="sm"
-              leftIcon={<Sparkles className="w-4 h-4 text-amber-200" />}
+              className="whitespace-nowrap"
+              leftIcon={<Sparkles className="w-4 h-4 text-amber-200 shrink-0" />}
             >
               Create Surprise
             </Button>
@@ -133,9 +126,9 @@ export function Navbar() {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs px-2.5 py-1.5 h-8 border-purple-500/40 text-purple-600 dark:text-purple-300"
+                className="text-xs px-2.5 py-1.5 h-8 border-purple-500/40 text-purple-600 dark:text-purple-300 whitespace-nowrap"
+                leftIcon={<Shield className="w-3.5 h-3.5 text-purple-500 shrink-0" />}
               >
-                <Shield className="w-3.5 h-3.5 mr-1 text-purple-500" />
                 CMS
               </Button>
             </Link>
@@ -144,8 +137,8 @@ export function Navbar() {
             <Button
               variant="primary"
               size="sm"
-              className="text-xs px-3 py-1.5 h-8"
-              leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-200" />}
+              className="text-xs px-3 py-1.5 h-8 whitespace-nowrap"
+              leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-200 shrink-0" />}
             >
               Create
             </Button>
@@ -194,9 +187,9 @@ export function Navbar() {
                 <Link
                   href="/admin"
                   onClick={close}
-                  className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-base font-semibold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 transition-colors"
+                  className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-base font-semibold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 transition-colors whitespace-nowrap"
                 >
-                  <Shield className="w-5 h-5 text-purple-500" />
+                  <Shield className="w-5 h-5 text-purple-500 shrink-0" />
                   <span>Admin CMS</span>
                 </Link>
               )}

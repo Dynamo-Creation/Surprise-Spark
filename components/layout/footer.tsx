@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import { Gift, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { BRAND_HEADLINE, BRAND_SUPPORTING_LINE } from "@/lib/constants";
 
 export function Footer() {
@@ -10,13 +11,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand Col */}
           <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-pink-500 via-rose-500 to-purple-600 flex items-center justify-center text-white shadow-md">
-                <Gift className="w-4 h-4" />
-              </div>
-              <span className="font-black text-lg tracking-tight text-slate-900 dark:text-white">
-                Surprise<span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Spark</span>
-              </span>
+            <Link href="/" className="inline-flex items-center" aria-label="Partner in Crime Home">
+              <BrandLogo size="md" />
             </Link>
 
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
@@ -97,7 +93,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-200/60 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} SurpriseSpark. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Partner in Crime. All rights reserved.</p>
           <p className="flex items-center gap-1">
             Crafted with <Heart className="w-3.5 h-3.5 text-pink-500 fill-pink-500" /> for unforgettable moments.
           </p>

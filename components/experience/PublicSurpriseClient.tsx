@@ -19,6 +19,7 @@ import { RecipientFinalScreen } from "./RecipientFinalScreen";
 import { RecipientShareModal } from "./RecipientShareModal";
 import { ExperienceErrorState, ExperienceErrorType } from "./ExperienceErrorState";
 import { ExperienceWebGLFallback } from "./ExperienceWebGLFallback";
+import { SweetCelebrationExperience } from "./SweetCelebrationExperience";
 import { soundManager } from "@/lib/audio/soundManager";
 import { trackSurpriseEvent, trackFunnel, trackPerformance } from "@/lib/analytics/tracker";
 
@@ -219,7 +220,16 @@ export function PublicSurpriseClient({
       {/* 2. Main Experience Engine */}
       {hasEntered && (
         <>
-          {isWebGLSupported ? (
+          {template.slug === "sweet-celebration" ? (
+            <SweetCelebrationExperience
+              recipientName={personalization.recipient_name}
+              senderName={personalization.sender_name}
+              specialDate={personalization.special_date}
+              message={personalization.message}
+              photos={surprise.photos}
+              onFinish={handleExperienceCompleted}
+            />
+          ) : isWebGLSupported ? (
             <ExperiencePlayer
               key={playerKey}
               template={template}

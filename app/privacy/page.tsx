@@ -62,8 +62,8 @@ export default function PrivacyCenterPage() {
 
           <div className="flex items-center gap-2 mb-2">
             <Badge variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 text-xs">
-              <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-              Privacy-First Architecture
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>Privacy-First Architecture</span>
             </Badge>
             <span className="text-xs text-slate-500">•</span>
             <span className="text-xs text-slate-400">Zero Invasive Tracking Guarantee</span>

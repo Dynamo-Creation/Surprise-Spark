@@ -36,6 +36,7 @@ import { soundManager } from "@/lib/audio/soundManager";
 import { PhotoManager } from "@/components/creator/PhotoManager";
 import { ShareModal } from "@/components/creator/ShareModal";
 import { ExperiencePlayer } from "@/components/engine/ExperiencePlayer";
+import { SweetCelebrationExperience } from "@/components/experience/SweetCelebrationExperience";
 import { saveDraft, getDraft, DraftSurprise } from "@/lib/creator/draftStorage";
 import { useAuth } from "@/hooks/useAuth";
 import { trackFunnel } from "@/lib/analytics/tracker";
@@ -859,24 +860,35 @@ function CreateStudioContent() {
 
           {/* Embedded Player using the exact same rendering engine */}
           <div className="rounded-3xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl min-h-[640px] flex flex-col">
-            <ExperiencePlayer
-              template={currentTemplate}
-              version={currentVersion}
-              scenes={resolvedScenes}
-              personalization={{
-                recipient_name: recipientName,
-                sender_name: senderName,
-                message: customMessage,
-                special_date: specialDate,
-                photo_1: photos[0] || "",
-                photo_2: photos[1] || "",
-                photo_3: photos[2] || "",
-                photo_4: photos[3] || "",
-                photo_5: photos[4] || "",
-              }}
-              showCreatorControls={true}
-              themeOverride={THEMES[selectedThemeId]}
-            />
+            {currentTemplate.slug === "sweet-celebration" ? (
+              <SweetCelebrationExperience
+                recipientName={recipientName}
+                senderName={senderName}
+                specialDate={specialDate}
+                message={customMessage}
+                photos={photos}
+                onFinish={() => setCurrentStep(7)}
+              />
+            ) : (
+              <ExperiencePlayer
+                template={currentTemplate}
+                version={currentVersion}
+                scenes={resolvedScenes}
+                personalization={{
+                  recipient_name: recipientName,
+                  sender_name: senderName,
+                  message: customMessage,
+                  special_date: specialDate,
+                  photo_1: photos[0] || "",
+                  photo_2: photos[1] || "",
+                  photo_3: photos[2] || "",
+                  photo_4: photos[3] || "",
+                  photo_5: photos[4] || "",
+                }}
+                showCreatorControls={true}
+                themeOverride={THEMES[selectedThemeId]}
+              />
+            )}
           </div>
 
           <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">

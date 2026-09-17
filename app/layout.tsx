@@ -15,20 +15,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://surprisespark.app"),
-  title: "SurpriseSpark — Don’t Just Send A Wish. Send A Surprise.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://partnerincrime.app"),
+  title: "Partner in Crime — Don’t Just Send A Wish. Send A Surprise.",
   description:
     "Create tiny interactive 3D experiences, personalized memories, music, and emotional surprises for birthdays and celebrations.",
   keywords: [
+    "partner in crime",
     "interactive birthday wish",
     "3d surprise",
     "birthday surprise link",
     "celebration card",
     "personalized gift",
   ],
-  authors: [{ name: "SurpriseSpark Team" }],
+  authors: [{ name: "Partner in Crime Team" }],
   openGraph: {
-    title: "Don’t Just Send A Wish. Send A Surprise.",
+    title: "Partner in Crime — Don’t Just Send A Wish. Send A Surprise.",
     description: "Create tiny interactive experiences for someone's special day.",
     type: "website",
   },

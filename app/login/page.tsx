@@ -143,9 +143,9 @@ function LoginForm() {
               variant="primary"
               size="sm"
               onClick={handleElevateAdmin}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xs shadow-md"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xs shadow-md whitespace-nowrap"
+              leftIcon={<Shield className="w-3.5 h-3.5 shrink-0" />}
             >
-              <Shield className="w-3.5 h-3.5 mr-1.5" />
               Activate Superadmin & Open CMS
             </Button>
           </div>

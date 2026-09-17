@@ -26,7 +26,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "relative inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 active:scale-98 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer select-none shadow-sm";
+      "relative inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 active:scale-98 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer select-none shadow-sm whitespace-nowrap";
 
     const variantStyles = {
       primary:
@@ -58,12 +58,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin text-current" />
+          <Loader2 className="w-4 h-4 animate-spin text-current shrink-0" />
         ) : (
           <>
-            {leftIcon && <span className="inline-flex shrink-0">{leftIcon}</span>}
-            <span>{children}</span>
-            {rightIcon && <span className="inline-flex shrink-0">{rightIcon}</span>}
+            {leftIcon && <span className="inline-flex items-center justify-center shrink-0">{leftIcon}</span>}
+            <span className="inline-flex items-center justify-center gap-1.5 leading-none">{children}</span>
+            {rightIcon && <span className="inline-flex items-center justify-center shrink-0">{rightIcon}</span>}
           </>
         )}
       </button>

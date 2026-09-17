@@ -23,14 +23,14 @@ export function Badge({
   };
 
   const sizeStyles = {
-    sm: "text-[11px] px-2.5 py-0.5 font-medium",
-    md: "text-xs px-3 py-1 font-semibold",
+    sm: "text-[11px] px-2.5 py-0.5 font-medium leading-none",
+    md: "text-xs px-3 py-1 font-semibold leading-none",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border transition-colors",
+        "inline-flex items-center justify-center gap-1.5 rounded-full border transition-colors whitespace-nowrap shrink-0",
         variantStyles[variant],
         sizeStyles[size],
         className
