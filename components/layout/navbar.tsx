@@ -3,13 +3,14 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Gift, Menu, X, Sparkles, ArrowRight, User, LogOut, Shield } from "lucide-react";
+import { Menu, X, Sparkles, ArrowRight, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { NAV_LINKS } from "@/lib/constants";
 import { useMobileNav } from "@/hooks/useMobileNav";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -66,6 +67,8 @@ export function Navbar() {
 
         {/* Desktop CTA & Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
+
           {isAdmin && (
             <Link href="/admin">
               <Button
@@ -121,6 +124,7 @@ export function Navbar() {
 
         {/* Mobile Header Controls */}
         <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
           {isAdmin && (
             <Link href="/admin">
               <Button
@@ -138,7 +142,7 @@ export function Navbar() {
               variant="primary"
               size="sm"
               className="text-xs px-3 py-1.5 h-8 whitespace-nowrap"
-              leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-200 shrink-0" />}
+              leftIcon={<Sparkles className="w-4 h-4 text-amber-200 shrink-0" />}
             >
               Create
             </Button>
@@ -193,6 +197,10 @@ export function Navbar() {
                   <span>Admin CMS</span>
                 </Link>
               )}
+              <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 mt-2">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Theme mode</span>
+                <ThemeToggle />
+              </div>
             </nav>
           </div>
 
