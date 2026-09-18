@@ -20,6 +20,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(
     errorParam === "forbidden_not_admin"
@@ -28,6 +29,14 @@ function LoginForm() {
       ? "Please sign in with an administrator account to continue."
       : null
   );
+
+  // Auto-redirect if user is already authenticated and has no active admin authorization error
+  React.useEffect(() => {
+    if (user && errorParam !== "forbidden_not_admin") {
+      const target = redirect && redirect !== "/login" ? redirect : "/dashboard";
+      window.location.href = target;
+    }
+  }, [user, errorParam, redirect]);
 
   const handleElevateAdmin = () => {
     const adminEmail = user?.email || email || "admin@surprisespark.app";
@@ -42,7 +51,7 @@ function LoginForm() {
     };
     localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
     document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
-    router.push("/admin");
+    window.location.href = "/admin";
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -64,12 +73,16 @@ function LoginForm() {
       const { error: loginError } = await signIn(email, password);
       if (loginError) {
         setError(loginError);
+        setIsLoading(false);
       } else {
-        router.push(redirect);
+        setIsRedirecting(true);
+        // Force cookie propagation and redirect to destination landing page
+        router.refresh();
+        const target = redirect && redirect !== "/login" ? redirect : "/dashboard";
+        window.location.href = target;
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -188,15 +201,22 @@ function LoginForm() {
             </div>
           </div>
 
+          {isRedirecting && (
+            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300 animate-in fade-in">
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Sign in successful! Redirecting you now...</span>
+            </div>
+          )}
+
           <Button
             type="submit"
             variant="primary"
             size="lg"
-            className="w-full mt-2 text-sm shadow-md"
-            isLoading={isLoading}
+            className="w-full mt-2 text-sm shadow-md cursor-pointer"
+            isLoading={isLoading || isRedirecting}
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
-            Sign In to Studio
+            {isRedirecting ? "Redirecting..." : "Sign In to Studio"}
           </Button>
         </form>
 

@@ -121,6 +121,20 @@ export async function updateSession(request: NextRequest) {
 
     if (!hasAdminAccess && user && isAuthorizedAdmin(user)) {
       hasAdminAccess = true;
+      const rawName = (user.user_metadata?.full_name as string) || (user.email?.split("@")[0] ?? "Administrator");
+      const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      const adminSession = {
+        id: user.id || "admin-root",
+        email: user.email || "admin@surprisespark.app",
+        displayName,
+        role: "superadmin",
+        lastLoginAt: new Date().toISOString(),
+      };
+      supabaseResponse.cookies.set(
+        "admin_user_session",
+        encodeURIComponent(JSON.stringify(adminSession)),
+        { path: "/", maxAge: 86400, sameSite: "lax" }
+      );
     }
 
     if (!hasAdminAccess) {
@@ -149,14 +163,20 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // If user is already authenticated and visits /login or /signup, redirect to /dashboard
-  // UNLESS there is an explicit error parameter (e.g. forbidden_not_admin or unauthorized)
+  // If user is already authenticated and visits /login or /signup, redirect to destination
   const isAuthRoute =
     request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup";
-  if (isAuthRoute && user && !request.nextUrl.searchParams.has("error")) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/dashboard";
-    return NextResponse.redirect(redirectUrl);
+  if (isAuthRoute && user) {
+    const targetRedirect = request.nextUrl.searchParams.get("redirect") || "/dashboard";
+    const isAdmin = isAuthorizedAdmin(user);
+    // If user is admin trying to access admin, or if already logged in with no blocking error
+    if ((isAdmin && targetRedirect.startsWith("/admin")) || !request.nextUrl.searchParams.has("error")) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = targetRedirect;
+      redirectUrl.searchParams.delete("error");
+      redirectUrl.searchParams.delete("redirect");
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return supabaseResponse;

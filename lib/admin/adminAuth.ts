@@ -18,6 +18,12 @@ export const ADMIN_ROLES: AdminRole[] = [
   "moderator",
 ];
 
+export const KNOWN_ADMIN_EMAILS: string[] = [
+  "admin@surprisespark.app",
+  "sonu25580@gmail.com",
+  "dynamo@surprisespark.app",
+];
+
 /**
  * Checks if a user object or role string qualifies as an authorized administrator.
  */
@@ -43,15 +49,16 @@ export function isAuthorizedAdmin(roleOrUser?: unknown): boolean {
     if (ADMIN_ROLES.includes(userRole as AdminRole)) return true;
     if (appMeta?.is_admin === true || userMeta?.is_admin === true) return true;
 
-    // Check email pattern (allows admin accounts in both live and local modes)
+    // Check known administrator emails or patterns (allows admin accounts in both live and local modes)
     const email = (u.email as string)?.toLowerCase();
-    if (
-      email &&
-      (email === "admin@surprisespark.app" ||
-        email.includes("admin") ||
-        email.endsWith("@admin.com"))
-    ) {
-      return true;
+    if (email) {
+      if (KNOWN_ADMIN_EMAILS.includes(email)) return true;
+      if (email.includes("admin") || email.endsWith("@admin.com")) return true;
+
+      const envAdminEmails = process.env.ADMIN_EMAILS
+        ? process.env.ADMIN_EMAILS.split(",").map((e) => e.trim().toLowerCase())
+        : [];
+      if (envAdminEmails.includes(email)) return true;
     }
   }
 
