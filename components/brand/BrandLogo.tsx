@@ -1,13 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useId, useCallback } from "react";
+import React, { useState, useEffect, useRef, useId, useCallback, useImperativeHandle } from "react";
 import { cn } from "@/lib/utils";
 
-interface BrandLogoProps {
+export interface BrandLogoHandle {
+  play: (withCelebration?: boolean) => void;
+}
+
+export interface BrandLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   showTagline?: boolean;
   autoPlayOnMount?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 interface Particle {
@@ -72,218 +77,264 @@ const SIGNATURE_PATH_D = [
   "C 890 95 930 100 985 95"
 ].join(" ");
 
-export function BrandLogo({
-  size = "md",
-  className,
-  showTagline = false,
-  autoPlayOnMount = true
-}: BrandLogoProps) {
-  const maskId = useId().replace(/:/g, "_");
-  const pathRef = useRef<SVGPathElement>(null);
-  const animFrameRef = useRef<number | null>(null);
-  const particleAnimRef = useRef<number | null>(null);
+export const BrandLogo = React.forwardRef<BrandLogoHandle, BrandLogoProps>(
+  function BrandLogo(
+    {
+      size = "md",
+      className,
+      showTagline = false,
+      autoPlayOnMount = true,
+      onClick,
+    },
+    ref
+  ) {
+    const maskId = useId().replace(/:/g, "_");
+    const pathRef = useRef<SVGPathElement>(null);
+    const animFrameRef = useRef<number | null>(null);
+    const particleAnimRef = useRef<number | null>(null);
 
-  // Natural aspect ratio: 991 / 164 = 6.042
-  const dimensions = {
-    sm: { height: 26, width: 157, class: "h-[26px] w-[157px]" },
-    md: { height: 36, width: 218, class: "h-[36px] w-[218px]" },
-    lg: { height: 48, width: 290, class: "h-[48px] w-[290px]" },
-    xl: { height: 60, width: 362, class: "h-[60px] w-[362px]" },
-  }[size];
+    // Responsive aspect ratio: 991 / 164 = 6.042
+    const dimensions = {
+      sm: { height: 24, width: 145, class: "h-[24px] w-[145px]" },
+      md: {
+        height: 32,
+        width: 194,
+        class: "h-[28px] w-[164px] sm:h-[34px] sm:w-[204px] md:h-[36px] md:w-[218px]",
+      },
+      lg: {
+        height: 44,
+        width: 266,
+        class: "h-[36px] w-[218px] sm:h-[44px] sm:w-[266px]",
+      },
+      xl: {
+        height: 56,
+        width: 338,
+        class: "h-[46px] w-[280px] sm:h-[56px] sm:w-[338px]",
+      },
+    }[size];
 
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [isFullyDrawn, setIsFullyDrawn] = useState(true);
-  const [progress, setProgress] = useState(1);
-  const [totalLength, setTotalLength] = useState(2400);
-  const [penPoint, setPenPoint] = useState<{ x: number; y: number; isRed: boolean }>({
-    x: 985,
-    y: 95,
-    isRed: true,
-  });
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [heartPulse, setHeartPulse] = useState(false);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [isFullyDrawn, setIsFullyDrawn] = useState(true);
+    const [progress, setProgress] = useState(1);
+    const [totalLength, setTotalLength] = useState(2400);
+    const [penPoint, setPenPoint] = useState<{ x: number; y: number; isRed: boolean }>({
+      x: 9,
+      y: 95,
+      isRed: true,
+    });
+    const [particles, setParticles] = useState<Particle[]>([]);
+    const [heartPulse, setHeartPulse] = useState(false);
 
-  // Initialize path length
-  useEffect(() => {
-    if (pathRef.current) {
-      try {
-        const len = pathRef.current.getTotalLength();
-        if (len > 0) {
-          setTotalLength(len);
+    // Initialize path length
+    useEffect(() => {
+      if (pathRef.current) {
+        try {
+          const len = pathRef.current.getTotalLength();
+          if (len > 0) {
+            setTotalLength(len);
+          }
+        } catch {
+          // Fallback length
         }
-      } catch {
-        // Fallback length
       }
-    }
-  }, []);
+    }, []);
 
-  // Spawn celebration particles around the heart
-  const spawnCelebrationParticles = useCallback((burstCount = 12) => {
-    const heartCenter = { x: 875, y: 55 };
-    const colors = ["#ef4444", "#f43f5e", "#fb7185", "#fda4af", "#ffe4e6", "#f472b6", "#fbbf24"];
-    const newParticles: Particle[] = [];
+    // Spawn celebration particles around the heart
+    const spawnCelebrationParticles = useCallback((burstCount = 12) => {
+      const heartCenter = { x: 875, y: 55 };
+      const colors = ["#ef4444", "#f43f5e", "#fb7185", "#fda4af", "#ffe4e6", "#f472b6", "#fbbf24"];
+      const newParticles: Particle[] = [];
 
-    for (let i = 0; i < burstCount; i++) {
-      const angle = (Math.PI * 2 * i) / burstCount + (Math.random() - 0.5) * 0.6;
-      const speed = 45 + Math.random() * 75;
-      newParticles.push({
-        id: Date.now() + i + Math.random(),
-        x: heartCenter.x + (Math.random() - 0.5) * 24,
-        y: heartCenter.y + (Math.random() - 0.5) * 24,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 25,
-        size: Math.random() > 0.3 ? 24 + Math.random() * 16 : 16 + Math.random() * 12,
-        opacity: 1,
-        rotation: (Math.random() - 0.5) * 90,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        type: i % 2 === 0 ? "heart" : "sparkle",
-      });
-    }
-
-    setParticles((prev) => [...prev, ...newParticles]);
-  }, []);
-
-  // Particle physics tick
-  useEffect(() => {
-    if (particles.length === 0) return;
-
-    let lastTime = performance.now();
-    const updateParticles = (now: number) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
-
-      setParticles((prev) =>
-        prev
-          .map((p) => ({
-            ...p,
-            x: p.x + p.vx * dt,
-            y: p.y + p.vy * dt,
-            vy: p.vy + 40 * dt, // gentle gravity
-            opacity: p.opacity - dt * 1.4, // fade out in ~0.7s
-            rotation: p.rotation + 45 * dt,
-          }))
-          .filter((p) => p.opacity > 0.02)
-      );
-
-      particleAnimRef.current = requestAnimationFrame(updateParticles);
-    };
-
-    particleAnimRef.current = requestAnimationFrame(updateParticles);
-    return () => {
-      if (particleAnimRef.current) cancelAnimationFrame(particleAnimRef.current);
-    };
-  }, [particles.length]);
-
-  // Signature animation runner
-  const playSignature = useCallback(
-    (withCelebration = false) => {
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current);
+      for (let i = 0; i < burstCount; i++) {
+        const angle = (Math.PI * 2 * i) / burstCount + (Math.random() - 0.5) * 0.6;
+        const speed = 45 + Math.random() * 75;
+        newParticles.push({
+          id: Date.now() + i + Math.random(),
+          x: heartCenter.x + (Math.random() - 0.5) * 24,
+          y: heartCenter.y + (Math.random() - 0.5) * 24,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 25,
+          size: Math.random() > 0.3 ? 24 + Math.random() * 16 : 16 + Math.random() * 12,
+          opacity: 1,
+          rotation: (Math.random() - 0.5) * 90,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          type: i % 2 === 0 ? "heart" : "sparkle",
+        });
       }
 
-      setIsDrawing(true);
-      setIsFullyDrawn(false);
-      setProgress(0);
-      setHeartPulse(false);
+      setParticles((prev) => [...prev, ...newParticles]);
+    }, []);
 
-      const path = pathRef.current;
-      const len = path ? path.getTotalLength() : totalLength;
-      if (len > 0 && len !== totalLength) setTotalLength(len);
+    // Particle physics tick
+    useEffect(() => {
+      if (particles.length === 0) return;
 
-      const duration = 1600; // 1.6s signature duration
-      const startTime = performance.now();
+      let lastTime = performance.now();
+      const updateParticles = (now: number) => {
+        const dt = Math.min((now - lastTime) / 1000, 0.1);
+        lastTime = now;
 
-      const animate = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const rawProgress = Math.min(elapsed / duration, 1);
+        setParticles((prev) =>
+          prev
+            .map((p) => ({
+              ...p,
+              x: p.x + p.vx * dt,
+              y: p.y + p.vy * dt,
+              vy: p.vy + 40 * dt, // gentle gravity
+              opacity: p.opacity - dt * 1.4, // fade out in ~0.7s
+              rotation: p.rotation + 45 * dt,
+            }))
+            .filter((p) => p.opacity > 0.02)
+        );
 
-        // Smooth cubic easeInOut for realistic handwriting velocity
-        const easedProgress =
-          rawProgress < 0.5
-            ? 4 * rawProgress * rawProgress * rawProgress
-            : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
-
-        setProgress(easedProgress);
-
-        // Update pen position
-        if (path && len > 0) {
-          try {
-            const currentDist = easedProgress * len;
-            const pt = path.getPointAtLength(currentDist);
-            const isRedRegion = pt.x < 135 || pt.x > 780;
-            setPenPoint({ x: pt.x, y: pt.y, isRed: isRedRegion });
-          } catch {
-            // fallback
-          }
-        }
-
-        if (rawProgress < 1) {
-          animFrameRef.current = requestAnimationFrame(animate);
-        } else {
-          // Signature complete!
-          setProgress(1);
-          setIsDrawing(false);
-          setIsFullyDrawn(true);
-
-          // Trigger heart pulse
-          setHeartPulse(true);
-          setTimeout(() => setHeartPulse(false), 800);
-
-          // Trigger particle burst if requested or on click
-          if (withCelebration) {
-            spawnCelebrationParticles(12);
-          } else {
-            spawnCelebrationParticles(6);
-          }
-        }
+        particleAnimRef.current = requestAnimationFrame(updateParticles);
       };
 
-      animFrameRef.current = requestAnimationFrame(animate);
-    },
-    [spawnCelebrationParticles, totalLength]
-  );
+      particleAnimRef.current = requestAnimationFrame(updateParticles);
+      return () => {
+        if (particleAnimRef.current) cancelAnimationFrame(particleAnimRef.current);
+      };
+    }, [particles.length]);
 
-  // Auto-play on mount (with short delay for smooth entrance)
-  useEffect(() => {
-    if (!autoPlayOnMount) return;
-    const timer = setTimeout(() => {
-      playSignature(false);
-    }, 450);
-    return () => clearTimeout(timer);
-  }, [autoPlayOnMount, playSignature]);
+    // Signature animation runner
+    const playSignature = useCallback(
+      (withCelebration = false) => {
+        if (animFrameRef.current) {
+          cancelAnimationFrame(animFrameRef.current);
+        }
 
-  // Clean up animation on unmount
-  useEffect(() => {
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-      if (particleAnimRef.current) cancelAnimationFrame(particleAnimRef.current);
+        setIsDrawing(true);
+        setIsFullyDrawn(false);
+        setProgress(0);
+        setHeartPulse(false);
+
+        const path = pathRef.current;
+        const len = path ? path.getTotalLength() : totalLength;
+        if (len > 0 && len !== totalLength) setTotalLength(len);
+
+        // Immediate nib placement at path start
+        if (path && len > 0) {
+          try {
+            const pt0 = path.getPointAtLength(0);
+            setPenPoint({ x: pt0.x, y: pt0.y, isRed: true });
+          } catch {
+            setPenPoint({ x: 9, y: 95, isRed: true });
+          }
+        } else {
+          setPenPoint({ x: 9, y: 95, isRed: true });
+        }
+
+        if (withCelebration) {
+          spawnCelebrationParticles(4);
+        }
+
+        const duration = 1350; // Snappy, ultra-smooth 1.35s signature handwriting velocity
+        const startTime = performance.now();
+
+        const animate = (currentTime: number) => {
+          const elapsed = currentTime - startTime;
+          const rawProgress = Math.min(elapsed / duration, 1);
+
+          // Smooth cubic easeInOut for realistic handwriting velocity
+          const easedProgress =
+            rawProgress < 0.5
+              ? 4 * rawProgress * rawProgress * rawProgress
+              : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
+
+          setProgress(easedProgress);
+
+          // Update pen position
+          if (path && len > 0) {
+            try {
+              const currentDist = easedProgress * len;
+              const pt = path.getPointAtLength(currentDist);
+              const isRedRegion = pt.x < 135 || pt.x > 780;
+              setPenPoint({ x: pt.x, y: pt.y, isRed: isRedRegion });
+            } catch {
+              // fallback
+            }
+          }
+
+          if (rawProgress < 1) {
+            animFrameRef.current = requestAnimationFrame(animate);
+          } else {
+            // Signature complete!
+            setProgress(1);
+            setIsDrawing(false);
+            setIsFullyDrawn(true);
+
+            // Trigger heart pulse
+            setHeartPulse(true);
+            setTimeout(() => setHeartPulse(false), 800);
+
+            // Trigger particle burst if requested or on click
+            if (withCelebration) {
+              spawnCelebrationParticles(14);
+            } else {
+              spawnCelebrationParticles(6);
+            }
+          }
+        };
+
+        animFrameRef.current = requestAnimationFrame(animate);
+      },
+      [spawnCelebrationParticles, totalLength]
+    );
+
+    // Expose imperative handle for parent components to trigger play
+    useImperativeHandle(
+      ref,
+      () => ({
+        play: (withCelebration = false) => {
+          playSignature(withCelebration);
+        },
+      }),
+      [playSignature]
+    );
+
+    // Auto-play on mount (short 100ms delay for smooth entrance)
+    useEffect(() => {
+      if (!autoPlayOnMount) return;
+      const timer = setTimeout(() => {
+        playSignature(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }, [autoPlayOnMount, playSignature]);
+
+    // Clean up animation on unmount
+    useEffect(() => {
+      return () => {
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        if (particleAnimRef.current) cancelAnimationFrame(particleAnimRef.current);
+      };
+    }, []);
+
+    const handleMouseEnter = () => {
+      if (!isDrawing) {
+        playSignature(false);
+      }
     };
-  }, []);
 
-  const handleMouseEnter = () => {
-    playSignature(false);
-  };
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      playSignature(true);
+      onClick?.(e);
+    };
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    playSignature(true);
-  };
+    // Mask dash calculation:
+    // When progress is 0, offset = totalLength (hidden).
+    // When progress is 1, offset = 0 (fully drawn).
+    const strokeDashoffset = isFullyDrawn ? 0 : totalLength * (1 - progress);
 
-  // Mask dash calculation:
-  // When progress is 0, offset = totalLength (hidden).
-  // When progress is 1, offset = 0 (fully drawn).
-  const strokeDashoffset = isFullyDrawn ? 0 : totalLength * (1 - progress);
-
-  return (
-    <div
-      className={cn(
-        "relative inline-flex flex-col items-start justify-center select-none cursor-pointer group",
-        className
-      )}
-      onMouseEnter={handleMouseEnter}
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
+    return (
+      <div
+        className={cn(
+          "relative inline-flex flex-col items-start justify-center select-none cursor-pointer group active:scale-[0.98] transition-transform duration-150",
+          className
+        )}
+        onMouseEnter={handleMouseEnter}
+        onClick={handleClick}
+        role="button"
+        tabIndex={0}
       aria-label="Partner in Crime — Animated Signature Logo (hover or click to sign)"
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -448,3 +499,7 @@ export function BrandLogo({
     </div>
   );
 }
+);
+
+BrandLogo.displayName = "BrandLogo";
+
