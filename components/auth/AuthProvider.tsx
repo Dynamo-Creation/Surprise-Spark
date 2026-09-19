@@ -17,6 +17,8 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  sendEmailOtp: (email: string, displayName?: string) => Promise<{ error: string | null }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -407,18 +409,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Google OAuth
   const signInWithGoogle = async () => {
     if (isConfigured) {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/`,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) return { error: error.message };
+
+      if (data?.url) {
+        try {
+          // Pre-verify that Google provider is enabled in Supabase so the user isn't redirected to a raw 400 JSON page
+          const probe = await fetch(data.url);
+          if (probe.status === 400) {
+            const errData = await probe.json().catch(() => null);
+            if (errData?.msg?.includes("provider is not enabled") || errData?.error_code === "validation_failed") {
+              return {
+                error:
+                  "Google Sign-In is not enabled yet in your Supabase project (unpumpwsxyjvfqwtslss). Please enable Google in Supabase Dashboard (Authentication > Providers > Google).",
+              };
+            }
+          }
+        } catch {
+          // Ignore network/CORS probe failures and proceed to redirect
+        }
+
+        window.location.href = data.url;
+        return { error: null };
+      }
+
+      return { error: "Failed to generate Google authentication URL." };
+    }
+
+    // Local fallback message
+    return { error: "Google OAuth requires Supabase project configuration in .env.local" };
+  };
+
+  // Send Email OTP
+  const sendEmailOtp = async (email: string, displayName?: string) => {
+    if (isConfigured) {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim().toLowerCase(),
+        options: {
+          shouldCreateUser: true,
+          data: displayName?.trim() ? { full_name: displayName.trim() } : undefined,
         },
       });
       if (error) return { error: error.message };
       return { error: null };
     }
 
-    // Local fallback message
-    return { error: "Google OAuth requires Supabase project configuration in .env.local" };
+    return { error: "Supabase authentication is not configured in .env.local" };
+  };
+
+  // Verify Email OTP
+  const verifyEmailOtp = async (email: string, token: string) => {
+    if (isConfigured) {
+      const cleanEmail = email.trim().toLowerCase();
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: token.trim(),
+        type: "email",
+      });
+
+      if (error) return { error: error.message };
+
+      if (data.user) {
+        setUser(data.user);
+        await fetchProfile(data.user.id, data.user.email, data.user.user_metadata?.full_name, data.user);
+      }
+      return { error: null };
+    }
+
+    return { error: "Supabase authentication is not configured in .env.local" };
   };
 
   return (
@@ -434,6 +498,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         updateProfile,
         signInWithGoogle,
+        sendEmailOtp,
+        verifyEmailOtp,
       }}
     >
       {children}
