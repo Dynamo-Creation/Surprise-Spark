@@ -89,7 +89,7 @@ export function PublicSurpriseClient({
         // Increment view count in local storage
         incrementViewCount(publicId);
 
-        const targetSlug = draft.templateSlug || "magic-gift";
+        const targetSlug = draft.templateSlug || "sweet-celebration";
         const resolvedTpl = templateRegistry.getTemplate(targetSlug) || initialTemplate;
         const resolvedVer = resolvedTpl.versions?.[0] || initialVersion;
 

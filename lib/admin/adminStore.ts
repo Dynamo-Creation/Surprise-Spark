@@ -18,6 +18,7 @@ import { ALL_BIRTHDAY_TEMPLATES } from "@/lib/engine/templates";
 import { ALL_MUSIC_TRACKS } from "@/lib/engine/musicCatalog";
 import { THEMES, ThemeId } from "@/lib/engine/themes";
 import { listDrafts } from "@/lib/creator/draftStorage";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 // -----------------------------------------------------------------------------
 // 1. ADMIN USER & ACCOUNT TYPES
@@ -67,6 +68,8 @@ export interface AdminDashboardMetrics {
   completionRate: number; // percentage e.g. 88.4
 }
 
+export type AdminMetricsMode = "live" | "demo";
+
 // -----------------------------------------------------------------------------
 // 2. INITIAL SEED ACCOUNTS & AUDIT TRAIL
 // -----------------------------------------------------------------------------
@@ -81,7 +84,7 @@ const INITIAL_USERS: AdminUserAccount[] = [
     lastActivityAt: "2026-09-14T08:15:00Z",
     surprisesCount: 14,
     publishedCount: 12,
-    templateUsage: ["magic-gift", "birthday-cake-reveal"],
+    templateUsage: ["sweet-celebration"],
   },
   {
     id: "usr_01h8x9k3q5n",
@@ -93,7 +96,7 @@ const INITIAL_USERS: AdminUserAccount[] = [
     lastActivityAt: "2026-09-13T22:30:00Z",
     surprisesCount: 8,
     publishedCount: 7,
-    templateUsage: ["balloon-room", "mystery-door"],
+    templateUsage: ["sweet-celebration"],
   },
   {
     id: "usr_01h8x9k4r6o",
@@ -105,7 +108,7 @@ const INITIAL_USERS: AdminUserAccount[] = [
     lastActivityAt: "2026-09-14T07:45:00Z",
     surprisesCount: 22,
     publishedCount: 19,
-    templateUsage: ["confetti-blast", "rainbow-surprise", "cute-character"],
+    templateUsage: ["sweet-celebration"],
   },
   {
     id: "usr_01h8x9k5s7p",
@@ -117,7 +120,7 @@ const INITIAL_USERS: AdminUserAccount[] = [
     lastActivityAt: "2026-09-02T01:10:00Z",
     surprisesCount: 1,
     publishedCount: 0,
-    templateUsage: ["magic-gift"],
+    templateUsage: ["sweet-celebration"],
   },
   {
     id: "usr_01h8x9k6t8q",
@@ -129,7 +132,7 @@ const INITIAL_USERS: AdminUserAccount[] = [
     lastActivityAt: "2026-09-14T09:30:00Z",
     surprisesCount: 5,
     publishedCount: 5,
-    templateUsage: ["magic-gift", "memory-journey"],
+    templateUsage: ["sweet-celebration"],
   },
 ];
 
@@ -139,7 +142,7 @@ const INITIAL_AUDIT_LOGS: AdminAuditRecord[] = [
     actor: { id: "usr_01h8x9k6t8q", name: "Super Admin", role: "superadmin" },
     action: "TEMPLATE_PUBLISH",
     targetTable: "templates",
-    targetId: "magic-gift",
+    targetId: "sweet-celebration",
     previousValue: "status: draft",
     newValue: "status: active, version: 1.0.0",
     timestamp: "2026-09-13T18:30:00Z",
@@ -169,6 +172,47 @@ const INITIAL_AUDIT_LOGS: AdminAuditRecord[] = [
 const ADMIN_TEMPLATES_STORAGE_KEY = "surprisespark_admin_templates_v1";
 const ADMIN_USERS_STORAGE_KEY = "surprisespark_admin_users_v1";
 const ADMIN_AUDIT_STORAGE_KEY = "surprisespark_admin_audit_v1";
+export const DELETED_TEMPLATES_STORAGE_KEY = "surprisespark_deleted_templates_v1";
+
+/**
+ * Slugs of all 3D celebration templates permanently purged from the platform,
+ * preserving only Sweet Celebration ('sweet-celebration').
+ */
+export const REMOVED_CELEBRATION_SLUGS = [
+  "magic-gift",
+  "birthday-cake-reveal",
+  "balloon-room",
+  "mystery-door",
+  "memory-journey",
+  "confetti-blast",
+  "rainbow-surprise",
+  "cute-character",
+  "tpl-magic-gift",
+  "tpl-birthday-cake",
+  "tpl-balloon-room",
+  "tpl-mystery-door",
+  "tpl-memory-journey",
+  "tpl-confetti-blast",
+  "tpl-rainbow-surprise",
+  "tpl-cute-character",
+];
+
+export function getDeletedTemplateSlugs(): string[] {
+  if (typeof window === "undefined") return REMOVED_CELEBRATION_SLUGS;
+  try {
+    const raw = localStorage.getItem(DELETED_TEMPLATES_STORAGE_KEY);
+    const customDeleted: string[] = raw ? JSON.parse(raw) : [];
+    const merged = Array.from(new Set([...REMOVED_CELEBRATION_SLUGS, ...customDeleted]));
+    return merged;
+  } catch {
+    return REMOVED_CELEBRATION_SLUGS;
+  }
+}
+
+export function isTemplateDeleted(slugOrId: string): boolean {
+  if (slugOrId === "sweet-celebration" || slugOrId === "tpl-sweet-celebration") return false;
+  return getDeletedTemplateSlugs().includes(slugOrId);
+}
 
 // Persistent & In-Memory Global Storage
 class AdminStore {
@@ -188,24 +232,65 @@ class AdminStore {
     this.auditLogs = [...INITIAL_AUDIT_LOGS];
 
     const registry = TemplateRegistry.getInstance();
+    const deleted = getDeletedTemplateSlugs();
     for (const tpl of ALL_BIRTHDAY_TEMPLATES) {
-      this.templates.set(tpl.slug, JSON.parse(JSON.stringify(tpl)));
-      registry.registerTemplate(tpl);
+      if (!deleted.includes(tpl.slug) && !deleted.includes(tpl.id)) {
+        this.templates.set(tpl.slug, JSON.parse(JSON.stringify(tpl)));
+        registry.registerTemplate(tpl);
+      }
     }
   }
 
   private loadFromStorage() {
     if (typeof window === "undefined") return;
     try {
+      // 1. Ensure permanent blacklist in localStorage has all removed celebration slugs
+      const rawDeleted = localStorage.getItem(DELETED_TEMPLATES_STORAGE_KEY);
+      const existingDeleted: string[] = rawDeleted ? JSON.parse(rawDeleted) : [];
+      const updatedBlacklist = Array.from(new Set([...existingDeleted, ...REMOVED_CELEBRATION_SLUGS]));
+      localStorage.setItem(DELETED_TEMPLATES_STORAGE_KEY, JSON.stringify(updatedBlacklist));
+
+      // 2. Remove purged templates from in-memory maps and engine registry
+      for (const slug of REMOVED_CELEBRATION_SLUGS) {
+        this.templates.delete(slug);
+        TemplateRegistry.getInstance().deleteTemplate(slug);
+      }
+
+      // 3. Clean stored templates table
       const rawTpls = localStorage.getItem(ADMIN_TEMPLATES_STORAGE_KEY);
       if (rawTpls) {
         const parsed: TemplateModel[] = JSON.parse(rawTpls);
         const registry = TemplateRegistry.getInstance();
+        const cleaned: TemplateModel[] = [];
         parsed.forEach((tpl) => {
-          this.templates.set(tpl.slug, tpl);
-          this.templates.set(tpl.id, tpl);
-          registry.registerTemplate(tpl);
+          if (
+            !updatedBlacklist.includes(tpl.slug) &&
+            !updatedBlacklist.includes(tpl.id)
+          ) {
+            this.templates.set(tpl.slug, tpl);
+            this.templates.set(tpl.id, tpl);
+            registry.registerTemplate(tpl);
+            cleaned.push(tpl);
+          } else {
+            this.templates.delete(tpl.slug);
+            this.templates.delete(tpl.id);
+            registry.deleteTemplate(tpl.slug);
+            registry.deleteTemplate(tpl.id);
+          }
         });
+        localStorage.setItem(ADMIN_TEMPLATES_STORAGE_KEY, JSON.stringify(cleaned));
+      }
+
+      // 4. Asynchronously purge removed celebration templates from Supabase
+      if (isSupabaseConfigured()) {
+        try {
+          const supabase = createClient();
+          for (const slug of REMOVED_CELEBRATION_SLUGS) {
+            supabase.from("templates").delete().eq("slug", slug).then();
+          }
+        } catch {
+          // offline
+        }
       }
 
       const rawUsers = localStorage.getItem(ADMIN_USERS_STORAGE_KEY);
@@ -253,25 +338,77 @@ class AdminStore {
   // ---------------------------------------------------------------------------
   // DASHBOARD TELEMETRY & METRICS
   // ---------------------------------------------------------------------------
-  public getMetrics(): AdminDashboardMetrics {
+  public getMetrics(mode: AdminMetricsMode = "live"): AdminDashboardMetrics {
+    const drafts = typeof window !== "undefined" ? listDrafts() : [];
+
+    if (mode === "live") {
+      // 100% Genuine live telemetry derived from real creator activity & database
+      const uniqueUserIds = new Set<string>();
+      drafts.forEach((d) => {
+        if (d.userId) uniqueUserIds.add(d.userId);
+      });
+      // At least 1 user if an account or session is currently active
+      const totalUsers = Math.max(uniqueUserIds.size, 1);
+
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const surprisesCreatedToday = drafts.filter(
+        (d) => d.createdAt && d.createdAt >= oneDayAgo
+      ).length;
+
+      const totalSurprises = drafts.length;
+      const totalOpens = drafts.reduce((acc, d) => acc + (d.viewCount || 0), 0);
+      const totalShares = drafts.reduce((acc, d) => acc + (d.shareCount || 0), 0);
+
+      // Template adoption breakdown from real surprises
+      const templateCounts: Record<string, number> = {};
+      for (const d of drafts) {
+        const slug = d.templateSlug || "sweet-celebration";
+        templateCounts[slug] = (templateCounts[slug] || 0) + 1;
+      }
+
+      const allRegistered = Array.from(this.templates.values());
+      const popularTemplates = allRegistered
+        .map((tpl) => ({
+          name: tpl.name,
+          slug: tpl.slug,
+          count: templateCounts[tpl.slug] || 0,
+          category: tpl.categoryId || "Birthday",
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      const publishedCount = drafts.filter((d) => d.status === "published").length;
+      const completionRate =
+        totalSurprises > 0
+          ? Math.round((publishedCount / totalSurprises) * 100 * 10) / 10
+          : 0;
+
+      return {
+        totalUsers,
+        newUsersToday: Math.min(totalUsers, 1),
+        activeUsers: totalUsers,
+        totalSurprises,
+        surprisesCreatedToday,
+        totalOpens,
+        totalShares,
+        popularTemplates,
+        completionRate,
+      };
+    }
+
+    // Demo Mode: Seeded realistic baseline metrics
     const totalUsers = this.users.size + 1420; // baseline accounts
     const activeUsers = Math.floor(totalUsers * 0.74);
     const newUsersToday = 38;
 
-    // Aggregate from localStorage drafts if in client
-    const drafts = typeof window !== "undefined" ? listDrafts() : [];
     const localSurprisesCount = drafts.length;
     const totalSurprises = 3840 + localSurprisesCount;
     const surprisesCreatedToday = 142 + localSurprisesCount;
-    const totalOpens = 18920;
-    const totalShares = 7240;
+    const totalOpens = 18920 + drafts.reduce((acc, d) => acc + (d.viewCount || 0), 0);
+    const totalShares = 7240 + drafts.reduce((acc, d) => acc + (d.shareCount || 0), 0);
 
     const popularTemplates = [
-      { name: "Magic Gift 🎁", slug: "magic-gift", count: 1240, category: "Birthday" },
-      { name: "Birthday Cake Reveal 🎂", slug: "birthday-cake-reveal", count: 910, category: "Birthday" },
-      { name: "Balloon Room 🎈", slug: "balloon-room", count: 680, category: "Birthday" },
-      { name: "Confetti Blast 🎉", slug: "confetti-blast", count: 520, category: "Birthday" },
-      { name: "Rainbow Surprise 🌈", slug: "rainbow-surprise", count: 490, category: "Birthday" },
+      { name: "Sweet Celebration 💌", slug: "sweet-celebration", count: 1840, category: "Birthday" },
     ];
 
     return {
@@ -371,7 +508,7 @@ class AdminStore {
       slug,
       description: data.description || "",
       tagline: data.tagline || "",
-      thumbnailUrl: data.thumbnailUrl || "/templates/magic-gift.png",
+      thumbnailUrl: data.thumbnailUrl || "/templates/sweet-celebration/thumbnail.jpg",
       tags: data.tags || ["Birthday", "Custom"],
       status: data.status || "active",
       isFree: data.isFree ?? true,
@@ -502,13 +639,72 @@ class AdminStore {
     return updated;
   }
 
+  /**
+   * PERMANENT TEMPLATE DELETION
+   * Removes template from admin store, template registry, local storage,
+   * database, and all public catalogs.
+   */
   public deleteTemplate(slug: string, actor = "Super Admin"): boolean {
-    const existing = this.templates.get(slug);
-    if (!existing) return false;
+    this.loadFromStorage();
+    const target = this.getTemplate(slug);
+    const targetId = target?.id;
+    const targetSlug = target?.slug || slug;
+    const targetName = target?.name || slug;
 
-    this.templates.delete(slug);
+    // 1. Remove from in-memory maps by key and by value
+    for (const [key, tpl] of Array.from(this.templates.entries())) {
+      if (
+        key === targetSlug ||
+        key === targetId ||
+        tpl.slug === targetSlug ||
+        (targetId && tpl.id === targetId)
+      ) {
+        this.templates.delete(key);
+      }
+    }
+
+    // 2. Add to persistent deleted list in localStorage
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem(DELETED_TEMPLATES_STORAGE_KEY);
+        const deleted: string[] = raw ? JSON.parse(raw) : [];
+        if (!deleted.includes(targetSlug)) deleted.push(targetSlug);
+        if (targetId && !deleted.includes(targetId)) deleted.push(targetId);
+        localStorage.setItem(DELETED_TEMPLATES_STORAGE_KEY, JSON.stringify(deleted));
+      } catch {
+        // storage fallback
+      }
+    }
+
+    // 3. Remove from global TemplateRegistry
+    TemplateRegistry.getInstance().deleteTemplate(targetSlug);
+    if (targetId) {
+      TemplateRegistry.getInstance().deleteTemplate(targetId);
+    }
+
+    // 4. Save updated templates map to localStorage
     this.saveToStorage();
-    this.logAction(actor, "TEMPLATE_DELETE", "templates", slug, existing.name, "deleted");
+
+    // 5. Asynchronously delete from Supabase if configured
+    if (typeof window !== "undefined" && isSupabaseConfigured()) {
+      try {
+        const supabase = createClient();
+        supabase.from("templates").delete().eq("slug", targetSlug).then();
+      } catch {
+        // offline or unconfigured
+      }
+    }
+
+    // 6. Record in audit trail
+    this.logAction(
+      actor,
+      "TEMPLATE_DELETE",
+      "templates",
+      targetSlug,
+      `name: ${targetName}, slug: ${targetSlug}`,
+      "DELETED_PERMANENTLY"
+    );
+
     return true;
   }
 

@@ -8,6 +8,41 @@ import {
 import { DEMO_TEMPLATE_MODEL, DEMO_VERSION_1_0_0 } from "./demoTemplate";
 import { ALL_BIRTHDAY_TEMPLATES } from "./templates";
 
+const REMOVED_CELEBRATION_SLUGS = [
+  "magic-gift",
+  "birthday-cake-reveal",
+  "balloon-room",
+  "mystery-door",
+  "memory-journey",
+  "confetti-blast",
+  "rainbow-surprise",
+  "cute-character",
+  "demo-birthday-magic",
+  "tpl-magic-gift",
+  "tpl-birthday-cake",
+  "tpl-balloon-room",
+  "tpl-mystery-door",
+  "tpl-memory-journey",
+  "tpl-confetti-blast",
+  "tpl-rainbow-surprise",
+  "tpl-cute-character",
+  "tpl-demo-birthday",
+];
+
+function checkIsDeleted(slugOrId: string): boolean {
+  if (slugOrId === "sweet-celebration" || slugOrId === "tpl-sweet-celebration") return false;
+  if (REMOVED_CELEBRATION_SLUGS.includes(slugOrId)) return true;
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem("surprisespark_deleted_templates_v1");
+    if (!raw) return false;
+    const deleted: string[] = JSON.parse(raw);
+    return Array.isArray(deleted) && deleted.includes(slugOrId);
+  } catch {
+    return false;
+  }
+}
+
 export class TemplateRegistry {
   private static instance: TemplateRegistry;
 
@@ -17,14 +52,15 @@ export class TemplateRegistry {
   private constructor() {
     // Seed all production birthday templates
     for (const tpl of ALL_BIRTHDAY_TEMPLATES) {
-      this.registerTemplate(tpl);
+      if (!checkIsDeleted(tpl.slug) && !checkIsDeleted(tpl.id)) {
+        this.registerTemplate(tpl);
+      }
     }
 
     // Also register legacy demo template for backwards-compatibility
     this.registerTemplate(DEMO_TEMPLATE_MODEL);
     this.registerTemplateVersion(DEMO_VERSION_1_0_0);
   }
-
 
   public static getInstance(): TemplateRegistry {
     if (!TemplateRegistry.instance) {
@@ -37,6 +73,7 @@ export class TemplateRegistry {
    * Registers a template definition.
    */
   public registerTemplate(template: TemplateModel): void {
+    if (checkIsDeleted(template.slug) || checkIsDeleted(template.id)) return;
     this.templates.set(template.id, template);
     this.templates.set(template.slug, template);
 
@@ -46,6 +83,26 @@ export class TemplateRegistry {
         this.registerTemplateVersion(ver);
       }
     }
+  }
+
+  /**
+   * Permanently deletes a template definition and its versions from the registry.
+   */
+  public deleteTemplate(idOrSlug: string): boolean {
+    const tpl = this.templates.get(idOrSlug);
+    if (!tpl) {
+      this.templates.delete(idOrSlug);
+      return true;
+    }
+    this.templates.delete(tpl.id);
+    this.templates.delete(tpl.slug);
+    if (tpl.versions) {
+      for (const ver of tpl.versions) {
+        this.versions.delete(ver.id);
+        this.versions.delete(`${ver.templateId}@${ver.version}`);
+      }
+    }
+    return true;
   }
 
   /**
@@ -62,6 +119,7 @@ export class TemplateRegistry {
    * Retrieves a template by ID or slug.
    */
   public getTemplate(idOrSlug: string): TemplateModel | undefined {
+    if (checkIsDeleted(idOrSlug)) return undefined;
     return this.templates.get(idOrSlug);
   }
 
@@ -81,7 +139,7 @@ export class TemplateRegistry {
     const seenIds = new Set<string>();
 
     for (const tpl of this.templates.values()) {
-      if (!seenIds.has(tpl.id)) {
+      if (!seenIds.has(tpl.id) && !checkIsDeleted(tpl.slug) && !checkIsDeleted(tpl.id)) {
         seenIds.add(tpl.id);
         if (!category || tpl.categoryId === category) {
           list.push(tpl);

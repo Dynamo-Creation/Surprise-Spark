@@ -24,19 +24,37 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { adminStore, AdminDashboardMetrics } from "@/lib/admin/adminStore";
+import { adminStore, AdminDashboardMetrics, AdminMetricsMode } from "@/lib/admin/adminStore";
 import { analyticsStore } from "@/lib/analytics/analyticsStore";
 import { PlatformGrowthMetrics } from "@/lib/analytics/types";
-import { BarChart3, Activity, ArrowDownRight, RotateCcw } from "lucide-react";
+import { BarChart3, Activity, ArrowDownRight, RotateCcw, Database } from "lucide-react";
 
 export default function AdminDashboardPage() {
+  const [metricsMode, setMetricsMode] = useState<AdminMetricsMode>("live");
   const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null);
   const [growthMetrics, setGrowthMetrics] = useState<PlatformGrowthMetrics | null>(null);
 
   useEffect(() => {
-    setMetrics(adminStore.getMetrics());
-    setGrowthMetrics(analyticsStore.getPlatformMetrics());
+    let initialMode: AdminMetricsMode = "live";
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("surprisespark_admin_metrics_mode") as AdminMetricsMode;
+      if (saved === "demo" || saved === "live") {
+        initialMode = saved;
+      }
+    }
+    setMetricsMode(initialMode);
+    setMetrics(adminStore.getMetrics(initialMode));
+    setGrowthMetrics(analyticsStore.getPlatformMetrics(initialMode));
   }, []);
+
+  const handleToggleMode = (newMode: AdminMetricsMode) => {
+    setMetricsMode(newMode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("surprisespark_admin_metrics_mode", newMode);
+    }
+    setMetrics(adminStore.getMetrics(newMode));
+    setGrowthMetrics(analyticsStore.getPlatformMetrics(newMode));
+  };
 
   if (!metrics) {
     return (
@@ -52,7 +70,7 @@ export default function AdminDashboardPage() {
       id: "total-users",
       label: "Total Users",
       value: metrics.totalUsers.toLocaleString(),
-      subtext: "Registered creator accounts",
+      subtext: metricsMode === "live" ? "Real registered creator accounts" : "Registered creator accounts (Demo)",
       icon: Users,
       color: "from-blue-500 to-cyan-500",
     },
@@ -76,7 +94,7 @@ export default function AdminDashboardPage() {
       id: "total-surprises",
       label: "Total Surprises",
       value: metrics.totalSurprises.toLocaleString(),
-      subtext: "Created on platform",
+      subtext: metricsMode === "live" ? "Real surprises in database" : "Created on platform (Demo)",
       icon: Gift,
       color: "from-pink-500 to-rose-500",
     },
@@ -115,16 +133,24 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+    <div className="space-y-6">
+      {/* Header Banner with Mode Toggle */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">
               SurpriseSpark Control Room
             </span>
-            <Badge variant="outline" size="sm" className="text-[10px] border-emerald-500/30 text-emerald-400">
-              Live Realtime
+            <Badge
+              variant="outline"
+              size="sm"
+              className={`text-[10px] font-bold ${
+                metricsMode === "live"
+                  ? "border-emerald-500/40 text-emerald-400 bg-emerald-950/20"
+                  : "border-purple-500/40 text-purple-300 bg-purple-950/20"
+              }`}
+            >
+              {metricsMode === "live" ? "Live Database Telemetry" : "Demo Presentation Dataset"}
             </Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -135,23 +161,91 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Link href="/admin/templates">
-            <Button variant="secondary" size="sm" className="text-xs font-bold" leftIcon={<Copy className="w-3.5 h-3.5" />}>
-              Duplicate Template
-            </Button>
-          </Link>
-          <Link href="/admin/scenes">
-            <Button
-              size="sm"
-              className="text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white"
-              leftIcon={<Plus className="w-3.5 h-3.5" />}
+        {/* Live vs Demo Switcher & Quick Actions */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Interactive Mode Toggle Pill */}
+          <div className="flex items-center rounded-xl bg-slate-900 border border-slate-800 p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => handleToggleMode("live")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                metricsMode === "live"
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
-              Scene Builder
-            </Button>
-          </Link>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Live Real Data
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleMode("demo")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                metricsMode === "demo"
+                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              Demo Showcase
+            </button>
+          </div>
+
+          <div className="hidden sm:block h-6 w-px bg-slate-800" />
+
+          <div className="flex items-center gap-2">
+            <Link href="/admin/templates">
+              <Button variant="secondary" size="sm" className="text-xs font-bold" leftIcon={<Copy className="w-3.5 h-3.5" />}>
+                Templates
+              </Button>
+            </Link>
+            <Link href="/admin/scenes">
+              <Button
+                size="sm"
+                className="text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white"
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
+              >
+                Scene Builder
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Mode Notice Banner */}
+      {metricsMode === "live" ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 text-xs">
+          <div className="flex items-center gap-2.5">
+            <Database className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>
+              <strong>Live Mode Active:</strong> All metrics represent real database records and creator sessions.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-emerald-400/90">
+            <span>{metrics.totalSurprises} Surprises</span>
+            <span>•</span>
+            <span>{metrics.totalOpens} Opens</span>
+            <span>•</span>
+            <span>{metrics.totalUsers} Creator(s)</span>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl bg-purple-950/25 border border-purple-500/30 text-purple-300 text-xs">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+            <span>
+              <strong>Demo Mode Active:</strong> Displaying simulated baseline data for pitch decks, QA testing, and UI evaluation.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleToggleMode("live")}
+            className="text-[11px] font-bold text-purple-300 hover:text-white underline cursor-pointer text-left sm:text-right"
+          >
+            Switch to Live Real Data →
+          </button>
+        </div>
+      )}
 
       {/* 8 Primary KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -282,50 +376,65 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {metrics.popularTemplates.map((tpl, idx) => {
-                  const sharePct = Math.round((tpl.count / metrics.totalSurprises) * 100 * 2.5);
-                  return (
-                    <tr key={tpl.slug} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="p-4 pl-6">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-5 h-5 rounded-full bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-300">
-                            #{idx + 1}
-                          </span>
-                          <div>
-                            <p className="font-bold text-white text-xs">{tpl.name}</p>
-                            <span className="text-[10px] text-slate-400 font-mono">{tpl.slug}</span>
+                {metrics.popularTemplates.length === 0 || (metricsMode === "live" && metrics.totalSurprises === 0) ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-slate-400">
+                      <p className="text-xs font-semibold text-slate-300 mb-1">
+                        No surprises created in live production yet
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        Create a surprise at <Link href="/create" className="text-purple-400 underline">/create</Link> or switch to Demo Showcase mode above to view simulated data.
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  metrics.popularTemplates.map((tpl, idx) => {
+                    const sharePct = metrics.totalSurprises > 0
+                      ? Math.min(100, Math.round((tpl.count / metrics.totalSurprises) * 100))
+                      : 0;
+                    return (
+                      <tr key={tpl.slug} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="p-4 pl-6">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-5 h-5 rounded-full bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-300">
+                              #{idx + 1}
+                            </span>
+                            <div>
+                              <p className="font-bold text-white text-xs">{tpl.name}</p>
+                              <span className="text-[10px] text-slate-400 font-mono">{tpl.slug}</span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge variant="secondary" size="sm" className="bg-purple-950/40 text-purple-300 border-purple-800/50">
-                          {tpl.category}
-                        </Badge>
-                      </td>
-                      <td className="p-4 font-bold text-white">
-                        {tpl.count.toLocaleString()}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 w-20 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className="bg-gradient-to-r from-pink-500 to-purple-500 h-full rounded-full"
-                              style={{ width: `${Math.min(100, sharePct)}%` }}
-                            />
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="secondary" size="sm" className="bg-purple-950/40 text-purple-300 border-purple-800/50">
+                            {tpl.category}
+                          </Badge>
+                        </td>
+                        <td className="p-4 font-bold text-white">
+                          {tpl.count.toLocaleString()}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 w-20 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-pink-500 to-purple-500 h-full rounded-full"
+                                style={{ width: `${Math.min(100, sharePct)}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-slate-400">{sharePct}%</span>
                           </div>
-                          <span className="text-[10px] text-slate-400">{sharePct}%</span>
-                        </div>
-                      </td>
-                      <td className="p-4 pr-6 text-right">
-                        <Link href={`/admin/scenes?template=${tpl.slug}`}>
-                          <Button variant="outline" size="sm" className="h-7 text-xs border-slate-700 hover:border-purple-500">
-                            Configure
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="p-4 pr-6 text-right">
+                          <Link href={`/admin/scenes?template=${tpl.slug}`}>
+                            <Button variant="outline" size="sm" className="h-7 text-xs border-slate-700 hover:border-purple-500">
+                              Configure
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -347,7 +456,7 @@ export default function AdminDashboardPage() {
                       <p className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
                         Duplicate Template
                       </p>
-                      <p className="text-[10px] text-slate-400">Clone Magic Gift to Valentine Edition</p>
+                      <p className="text-[10px] text-slate-400">Clone Sweet Celebration to Custom Edition</p>
                     </div>
                   </div>
                   <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />

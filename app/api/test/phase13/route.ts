@@ -40,17 +40,10 @@ export async function GET() {
 
   try {
     // ----------------------------------------------------
-    // Test 1: All 8 Birthday Templates Integrity & Registry
+    // Test 1: Sweet Celebration Template Integrity & Registry
     // ----------------------------------------------------
     const expectedSlugs = [
-      "magic-gift",
-      "birthday-cake-reveal",
-      "balloon-room",
-      "mystery-door",
-      "memory-journey",
-      "confetti-blast",
-      "rainbow-surprise",
-      "cute-character",
+      "sweet-celebration",
     ];
 
     const registryTemplates = expectedSlugs.map((slug) => ({
@@ -66,10 +59,10 @@ export async function GET() {
       const tpl = item.template;
       if (!tpl || !tpl.versions || tpl.versions.length === 0) return false;
       const ver = tpl.versions[0];
-      return ver.scenes.length >= 7 && ver.scenes.every((sc) => sc.id && sc.name && sc.order >= 1);
+      return ver.scenes.length >= 3 && ver.scenes.every((sc) => sc.id && sc.name && sc.order >= 1);
     });
 
-    recordTest("birthday_templates", "All 8 Signature Birthday Templates Registered", allSlugsRegistered && allScenesValid, {
+    recordTest("birthday_templates", "Sweet Celebration Template Registered & Valid", allSlugsRegistered && allScenesValid, {
       expectedCount: expectedSlugs.length,
       actualCount: registryTemplates.filter((i) => i.template !== undefined).length,
       slugs: expectedSlugs,

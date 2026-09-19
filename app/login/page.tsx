@@ -75,7 +75,15 @@ function LoginForm() {
     };
     localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
     document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
-    window.location.href = "/admin";
+    const demoUser = {
+      id: user?.id || "admin-root",
+      email: adminEmail,
+      user_metadata: { full_name: displayName, role: "superadmin" },
+      role: "authenticated",
+    };
+    document.cookie = `demo_user_session=${encodeURIComponent(JSON.stringify(demoUser))}; path=/; max-age=86400; SameSite=Lax`;
+    const redirectTarget = searchParams.get("redirect") || "/admin";
+    window.location.href = redirectTarget;
   };
 
   // Traditional password login
@@ -246,14 +254,25 @@ function LoginForm() {
       {/* Login Card */}
       <Card glass className="p-6 sm:p-8 space-y-5 border-slate-200 dark:border-slate-800">
         {redirect?.startsWith("/admin") && (
-          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-850 flex items-start gap-2.5 text-xs text-purple-700 dark:text-purple-300 animate-in fade-in duration-200">
-            <Shield className="w-4 h-4 shrink-0 mt-0.5 text-purple-500" />
-            <div>
-              <p className="font-bold">Admin Console Sign In</p>
-              <p className="text-[11px] text-purple-600/90 dark:text-purple-300/80 mt-0.5">
-                Sign in with your administrator account (e.g. <strong>admin@surprisespark.app</strong>) to access the CMS management consoles.
-              </p>
+          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-850 flex flex-col gap-2.5 text-xs text-purple-700 dark:text-purple-300 animate-in fade-in duration-200">
+            <div className="flex items-start gap-2.5">
+              <Shield className="w-4 h-4 shrink-0 mt-0.5 text-purple-500" />
+              <div>
+                <p className="font-bold">Admin Console Access</p>
+                <p className="text-[11px] text-purple-600/90 dark:text-purple-300/80 mt-0.5">
+                  Sign in with admin credentials or click below to enter the Executive CMS directly.
+                </p>
+              </div>
             </div>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleElevateAdmin}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white font-bold text-xs shadow-sm cursor-pointer"
+              leftIcon={<Shield className="w-3.5 h-3.5" />}
+            >
+              Enter Admin Console as Superadmin 🛡️
+            </Button>
           </div>
         )}
 

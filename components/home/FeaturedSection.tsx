@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { cn } from "@/lib/utils";
-import { MOCK_TEMPLATES } from "@/lib/constants";
+import { MOCK_TEMPLATES, getVisibleTemplates } from "@/lib/constants";
 import { Template } from "@/types/template";
 import styles from "./Featured3DCard.module.css";
 
@@ -110,17 +110,15 @@ const TEMPLATE_META: Record<
 };
 
 export function FeaturedSection() {
-  // Spotlight signature featured birthday wonder templates including Sweet Celebration
-  const FEATURED_SLUGS = [
-    "magic-gift",
-    "birthday-cake-reveal",
-    "sweet-celebration",
-    "balloon-room",
-  ];
+  // Spotlight signature featured template: Sweet Celebration
+  const FEATURED_SLUGS = useMemo(() => ["sweet-celebration"], []);
 
-  const featuredTemplates = FEATURED_SLUGS.map((slug) =>
-    MOCK_TEMPLATES.find((t) => t.slug === slug)
-  ).filter(Boolean) as Template[];
+  const featuredTemplates = useMemo(() => {
+    const list = FEATURED_SLUGS.map((slug) =>
+      MOCK_TEMPLATES.find((t) => t.slug === slug)
+    ).filter(Boolean) as Template[];
+    return list.length > 0 ? list : MOCK_TEMPLATES.filter((t) => t.category === "birthday");
+  }, [FEATURED_SLUGS]);
 
   return (
     <section className="py-16 md:py-24 bg-slate-50/60 dark:bg-slate-900/30 border-y border-slate-100 dark:border-slate-800/80 relative overflow-hidden">
@@ -146,7 +144,16 @@ export function FeaturedSection() {
         </div>
 
         {/* 3D Template Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-7">
+        <div
+          className={cn(
+            "grid gap-6 sm:gap-7",
+            featuredTemplates.length === 1
+              ? "max-w-md mx-auto"
+              : featuredTemplates.length === 2
+              ? "max-w-3xl mx-auto grid-cols-1 md:grid-cols-2"
+              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4"
+          )}
+        >
           {featuredTemplates.map((template) => {
             const meta = TEMPLATE_META[template.slug] || {
               gradientClass: styles.gradientGift,
@@ -261,40 +268,36 @@ export function FeaturedSection() {
                         })}
                       </div>
 
-                      {/* Template-Accented Action Buttons: Frosted Aura Live Demo & Magic UI ShimmerButton */}
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Template-Accented Action Buttons: Frosted Aura Live Demo & Customize */}
+                      <div className="flex items-center gap-2 shrink-0">
                         {/* Live Demo: Frosted Aura Button with Template Border Glow */}
-                        <Link href={`/preview?template=${template.slug}`} className="block">
-                          <button
-                            type="button"
-                            className={cn(
-                              "group/demo relative inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer",
-                              "bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/90",
-                              "text-slate-700 dark:text-slate-200 transition-all duration-300",
-                              "hover:scale-[1.04] active:scale-95 shadow-xs",
-                              meta.demoBorderHover
-                            )}
-                          >
-                            <Eye className={cn("w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/demo:scale-115", meta.demoIconColor)} />
-                            <span>Live Demo</span>
-                          </button>
+                        <Link
+                          href={`/preview?template=${template.slug}`}
+                          className={cn(
+                            "group/demo relative inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer",
+                            "bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/90",
+                            "text-slate-700 dark:text-slate-200 transition-all duration-300",
+                            "hover:scale-[1.04] active:scale-95 shadow-xs",
+                            meta.demoBorderHover
+                          )}
+                        >
+                          <Eye className={cn("w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/demo:scale-115", meta.demoIconColor)} />
+                          <span>Live Demo</span>
                         </Link>
 
-                        {/* Customize: Magic UI ShimmerButton with Template Custom Gradient & Light Beam */}
-                        <Link href={`/create?template=${template.slug}`} className="block">
-                          <ShimmerButton
-                            shimmerColor={meta.shimmerColor}
-                            background={meta.buttonGradient}
-                            borderRadius="12px"
-                            shimmerDuration="2.4s"
-                            shimmerSize="0.08em"
-                            className="h-8 px-3 text-xs font-bold tracking-tight whitespace-nowrap shadow-md hover:scale-[1.04] transition-transform cursor-pointer"
-                          >
-                            <span className="flex items-center gap-1">
-                              <span>Customize</span>
-                              <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
-                            </span>
-                          </ShimmerButton>
+                        {/* Customize: Template Custom Gradient with Shimmer Beam */}
+                        <Link
+                          href={`/create?template=${template.slug}`}
+                          style={{
+                            background: meta.buttonGradient,
+                          }}
+                          className="relative inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-xl text-xs font-bold text-white tracking-tight whitespace-nowrap shadow-md hover:scale-[1.04] active:scale-95 transition-all duration-300 cursor-pointer overflow-hidden group/cust"
+                        >
+                          <span className="relative z-10 flex items-center gap-1">
+                            <span>Customize</span>
+                            <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/cust:translate-x-0.5" />
+                          </span>
+                          <span className="absolute inset-0 -translate-x-full group-hover/cust:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
                         </Link>
                       </div>
                     </div>

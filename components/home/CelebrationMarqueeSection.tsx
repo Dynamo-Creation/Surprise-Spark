@@ -19,8 +19,8 @@ const TESTIMONIALS_ROW_1: Testimonial[] = [
     role: "Surprised his partner Sarah",
     avatarUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80",
     gender: "male",
-    content: "She blew out the 3D candles on FaceTime and started crying happy tears! Truly unforgettable.",
-    tag: "Magic Gift 🎁",
+    content: "The interactive letterbox and typewriter notes brought tears of joy on FaceTime! Truly unforgettable.",
+    tag: "Sweet Celebration 💌",
   },
   {
     name: "Elena R.",
@@ -35,16 +35,16 @@ const TESTIMONIALS_ROW_1: Testimonial[] = [
     role: "Created for Mom's 60th",
     avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
     gender: "male",
-    content: "Dynamic confetti, background melody, and floating polaroids brought my whole family together.",
-    tag: "Memory Journey 📸",
+    content: "Dynamic celebratory bunting, background melody, and polaroid frame brought our whole family together.",
+    tag: "Sweet Memories 📸",
   },
   {
     name: "Priya N.",
     role: "Surprised her boyfriend",
     avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
     gender: "female",
-    content: "He spent 20 minutes tapping the balloons and reading all the hidden notes. Pure magic!",
-    tag: "Balloon Room 🎈",
+    content: "He spent 20 minutes tapping the letterbox and reading all the sweet personal notes. Pure magic!",
+    tag: "Sweet Birthday 🎈",
   },
 ];
 
@@ -54,8 +54,8 @@ const TESTIMONIALS_ROW_2: Testimonial[] = [
     role: "Anniversary surprise",
     avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80",
     gender: "male",
-    content: "Way more meaningful than a paper card or text. Felt like handing her a personalized video game world.",
-    tag: "Rainbow Surprise 🌈",
+    content: "Way more meaningful than a paper card or text. Felt like handing her a personalized interactive celebration world.",
+    tag: "Letterbox Magic 💌",
   },
   {
     name: "Chloe D.",
@@ -63,7 +63,7 @@ const TESTIMONIALS_ROW_2: Testimonial[] = [
     avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80",
     gender: "female",
     content: "The 3D unboxing animation gave everyone in the room genuine goosebumps. Everyone asked for the link!",
-    tag: "Confetti Blast 🎊",
+    tag: "Sweet Celebration 🎊",
   },
   {
     name: "Aiden W.",
@@ -78,8 +78,8 @@ const TESTIMONIALS_ROW_2: Testimonial[] = [
     role: "Best friend's 25th",
     avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&auto=format&fit=crop&q=80",
     gender: "female",
-    content: "The audio sync with the tapping candle sequence is so satisfying. 10/10 recommendation!",
-    tag: "Birthday Cake Reveal 🍰",
+    content: "The heart cursor trail and typewriter message sequence is so heartwarming. 10/10 recommendation!",
+    tag: "Sweet Celebration 🎂",
   },
 ];
 

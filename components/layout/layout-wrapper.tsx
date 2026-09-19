@@ -7,10 +7,10 @@ import { Footer } from "./footer";
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Recipient public experience is full-screen and distraction-free
-  const isRecipientExperience = pathname?.startsWith("/s/");
+  // Recipient public experience and Admin CMS are full-screen and distraction-free
+  const isDedicatedLayout = pathname?.startsWith("/s/") || pathname?.startsWith("/admin");
 
-  if (isRecipientExperience) {
+  if (isDedicatedLayout) {
     return <main className="flex-1 w-full min-h-screen">{children}</main>;
   }
 

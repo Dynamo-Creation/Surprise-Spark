@@ -77,7 +77,7 @@ export function saveDraft(data: Partial<DraftSurprise>): DraftSurprise {
       id: data.id || "draft_" + Math.random().toString(36).substring(2, 10),
       publicId: data.publicId || generatePublicId(),
       userId: data.userId,
-      templateSlug: data.templateSlug || "magic-gift",
+      templateSlug: data.templateSlug || "sweet-celebration",
       recipientName: data.recipientName || "Someone Special",
       senderName: data.senderName || "",
       message: data.message || "",

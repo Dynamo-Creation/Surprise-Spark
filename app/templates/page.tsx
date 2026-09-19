@@ -6,13 +6,15 @@ import { Search, Sparkles, Filter, Layers, ArrowRight, Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { CATEGORIES, MOCK_TEMPLATES } from "@/lib/constants";
+import { CATEGORIES, MOCK_TEMPLATES, getVisibleTemplates } from "@/lib/constants";
 
 export default function TemplatesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredTemplates = MOCK_TEMPLATES.filter((template) => {
+  const visibleTemplates = getVisibleTemplates(MOCK_TEMPLATES);
+
+  const filteredTemplates = visibleTemplates.filter((template) => {
     const matchesCategory =
       selectedCategory === "all" || template.category === selectedCategory;
     const matchesSearch =
@@ -63,7 +65,7 @@ export default function TemplatesPage() {
                 : "bg-white dark:bg-slate-850 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
-            All Categories ({MOCK_TEMPLATES.length})
+            All Categories ({visibleTemplates.length})
           </button>
           {CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat.id;

@@ -7,20 +7,12 @@ import { Smartphone, Monitor, ArrowLeft, ExternalLink, RotateCcw, Sparkles } fro
 import { Button } from "@/components/ui/button";
 
 const TEMPLATES_LIST = [
-  { slug: "magic-gift", name: "Magic Gift 🎁" },
-  { slug: "birthday-cake-reveal", name: "Cake Reveal 🎂" },
-  { slug: "balloon-room", name: "Balloon Room 🎈" },
-  { slug: "mystery-door", name: "Mystery Door 🚪" },
-  { slug: "memory-journey", name: "Memory Journey 📸" },
-  { slug: "confetti-blast", name: "Confetti Blast 🎉" },
-  { slug: "rainbow-surprise", name: "Rainbow Surprise 🌈" },
-  { slug: "cute-character", name: "Cute Character 🧸" },
   { slug: "sweet-celebration", name: "Sweet Celebration 💌" },
 ];
 
 function PreviewContent() {
   const searchParams = useSearchParams();
-  const initialTemplate = searchParams.get("template") || "magic-gift";
+  const initialTemplate = searchParams.get("template") || "sweet-celebration";
 
   const [activeTemplate, setActiveTemplate] = useState<string>(initialTemplate);
   const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile");

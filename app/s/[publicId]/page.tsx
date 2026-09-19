@@ -72,11 +72,14 @@ export default async function RecipientSurprisePage({
       : "Happy Birthday! Wishing you a day as brilliant, vibrant, and unforgettable as you are!");
 
   // Resolve Template Definition from TemplateRegistry
-  const templateSlug = query.template || "magic-gift";
+  const templateSlug = query.template || "sweet-celebration";
   const resolvedTemplate =
-    templateRegistry.getTemplate(templateSlug) || templateRegistry.getTemplate("magic-gift")!;
+    templateRegistry.getTemplate(templateSlug) ||
+    templateRegistry.getTemplate("sweet-celebration") ||
+    templateRegistry.listTemplates()[0];
   const resolvedVersion =
-    resolvedTemplate.versions?.[0] || templateRegistry.getTemplateVersion("ver-magic-gift-1-0-0")!;
+    resolvedTemplate?.versions?.[0] ||
+    templateRegistry.getTemplateVersion("ver-sweet-celebration-1-0-0")!;
 
   // Handle Photos (supporting up to 5 photos with dynamic skipping for unused photo scenes)
   let photosList: string[] = [];

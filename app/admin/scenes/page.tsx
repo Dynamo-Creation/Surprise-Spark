@@ -33,7 +33,7 @@ import { ExperiencePlayer } from "@/components/engine/ExperiencePlayer";
 
 function SceneBuilderContent() {
   const searchParams = useSearchParams();
-  const initialTplSlug = searchParams.get("template") || "magic-gift";
+  const initialTplSlug = searchParams.get("template") || "sweet-celebration";
 
   const [templates, setTemplates] = useState<TemplateModel[]>(adminStore.listTemplates());
   const [selectedTplSlug, setSelectedTplSlug] = useState<string>(initialTplSlug);

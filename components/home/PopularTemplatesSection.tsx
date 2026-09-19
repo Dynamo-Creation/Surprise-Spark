@@ -6,7 +6,7 @@ import { Sparkles, ArrowRight, Layers, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { MOCK_TEMPLATES } from "@/lib/constants";
+import { MOCK_TEMPLATES, getVisibleTemplates } from "@/lib/constants";
 import { ExperienceCategory } from "@/types/experience";
 
 export function PopularTemplatesSection() {
@@ -20,10 +20,11 @@ export function PopularTemplatesSection() {
     { id: "friendship", name: "Best Friend 🤝" },
   ];
 
+  const visible = getVisibleTemplates(MOCK_TEMPLATES);
   const filteredTemplates =
     selectedCategory === "all"
-      ? MOCK_TEMPLATES
-      : MOCK_TEMPLATES.filter((t) => t.category === selectedCategory);
+      ? visible
+      : visible.filter((t) => t.category === selectedCategory);
 
   return (
     <section className="py-16 md:py-24 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800/80">

@@ -77,7 +77,7 @@ export default function DashboardPage() {
           id: "draft-demo-1",
           publicId: "maya-24-magic",
           userId: user?.id,
-          templateSlug: "magic-gift",
+          templateSlug: "sweet-celebration",
           recipientName: "Maya",
           senderName: profile?.fullName || "Alex",
           message: "Happy Birthday Maya! Wishing you another year of crazy adventures and endless laughter!",

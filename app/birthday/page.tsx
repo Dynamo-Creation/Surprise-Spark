@@ -4,7 +4,7 @@ import { Cake, Sparkles, PartyPopper, Heart, Music, ArrowRight, Check } from "lu
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { MOCK_TEMPLATES } from "@/lib/constants";
+import { MOCK_TEMPLATES, getVisibleTemplates } from "@/lib/constants";
 
 export const metadata = {
   title: "Birthday Surprises — Interactive 3D Birthday Experiences",
@@ -12,7 +12,7 @@ export const metadata = {
 };
 
 export default function BirthdayPage() {
-  const birthdayTemplates = MOCK_TEMPLATES.filter((t) => t.category === "birthday");
+  const birthdayTemplates = getVisibleTemplates(MOCK_TEMPLATES).filter((t) => t.category === "birthday");
 
   return (
     <div className="py-12 md:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">

@@ -30,6 +30,7 @@ import { Card } from "@/components/ui/card";
 import { MOCK_TEMPLATES } from "@/lib/constants";
 import { ALL_BIRTHDAY_TEMPLATES } from "@/lib/engine/templates";
 import { templateRegistry } from "@/lib/engine/templateRegistry";
+import { isTemplateDeleted } from "@/lib/admin/adminStore";
 import { THEMES, THEME_LIST, ThemeId, ThemeConfig } from "@/lib/engine/themes";
 import { MUSIC_CATEGORIES, MUSIC_TRACKS, MusicCategory, MusicTrack } from "@/lib/engine/musicCatalog";
 import { soundManager } from "@/lib/audio/soundManager";
@@ -67,7 +68,7 @@ function CreateStudioContent() {
 
   // Step 1: Template
   const [selectedTemplateSlug, setSelectedTemplateSlug] = useState<string>(
-    templateSlugParam || "magic-gift"
+    templateSlugParam || "sweet-celebration"
   );
   const [pendingTemplateSlug, setPendingTemplateSlug] = useState<string | null>(null);
   const [showTemplateWarnModal, setShowTemplateWarnModal] = useState(false);
@@ -105,7 +106,7 @@ function CreateStudioContent() {
       if (existing) {
         setDraftId(existing.id);
         setPublicId(existing.publicId);
-        setSelectedTemplateSlug(existing.templateSlug || "magic-gift");
+        setSelectedTemplateSlug(existing.templateSlug || "sweet-celebration");
         setRecipientName(existing.recipientName || "Maya");
         setSenderName(existing.senderName || "");
         setCustomMessage(existing.message || "");
@@ -121,18 +122,34 @@ function CreateStudioContent() {
     }
   }, [editId]);
 
+  const availableBirthdayTemplates = useMemo(() => {
+    return ALL_BIRTHDAY_TEMPLATES.filter((tpl) => !isTemplateDeleted(tpl.slug));
+  }, []);
+
+  useEffect(() => {
+    if (isTemplateDeleted(selectedTemplateSlug)) {
+      const active = ALL_BIRTHDAY_TEMPLATES.find((tpl) => !isTemplateDeleted(tpl.slug));
+      if (active) {
+        setSelectedTemplateSlug(active.slug);
+      }
+    }
+  }, [selectedTemplateSlug]);
+
   // Resolve template from registry
   const currentTemplate = useMemo(() => {
     return (
       templateRegistry.getTemplate(selectedTemplateSlug) ||
-      templateRegistry.getTemplate("magic-gift")!
+      templateRegistry.getTemplate("sweet-celebration") ||
+      templateRegistry.listTemplates()[0] ||
+      ALL_BIRTHDAY_TEMPLATES[0]
     );
   }, [selectedTemplateSlug]);
 
   const currentVersion = useMemo(() => {
     return (
-      currentTemplate.versions?.[0] ||
-      templateRegistry.getTemplateVersion("ver-magic-gift-1-0-0")!
+      currentTemplate?.versions?.[0] ||
+      templateRegistry.getTemplateVersion("ver-sweet-celebration-1-0-0") ||
+      ALL_BIRTHDAY_TEMPLATES[0]?.versions?.[0]
     );
   }, [currentTemplate]);
 
@@ -386,12 +403,12 @@ function CreateStudioContent() {
               <span>Step 1 — Choose 3D Experience Template</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Select any of the 8 production birthday experiences. You can change your selection at any time.
+              Select the Sweet Celebration experience or custom editions. You can customize personal details at any time.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {ALL_BIRTHDAY_TEMPLATES.map((tpl) => {
+            {availableBirthdayTemplates.map((tpl) => {
               const isSelected = selectedTemplateSlug === tpl.slug;
               const mock = MOCK_TEMPLATES.find((m) => m.slug === tpl.slug);
 
