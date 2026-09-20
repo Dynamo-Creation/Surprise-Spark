@@ -111,51 +111,16 @@
         canvas.style.display = 'block';
         overlay.style.display = 'flex';
 
-        // Particle configuration & state variables defined before resize to prevent temporal dead zone ReferenceErrors
-        const particleCount = 1300;
-        const particles = [];
-        const clickHearts = [];
-        const rosePetals = [];
-        const offscreenCanvas = document.createElement('canvas');
-
-        // Draw a crisp heart at coordinates helper
-        function drawTinyHeart(ctx, x, y, size) {
-          ctx.beginPath();
-          const d = size * 1.35;
-          ctx.moveTo(x, y + d * 0.3);
-          ctx.bezierCurveTo(x, y - d * 0.45, x - d * 0.95, y - d * 0.45, x - d * 0.95, y + d * 0.2);
-          ctx.bezierCurveTo(x - d * 0.95, y + d * 0.7, x - d * 0.45, y + d * 1.05, x, y + d * 1.4);
-          ctx.bezierCurveTo(x + d * 0.45, y + d * 1.05, x + d * 0.95, y + d * 0.7, x + d * 0.95, y + d * 0.2);
-          ctx.bezierCurveTo(x + d * 0.95, y - d * 0.45, x, y - d * 0.45, x, y + d * 0.3);
-          ctx.closePath();
-          ctx.fill();
-        }
-
-        // Initialize particles with a portion starting on-screen to be revealed seamlessly by the scanline
-        for (let i = 0; i < particleCount; i++) {
-          const px = Math.random() * (window.innerWidth || 800);
-          const py = Math.random() * (window.innerHeight || 600) * 1.5 - (window.innerHeight || 600) * 0.5;
-          particles.push({
-            x: px,
-            y: py,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: 0.5 + Math.random() * 0.8, // gentle slow drift matching React configuration
-            targetX: px,
-            targetY: py,
-            originalTargetX: px,
-            originalTargetY: py,
-            size: Math.random() * 1.8 + 1,
-            baseSize: Math.random() * 1.8 + 1,
-            alpha: 0.1 + Math.random() * 0.8,
-            color: '#ffffff',
-            isSpare: true,
-            angle: Math.random() * Math.PI * 2,
-            speed: 0.2 + Math.random() * 0.8
-          });
-        }
-
         // Set high-DPI canvas bounds
         const ctx = canvas.getContext('2d');
+        function resize() {
+          const dpr = window.devicePixelRatio || 1;
+          canvas.width = window.innerWidth * dpr;
+          canvas.height = window.innerHeight * dpr;
+          ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
         // Standard timeline setup matching original config
         const slides = [
@@ -280,20 +245,62 @@
           }
         }
 
+        // Particle configuration & state variables
+        const particleCount = 1300;
+        const particles = [];
+        const clickHearts = [];
+        const rosePetals = [];
+        const offscreenCanvas = document.createElement('canvas');
+
+        // Draw a crisp heart at coordinates helper
+        function drawTinyHeart(ctx, x, y, size) {
+          ctx.beginPath();
+          const d = size * 1.35;
+          ctx.moveTo(x, y + d * 0.3);
+          ctx.bezierCurveTo(x, y - d * 0.45, x - d * 0.95, y - d * 0.45, x - d * 0.95, y + d * 0.2);
+          ctx.bezierCurveTo(x - d * 0.95, y + d * 0.7, x - d * 0.45, y + d * 1.05, x, y + d * 1.4);
+          ctx.bezierCurveTo(x + d * 0.45, y + d * 1.05, x + d * 0.95, y + d * 0.7, x + d * 0.95, y + d * 0.2);
+          ctx.bezierCurveTo(x + d * 0.95, y - d * 0.45, x, y - d * 0.45, x, y + d * 0.3);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Initialize particles with a portion starting on-screen to be revealed seamlessly by the scanline
+        for (let i = 0; i < particleCount; i++) {
+          const px = Math.random() * window.innerWidth;
+          const py = Math.random() * window.innerHeight * 1.5 - window.innerHeight * 0.5;
+          particles.push({
+            x: px,
+            y: py,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: 0.5 + Math.random() * 0.8, // gentle slow drift matching React configuration
+            targetX: px,
+            targetY: py,
+            originalTargetX: px,
+            originalTargetY: py,
+            size: Math.random() * 1.8 + 1,
+            baseSize: Math.random() * 1.8 + 1,
+            alpha: 0.1 + Math.random() * 0.8,
+            color: '#ffffff',
+            isSpare: true,
+            angle: Math.random() * Math.PI * 2,
+            speed: 0.2 + Math.random() * 0.8
+          });
+        }
+
         // Generate parametric heart points - adaptively scale up for longer text so it fits beautifully
         function sampleHeartPoints(w, h, count, heartText = "I Love ❤️ You") {
           const pts = [];
           const centerX = w / 2;
-          const centerY = h / 2 - h * 0.04;
+          const centerY = h / 2 - h * 0.05;
           const textLen = heartText ? heartText.length : 12;
-          const minDim = Math.min(w, h);
-          let scale = minDim * 0.021;
+          let scale = Math.min(w, h) * 0.016;
           if (textLen > 12) {
-            scale = minDim * (0.021 + Math.min(0.009, (textLen - 12) * 0.0012));
+            scale = Math.min(w, h) * (0.016 + Math.min(0.008, (textLen - 12) * 0.0011));
           }
 
           for (let layer = 0; layer < 2; layer++) {
-            const currentScale = scale - layer * 0.8;
+            const currentScale = scale - layer * 0.6;
             for (let i = 0; i < count / 2; i++) {
               const t = (i / (count / 2)) * Math.PI * 2;
               const xVal = 16 * Math.pow(Math.sin(t), 3);
@@ -307,7 +314,7 @@
           return pts;
         }
 
-        // Rasterize text points
+        // Rasterize text text points
         function sampleTextPoints(text, w, h) {
           const upperText = text.toUpperCase();
           offscreenCanvas.width = w;
@@ -318,12 +325,11 @@
           oCtx.fillStyle = '#000000';
           oCtx.fillRect(0, 0, w, h);
 
-          const minDim = Math.min(w, h);
-          let fontSize = Math.floor(minDim * 0.22);
+          let fontSize = Math.floor(w * 0.18);
           if (upperText.length > 4) {
-            fontSize = Math.floor(minDim * (0.9 / upperText.length));
+            fontSize = Math.floor(w * (0.8 / upperText.length));
           }
-          fontSize = Math.min(fontSize, Math.floor(h * 0.45));
+          fontSize = Math.min(fontSize, Math.floor(h * 0.5));
           fontSize = Math.max(fontSize, 28);
 
           oCtx.font = `900 ${fontSize}px "Space Grotesk", sans-serif`;
@@ -335,8 +341,7 @@
           const imgData = oCtx.getImageData(0, 0, w, h);
           const data = imgData.data;
           const pts = [];
-          // Uniform dense step across all screens so text is never faint or sparse on tablet/desktop
-          const step = Math.max(2, Math.min(3, Math.floor(minDim / 240)));
+          const step = Math.max(2, Math.floor((w * h) / 100000));
 
           for (let y = 0; y < h; y += step) {
             for (let x = 0; x < w; x += step) {
@@ -403,29 +408,6 @@
             }
           }
         }
-
-        // Window resize handler with target coordinate recalculation for tablet and desktop responsiveness
-        function resize() {
-          const dpr = window.devicePixelRatio || 1;
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-          canvas.width = w * dpr;
-          canvas.height = h * dpr;
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-          if (typeof particles !== 'undefined' && Array.isArray(particles)) {
-            for (let i = 0; i < particles.length; i++) {
-              if (particles[i].x > w) particles[i].x = Math.random() * w;
-              if (particles[i].y > h) particles[i].y = Math.random() * h;
-            }
-          }
-
-          if (typeof triggerSlideTransition === 'function' && typeof currentSlideIdx !== 'undefined' && currentSlideIdx >= 0) {
-            triggerSlideTransition(currentSlideIdx);
-          }
-        }
-        window.addEventListener('resize', resize);
-        resize();
 
         // Periodic heartbeat timer for centerpiece
         let lastHeartbeatTrigger = 0;
@@ -620,7 +602,7 @@
 
               if (isHeartSlide) {
                 const centerXP = window.innerWidth / 2;
-                const dirtyYP = window.innerHeight / 2 - window.innerHeight * 0.04;
+                const dirtyYP = window.innerHeight / 2 - window.innerHeight * 0.05;
                 const dx = p.originalTargetX - centerXP;
                 const dy = p.originalTargetY - dirtyYP;
                 targetX = centerXP + dx * heartPulse;
@@ -703,8 +685,7 @@
             ctx.textBaseline = 'middle';
 
             const cx = window.innerWidth / 2;
-            const cy = window.innerHeight / 2 - window.innerHeight * 0.04;
-            const minDim = Math.min(window.innerWidth, window.innerHeight);
+            const cy = window.innerHeight / 2 - window.innerHeight * 0.05;
 
             // Large Title - adaptively scale down font size for longer messages
             const textLen = heartText.length;
@@ -712,15 +693,15 @@
             if (textLen > 12) {
               fontSizeMultiplier = Math.max(0.62, 12 / textLen);
             }
-            const sizeMain = Math.max(22, Math.floor(minDim * 0.065 * fontSizeMultiplier) * textPulse);
+            const sizeMain = Math.max(22, Math.floor(window.innerWidth * 0.038 * fontSizeMultiplier) * textPulse);
             ctx.font = `900 ${sizeMain}px "Space Grotesk", sans-serif`;
             ctx.fillText(heartText, cx, cy);
 
             // Subtitle
-            const sizeSub = Math.max(12, Math.floor(minDim * 0.030 * fontSizeMultiplier) * textPulse);
+            const sizeSub = Math.max(11, Math.floor(window.innerWidth * 0.02 * fontSizeMultiplier) * textPulse);
             ctx.font = `500 ${sizeSub}px "Inter", sans-serif`;
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(heartSubText, cx, cy + sizeMain * 1.4);
+            ctx.fillText(heartSubText, cx, cy + sizeMain * 1.45);
             ctx.restore();
           }
 

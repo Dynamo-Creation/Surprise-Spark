@@ -18,19 +18,19 @@ export async function GET(request: NextRequest) {
 
     const rootDir = process.cwd();
     // Resolve slug and common aliases (e.g. lov-animation -> love-animation)
-    const targetSlugs = [slug];
-    if (slug === "lov-animation") targetSlugs.push("love-animation");
-    if (slug === "love-animation") targetSlugs.push("lov-animation");
+    const effectiveSlug = slug === "lov-animation" ? "love-animation" : slug;
+    const targetSlugs = [effectiveSlug];
+    if (slug !== effectiveSlug) targetSlugs.push(slug);
 
-    // Check multiple candidate locations for index.html
+    // Check multiple candidate locations for index.html - prioritize dist for compiled Vite/React apps
     const candidates: string[] = [];
     for (const s of targetSlugs) {
       candidates.push(
-        path.join(rootDir, "public", "templates", s, "index.html"),
         path.join(rootDir, "public", "templates", s, "dist", "index.html"),
+        path.join(rootDir, "lib", "engine", "templates", "custom", s, "dist", "index.html"),
+        path.join(rootDir, "public", "templates", s, "index.html"),
         path.join(rootDir, "public", "templates", s, "build", "index.html"),
-        path.join(rootDir, "lib", "engine", "templates", "custom", s, "index.html"),
-        path.join(rootDir, "lib", "engine", "templates", "custom", s, "dist", "index.html")
+        path.join(rootDir, "lib", "engine", "templates", "custom", s, "index.html")
       );
     }
 
@@ -140,6 +140,16 @@ export async function GET(request: NextRequest) {
       .replace(/window\.location\.port === ["']3000["']/g, "false")
       .replace(/window\.location\.hostname\.includes\(["']run\.app["']\)/g, "false");
 
+    // Inject base href for compiled dist bundles so scripts, styles, and assets resolve correctly
+    if (foundPath.includes("dist")) {
+      const baseTag = `<base href="/templates/${effectiveSlug}/dist/">`;
+      if (patchedHtml.includes("<head>")) {
+        patchedHtml = patchedHtml.replace("<head>", `<head>\n    ${baseTag}`);
+      } else {
+        patchedHtml = baseTag + patchedHtml;
+      }
+    }
+
     // Dynamically inject personalized recipient/sender text into templates with hardcoded texts
     if (recipientName && recipientName !== "Sarah") {
       patchedHtml = patchedHtml.replace(
@@ -154,44 +164,51 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Automatically trigger standalone app if present
+    // Automatically trigger preview interactions
     const autoTriggerScript = `
     <script>
       (function() {
-        console.log("[Live Preview Panel] Initializing template animation preview...");
+        console.log("[Live Preview Panel] Initializing template animation preview for ${effectiveSlug}...");
         window.isTemplatePreview = true;
         window.recipientName = ${JSON.stringify(recipientName)};
         window.senderName = ${JSON.stringify(senderName)};
         window.customMessage = ${JSON.stringify(message)};
 
         function autoLaunch() {
-          if (!window._previewStarted && typeof initStandaloneApp === "function") {
+          var rootEl = document.getElementById("root");
+          var isReactApp = rootEl && (rootEl.children.length > 0 || window.reactActive);
+
+          // Only invoke fallback standalone canvas if React bundle is not active
+          if (!isReactApp && !window._previewStarted && typeof initStandaloneApp === "function") {
             window._previewStarted = true;
             try {
               initStandaloneApp();
-              console.log("[Live Preview Panel] initStandaloneApp started successfully");
+              console.log("[Live Preview Panel] initStandaloneApp started as fallback");
             } catch(e) {
               console.warn("[Live Preview Panel] initStandaloneApp error:", e);
             }
           }
-          // Simulate overlay click to begin timeline and sound
+
+          // Trigger start interactions
           setTimeout(function() {
-            var overlay = document.getElementById("fallbackOverlay");
-            if (overlay) {
-              overlay.click();
+            if (!isReactApp) {
+              var overlay = document.getElementById("fallbackOverlay");
+              if (overlay) {
+                overlay.click();
+              }
             }
             var playBtn = document.querySelector(".play-button, .btn-play, #playBtn");
             if (playBtn) {
               playBtn.click();
             }
-          }, 150);
+          }, 300);
         }
 
         if (document.readyState === "complete" || document.readyState === "interactive") {
-          setTimeout(autoLaunch, 200);
+          setTimeout(autoLaunch, 250);
         } else {
           window.addEventListener("DOMContentLoaded", function() {
-            setTimeout(autoLaunch, 200);
+            setTimeout(autoLaunch, 250);
           });
         }
       })();

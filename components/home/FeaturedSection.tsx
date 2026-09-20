@@ -91,6 +91,22 @@ const TEMPLATE_META: Record<
       { icon: Sparkles, color: "text-amber-500", title: "Celebration Bunting" },
     ],
   },
+  "love-animation": {
+    gradientClass: styles.gradientSweet,
+    circleClass: styles.circleSweet,
+    emoji: "💖",
+    shimmerColor: "#f43f5e",
+    buttonGradient: "linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #a855f7 100%)",
+    demoBorderHover: "hover:border-rose-400 hover:text-rose-600 dark:hover:text-rose-300 hover:shadow-[0_0_14px_rgba(244,63,94,0.35)]",
+    demoGlow: "bg-rose-50/80 dark:bg-rose-950/40",
+    demoIconColor: "text-rose-500",
+    accentColor: "text-rose-600 dark:text-rose-400",
+    microActions: [
+      { icon: Mail, color: "text-rose-500", title: "Wax Seal Envelope" },
+      { icon: Heart, color: "text-pink-500", title: "Pulsing Particle Heart" },
+      { icon: Sparkles, color: "text-purple-500", title: "Cybernetic Rain" },
+    ],
+  },
   "balloon-room": {
     gradientClass: styles.gradientBalloon,
     circleClass: styles.circleBalloon,
@@ -110,8 +126,8 @@ const TEMPLATE_META: Record<
 };
 
 export function FeaturedSection() {
-  // Spotlight signature featured template: Sweet Celebration
-  const FEATURED_SLUGS = useMemo(() => ["sweet-celebration"], []);
+  // Spotlight signature featured templates: Sweet Celebration & Love Animation
+  const FEATURED_SLUGS = useMemo(() => ["sweet-celebration", "love-animation"], []);
 
   const featuredTemplates = useMemo(() => {
     const list = FEATURED_SLUGS.map((slug) =>

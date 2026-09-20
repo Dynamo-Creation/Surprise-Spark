@@ -7,6 +7,7 @@ export * from "./confettiBlastTemplate";
 export * from "./rainbowSurpriseTemplate";
 export * from "./cuteCharacterTemplate";
 export * from "./sweetCelebrationTemplate";
+export * from "./loveAnimationTemplate";
 
 import { TemplateModel } from "../types";
 import { MAGIC_GIFT_TEMPLATE } from "./magicGiftTemplate";
@@ -18,8 +19,10 @@ import { CONFETTI_BLAST_TEMPLATE } from "./confettiBlastTemplate";
 import { RAINBOW_SURPRISE_TEMPLATE } from "./rainbowSurpriseTemplate";
 import { CUTE_CHARACTER_TEMPLATE } from "./cuteCharacterTemplate";
 import { SWEET_CELEBRATION_TEMPLATE } from "./sweetCelebrationTemplate";
+import { LOVE_ANIMATION_TEMPLATE } from "./loveAnimationTemplate";
 
 export const ALL_BIRTHDAY_TEMPLATES: TemplateModel[] = [
   SWEET_CELEBRATION_TEMPLATE,
+  LOVE_ANIMATION_TEMPLATE,
 ];
 

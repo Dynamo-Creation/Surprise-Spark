@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const TEMPLATES_LIST = [
   { slug: "sweet-celebration", name: "Sweet Celebration 💌" },
+  { slug: "love-animation", name: "Love Animation 💖" },
 ];
 
 function PreviewContent() {
@@ -18,7 +19,10 @@ function PreviewContent() {
   const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile");
   const [iframeKey, setIframeKey] = useState(0);
 
-  const previewUrl = `/s/sample-birthday-123?template=${activeTemplate}`;
+  const previewUrl =
+    activeTemplate === "love-animation"
+      ? "/api/admin/templates/preview?slug=love-animation"
+      : `/s/sample-birthday-123?template=${activeTemplate}`;
 
   return (
     <div className="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
