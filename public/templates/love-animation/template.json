@@ -1,0 +1,33 @@
+{
+  "id": "tpl-love-animation",
+  "slug": "love-animation",
+  "name": "Love Animation",
+  "categoryId": "birthday",
+  "description": "",
+  "thumbnailUrl": "/templates/sweet-celebration/thumbnail.jpg",
+  "supportsPhotos": true,
+  "maxPhotos": 3,
+  "supportsMusic": true,
+  "audioDuration": 30,
+  "status": "active",
+  "createdAt": "2026-09-20T10:31:40.868Z",
+  "updatedAt": "2026-09-20T10:31:40.868Z",
+  "files": [
+    ".env.example",
+    ".gitignore",
+    "index.html",
+    "metadata.json",
+    "package.json",
+    "README.md",
+    "tsconfig.json",
+    "vite.config.ts",
+    "src/App.tsx",
+    "src/index.css",
+    "src/main.tsx",
+    "src/types.ts",
+    "src/utils/audio.ts",
+    "src/components/Controls.tsx",
+    "src/components/VideoCanvas.tsx",
+    "assets/.aistudio/.gitignore"
+  ]
+}

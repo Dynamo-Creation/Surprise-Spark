@@ -1,0 +1,20 @@
+{
+  "id": "tpl-retro-sunset-wishes",
+  "slug": "retro-sunset-wishes",
+  "name": "Retro Sunset Wishes",
+  "categoryId": "birthday",
+  "description": "A warm nostalgic retro birthday card with vintage paper grain and polaroid photo stack.",
+  "thumbnailUrl": "/templates/retro-sunset-wishes/thumbnail.jpg",
+  "supportsPhotos": true,
+  "maxPhotos": 3,
+  "supportsMusic": true,
+  "audioDuration": 30,
+  "status": "active",
+  "createdAt": "2026-09-20T10:11:48.532Z",
+  "updatedAt": "2026-09-20T10:11:48.532Z",
+  "files": [
+    "template.json",
+    "index.tsx",
+    "thumbnail.jpg"
+  ]
+}

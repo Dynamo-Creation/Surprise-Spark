@@ -1,239 +1,98 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  LayoutDashboard,
-  Users,
-  Layers,
-  Film,
-  Folder,
-  Box,
-  Smile,
-  Palette,
-  Music,
-  Gift,
-  BarChart3,
-  FileText,
-  Settings,
-  ShieldCheck,
-  Menu,
-  X,
-  Shield,
-  Sparkles,
-  ExternalLink,
-  LogOut,
-  ArrowLeft,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-
-const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/templates", label: "Templates", icon: Layers },
-  { href: "/admin/scenes", label: "Scenes", icon: Film },
-  { href: "/admin/assets", label: "Assets", icon: Folder },
-  { href: "/admin/objects", label: "3D Objects", icon: Box },
-  { href: "/admin/characters", label: "Characters", icon: Smile },
-  { href: "/admin/themes", label: "Themes", icon: Palette },
-  { href: "/admin/music", label: "Music", icon: Music },
-  { href: "/admin/surprises", label: "Surprises", icon: Gift },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/admin/reports", label: "Reports", icon: FileText },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
-  { href: "/admin/audit-logs", label: "Audit Logs", icon: ShieldCheck },
-];
+import React, { useState, useEffect } from "react";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
+import { AdminNotificationsDrawer } from "@/components/admin/AdminNotificationsDrawer";
+import { AdminMetricsMode, adminStore } from "@/lib/admin/adminStore";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [metricsMode, setMetricsMode] = useState<AdminMetricsMode>("live");
 
-  const handleAdminSignOut = async () => {
-    await signOut();
-    router.push("/login");
+  // Load metrics mode from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(
+        "surprisespark_admin_metrics_mode"
+      ) as AdminMetricsMode;
+      if (saved === "demo" || saved === "live") {
+        setMetricsMode(saved);
+      }
+    }
+  }, []);
+
+  // Keyboard shortcut for Command Palette (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleToggleMode = (newMode: AdminMetricsMode) => {
+    setMetricsMode(newMode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("surprisespark_admin_metrics_mode", newMode);
+      // Dispatch custom storage event for other components to react if needed
+      window.dispatchEvent(new Event("surprisespark_mode_changed"));
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row">
-      {/* Mobile Topbar */}
-      <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white">
-            <Shield className="w-4 h-4" />
-          </div>
-          <div>
-            <span className="font-black text-sm text-white tracking-tight">SurpriseSpark</span>
-            <span className="text-[10px] text-purple-400 font-bold ml-1.5 uppercase">CMS</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <Link href="/" title="Exit to Platform">
-            <Button variant="ghost" size="sm" className="p-1.5 text-xs text-slate-400 hover:text-white">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 text-slate-400 hover:text-white"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#070911] text-slate-100 flex flex-col lg:flex-row relative selection:bg-purple-600 selection:text-white">
+      {/* Subtle Aurora Ambient Lighting Accents */}
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed bottom-0 right-1/4 w-[400px] h-[400px] bg-pink-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
-      {/* Admin Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900/95 backdrop-blur-md border-r border-slate-800 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Brand Banner */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-base text-white tracking-tight">SurpriseSpark</span>
-              </div>
-              <p className="text-[11px] font-semibold text-purple-400 uppercase tracking-wider">
-                Production CMS
-              </p>
-            </div>
-          </div>
-          <Badge variant="success" size="sm" className="hidden sm:inline-flex text-[10px] uppercase font-bold">
-            Live
-          </Badge>
-        </div>
+      {/* Streamlined Admin Sidebar */}
+      <AdminSidebar
+        mobileMenuOpen={mobileMenuOpen}
+        onCloseMobileMenu={() => setMobileMenuOpen(false)}
+      />
 
-        {/* Security Role Badge */}
-        <div className="mx-4 my-3 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <div>
-              <p className="text-xs font-bold text-white leading-none">Super Administrator</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Full System Access</p>
-            </div>
-          </div>
-          <Badge variant="outline" size="sm" className="text-[10px] border-purple-500/30 text-purple-300">
-            RBAC
-          </Badge>
-        </div>
-
-        {/* 14 Navigation Links */}
-        <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isActive
-                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md shadow-purple-600/25"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Quick External Links */}
-        <div className="p-3 border-t border-slate-800 space-y-1">
-          <Link
-            href="/create"
-            target="_blank"
-            className="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-pink-400" />
-              Creator Studio
-            </span>
-            <ExternalLink className="w-3 h-3 text-slate-500" />
-          </Link>
-
-          <Link
-            href="/"
-            target="_blank"
-            className="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <Gift className="w-3.5 h-3.5 text-purple-400" />
-              Public Platform
-            </span>
-            <ExternalLink className="w-3 h-3 text-slate-500" />
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main CMS Viewport */}
+      {/* Main Viewport */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Control Bar */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-slate-900/60 border-b border-slate-800/80 backdrop-blur-md sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Active Environment:
-            </span>
-            <Badge variant="outline" size="sm" className="border-emerald-500/40 text-emerald-400 bg-emerald-950/20">
-              Production • v1.0.9
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link href="/admin/audit-logs">
-              <Button variant="ghost" size="sm" className="text-xs text-slate-300 hover:text-white">
-                <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-purple-400" />
-                Audit Trail
-              </Button>
-            </Link>
-            <div className="h-4 w-px bg-slate-800" />
-            <span className="text-xs text-slate-400 font-medium">
-              Logged in as <strong className="text-white">{user?.email || "admin@surprisespark.app"}</strong>
-            </span>
-            <div className="h-4 w-px bg-slate-800" />
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="text-xs text-slate-400 hover:text-white">
-                <ArrowLeft className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                Exit CMS
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleAdminSignOut}
-              className="text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30"
-            >
-              <LogOut className="w-3.5 h-3.5 mr-1 text-rose-400" />
-              Sign Out
-            </Button>
-          </div>
-        </header>
+        {/* Sleek Top Control Bar */}
+        <AdminHeader
+          metricsMode={metricsMode}
+          onToggleMode={handleToggleMode}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          onOpenNotifications={() => setNotificationsOpen(true)}
+          onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+        />
 
         {/* Content Outlet */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>
+
+      {/* Command Palette Modal */}
+      <AdminCommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onToggleMode={() =>
+          handleToggleMode(metricsMode === "live" ? "demo" : "live")
+        }
+      />
+
+      {/* Notifications Slide-over Drawer */}
+      <AdminNotificationsDrawer
+        isOpen={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
     </div>
   );
 }

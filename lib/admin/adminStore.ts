@@ -214,6 +214,37 @@ export function isTemplateDeleted(slugOrId: string): boolean {
   return getDeletedTemplateSlugs().includes(slugOrId);
 }
 
+export const LOVE_ANIMATION_TEMPLATE: TemplateModel = {
+  id: "tpl-love-animation",
+  slug: "love-animation",
+  name: "Love Animation",
+  categoryId: "birthday",
+  description: "Romantic canvas particles animation featuring pulsing heartbeat, falling petals, and smooth transitions.",
+  tagline: "Romantic Heart & Text Particle Experience",
+  thumbnailUrl: "/templates/sweet-celebration/thumbnail.jpg",
+  tags: ["Love", "Romantic", "Particles", "Canvas"],
+  status: "active",
+  isFree: true,
+  supportsPhotos: true,
+  maxPhotos: 3,
+  supportsMusic: true,
+  supportsTheme: true,
+  currentVersion: "1.0.0",
+  versions: [
+    {
+      id: "tpl-love-animation_v1",
+      templateId: "tpl-love-animation",
+      version: "1.0.0",
+      isPublished: true,
+      changelog: "Initial upload",
+      createdAt: "2026-09-20T10:31:40.868Z",
+      scenes: [],
+    },
+  ],
+  createdAt: "2026-09-20T10:31:40.868Z",
+  updatedAt: "2026-09-20T10:31:40.868Z",
+};
+
 // Persistent & In-Memory Global Storage
 class AdminStore {
   private static instance: AdminStore;
@@ -233,7 +264,8 @@ class AdminStore {
 
     const registry = TemplateRegistry.getInstance();
     const deleted = getDeletedTemplateSlugs();
-    for (const tpl of ALL_BIRTHDAY_TEMPLATES) {
+    const baseTemplates = [...ALL_BIRTHDAY_TEMPLATES, LOVE_ANIMATION_TEMPLATE];
+    for (const tpl of baseTemplates) {
       if (!deleted.includes(tpl.slug) && !deleted.includes(tpl.id)) {
         this.templates.set(tpl.slug, JSON.parse(JSON.stringify(tpl)));
         registry.registerTemplate(tpl);
@@ -262,23 +294,51 @@ class AdminStore {
         const parsed: TemplateModel[] = JSON.parse(rawTpls);
         const registry = TemplateRegistry.getInstance();
         const cleaned: TemplateModel[] = [];
+        const seenSlugs = new Set<string>();
+
         parsed.forEach((tpl) => {
+          if (tpl && tpl.slug === "lov-animation") {
+            tpl.slug = "love-animation";
+            tpl.name = "Love Animation";
+            tpl.id = "tpl-love-animation";
+          }
           if (
+            tpl &&
+            tpl.slug &&
+            !seenSlugs.has(tpl.slug) &&
             !updatedBlacklist.includes(tpl.slug) &&
             !updatedBlacklist.includes(tpl.id)
           ) {
+            seenSlugs.add(tpl.slug);
             this.templates.set(tpl.slug, tpl);
-            this.templates.set(tpl.id, tpl);
             registry.registerTemplate(tpl);
             cleaned.push(tpl);
-          } else {
+          } else if (
+            updatedBlacklist.includes(tpl.slug) ||
+            updatedBlacklist.includes(tpl.id)
+          ) {
             this.templates.delete(tpl.slug);
             this.templates.delete(tpl.id);
             registry.deleteTemplate(tpl.slug);
             registry.deleteTemplate(tpl.id);
           }
         });
+
+        // Ensure love-animation is present if not deleted
+        if (!seenSlugs.has(LOVE_ANIMATION_TEMPLATE.slug) && !updatedBlacklist.includes(LOVE_ANIMATION_TEMPLATE.slug)) {
+          this.templates.set(LOVE_ANIMATION_TEMPLATE.slug, LOVE_ANIMATION_TEMPLATE);
+          registry.registerTemplate(LOVE_ANIMATION_TEMPLATE);
+          cleaned.push(LOVE_ANIMATION_TEMPLATE);
+        }
+
         localStorage.setItem(ADMIN_TEMPLATES_STORAGE_KEY, JSON.stringify(cleaned));
+      } else {
+        // First load fallback
+        const registry = TemplateRegistry.getInstance();
+        if (!updatedBlacklist.includes(LOVE_ANIMATION_TEMPLATE.slug)) {
+          this.templates.set(LOVE_ANIMATION_TEMPLATE.slug, LOVE_ANIMATION_TEMPLATE);
+          registry.registerTemplate(LOVE_ANIMATION_TEMPLATE);
+        }
       }
 
       // 4. Asynchronously purge removed celebration templates from Supabase
@@ -311,9 +371,12 @@ class AdminStore {
   private saveToStorage() {
     if (typeof window === "undefined") return;
     try {
+      const uniqueTemplates = Array.from(
+        new Map(Array.from(this.templates.values()).map((t) => [t.slug, t])).values()
+      );
       localStorage.setItem(
         ADMIN_TEMPLATES_STORAGE_KEY,
-        JSON.stringify(Array.from(this.templates.values()))
+        JSON.stringify(uniqueTemplates)
       );
       localStorage.setItem(
         ADMIN_USERS_STORAGE_KEY,
@@ -470,7 +533,13 @@ class AdminStore {
   // ---------------------------------------------------------------------------
   public listTemplates(): TemplateModel[] {
     this.loadFromStorage();
-    return Array.from(this.templates.values());
+    const unique = new Map<string, TemplateModel>();
+    for (const tpl of this.templates.values()) {
+      if (tpl && tpl.slug) {
+        unique.set(tpl.slug, tpl);
+      }
+    }
+    return Array.from(unique.values());
   }
 
   public getTemplate(slugOrId: string): TemplateModel | undefined {
