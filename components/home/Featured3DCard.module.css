@@ -100,18 +100,33 @@
   padding-top: 14px;
   transform-style: preserve-3d;
   position: relative;
+  z-index: 50;
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  transform: translate3d(0, 0, 28px);
+  transform: translate3d(0, 0, 32px);
   border-top: 1px solid rgba(226, 232, 240, 0.85);
   transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 :global(.dark) .bottom {
   border-top: 1px solid rgba(51, 65, 85, 0.65);
+}
+
+.actionButtonsContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 60;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 36px);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* Social / Feature micro buttons */
@@ -291,7 +306,11 @@
 }
 
 .parent:hover .card .bottom {
-  transform: translate3d(0, 0, 40px);
+  transform: translate3d(0, 0, 44px);
+}
+
+.parent:hover .card .bottom .actionButtonsContainer {
+  transform: translate3d(0, 0, 58px);
 }
 
 .parent:hover .card .bottom .socialButtonsContainer .socialButton:first-child {

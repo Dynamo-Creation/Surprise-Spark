@@ -127,6 +127,12 @@ function CreateStudioContent() {
   }, []);
 
   useEffect(() => {
+    if (templateSlugParam && !isTemplateDeleted(templateSlugParam)) {
+      setSelectedTemplateSlug(templateSlugParam);
+    }
+  }, [templateSlugParam]);
+
+  useEffect(() => {
     if (isTemplateDeleted(selectedTemplateSlug)) {
       const active = ALL_BIRTHDAY_TEMPLATES.find((tpl) => !isTemplateDeleted(tpl.slug));
       if (active) {

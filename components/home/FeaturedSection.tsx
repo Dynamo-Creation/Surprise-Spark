@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Sparkles,
   Layers,
@@ -126,6 +127,19 @@ const TEMPLATE_META: Record<
 };
 
 export function FeaturedSection() {
+  const router = useRouter();
+
+  const handleNavigation = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+      e.stopPropagation();
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+        e.preventDefault();
+        router.push(href);
+      }
+    },
+    [router]
+  );
+
   // Spotlight signature featured templates: Sweet Celebration & Love Animation
   const FEATURED_SLUGS = useMemo(() => ["sweet-celebration", "love-animation"], []);
 
@@ -277,43 +291,49 @@ export function FeaturedSection() {
                               className={styles.socialButton}
                               title={action.title}
                               type="button"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <IconComp className={`w-3.5 h-3.5 ${action.color}`} />
+                              <IconComp className={`w-3.5 h-3.5 ${action.color} pointer-events-none`} />
                             </button>
                           );
                         })}
                       </div>
 
                       {/* Template-Accented Action Buttons: Frosted Aura Live Demo & Customize */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className={styles.actionButtonsContainer}>
                         {/* Live Demo: Frosted Aura Button with Template Border Glow */}
                         <Link
                           href={`/preview?template=${template.slug}`}
+                          onClick={(e) => handleNavigation(e, `/preview?template=${template.slug}`)}
                           className={cn(
-                            "group/demo relative inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer",
-                            "bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/90",
-                            "text-slate-700 dark:text-slate-200 transition-all duration-300",
-                            "hover:scale-[1.04] active:scale-95 shadow-xs",
+                            "group/demo relative z-30 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer pointer-events-auto select-none",
+                            "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/90",
+                            "text-slate-700 dark:text-slate-200 transition-all duration-200",
+                            "hover:scale-[1.04] active:opacity-80 active:brightness-95 shadow-xs",
                             meta.demoBorderHover
                           )}
                         >
-                          <Eye className={cn("w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/demo:scale-115", meta.demoIconColor)} />
-                          <span>Live Demo</span>
+                          <Eye className={cn("w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/demo:scale-115 pointer-events-none", meta.demoIconColor)} />
+                          <span className="pointer-events-none">Live Demo</span>
                         </Link>
 
                         {/* Customize: Template Custom Gradient with Shimmer Beam */}
                         <Link
                           href={`/create?template=${template.slug}`}
+                          onClick={(e) => handleNavigation(e, `/create?template=${template.slug}`)}
                           style={{
                             background: meta.buttonGradient,
                           }}
-                          className="relative inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-xl text-xs font-bold text-white tracking-tight whitespace-nowrap shadow-md hover:scale-[1.04] active:scale-95 transition-all duration-300 cursor-pointer overflow-hidden group/cust"
+                          className={cn(
+                            "group/cust relative z-30 inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-xl text-xs font-bold text-white tracking-tight whitespace-nowrap shadow-md cursor-pointer pointer-events-auto select-none overflow-hidden",
+                            "transition-all duration-200 hover:scale-[1.04] active:opacity-80 active:brightness-95 hover:shadow-lg"
+                          )}
                         >
-                          <span className="relative z-10 flex items-center gap-1">
+                          <span className="relative z-10 flex items-center gap-1 pointer-events-none">
                             <span>Customize</span>
-                            <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/cust:translate-x-0.5" />
+                            <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/cust:translate-x-0.5 pointer-events-none" />
                           </span>
-                          <span className="absolute inset-0 -translate-x-full group-hover/cust:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+                          <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover/cust:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
                         </Link>
                       </div>
                     </div>

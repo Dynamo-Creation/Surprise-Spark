@@ -19,6 +19,15 @@ function PreviewContent() {
   const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile");
   const [iframeKey, setIframeKey] = useState(0);
 
+  // Synchronize active template when URL changes
+  React.useEffect(() => {
+    const t = searchParams.get("template");
+    if (t && t !== activeTemplate) {
+      setActiveTemplate(t);
+      setIframeKey((k) => k + 1);
+    }
+  }, [searchParams, activeTemplate]);
+
   const previewUrl =
     activeTemplate === "love-animation"
       ? "/api/admin/templates/preview?slug=love-animation"
