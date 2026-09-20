@@ -8,8 +8,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
-    const recipientName = searchParams.get("recipientName") || "Sarah";
-    const senderName = searchParams.get("senderName") || "Alex";
+    const recipientName = searchParams.get("recipientName") || searchParams.get("name") || "Sarah";
+    const senderName = searchParams.get("senderName") || searchParams.get("sender") || "Alex";
     const message = searchParams.get("message") || "Wishing you the happiest celebration filled with love and magic!";
 
     if (!slug) {

@@ -133,7 +133,6 @@ export function FeaturedSection() {
     (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
       e.stopPropagation();
       if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-        e.preventDefault();
         router.push(href);
       }
     },

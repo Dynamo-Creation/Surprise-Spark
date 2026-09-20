@@ -30,14 +30,21 @@ const REMOVED_CELEBRATION_SLUGS = [
 ];
 
 function checkIsDeleted(slugOrId: string): boolean {
-  if (slugOrId === "sweet-celebration" || slugOrId === "tpl-sweet-celebration") return false;
+  if (
+    slugOrId === "sweet-celebration" ||
+    slugOrId === "tpl-sweet-celebration" ||
+    slugOrId === "love-animation" ||
+    slugOrId === "tpl-love-animation"
+  ) {
+    return false;
+  }
   if (REMOVED_CELEBRATION_SLUGS.includes(slugOrId)) return true;
   if (typeof window === "undefined") return false;
   try {
     const raw = localStorage.getItem("surprisespark_deleted_templates_v1");
     if (!raw) return false;
     const deleted: string[] = JSON.parse(raw);
-    return Array.isArray(deleted) && deleted.includes(slugOrId);
+    return Array.isArray(deleted) && deleted.filter((s) => s !== "love-animation" && s !== "tpl-love-animation").includes(slugOrId);
   } catch {
     return false;
   }

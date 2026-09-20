@@ -892,6 +892,12 @@ function CreateStudioContent() {
                 photos={photos}
                 onFinish={() => setCurrentStep(7)}
               />
+            ) : currentTemplate.slug === "love-animation" ? (
+              <iframe
+                src={`/api/admin/templates/preview?slug=love-animation&recipientName=${encodeURIComponent(recipientName)}&senderName=${encodeURIComponent(senderName)}&message=${encodeURIComponent(customMessage)}`}
+                className="w-full h-[640px] border-none"
+                title="Love Animation Interactive Preview"
+              />
             ) : (
               <ExperiencePlayer
                 template={currentTemplate}

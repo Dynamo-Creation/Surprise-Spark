@@ -202,7 +202,13 @@ export function getDeletedTemplateSlugs(): string[] {
   try {
     const raw = localStorage.getItem(DELETED_TEMPLATES_STORAGE_KEY);
     const customDeleted: string[] = raw ? JSON.parse(raw) : [];
-    const merged = Array.from(new Set([...REMOVED_CELEBRATION_SLUGS, ...customDeleted]));
+    const merged = Array.from(new Set([...REMOVED_CELEBRATION_SLUGS, ...customDeleted])).filter(
+      (s) =>
+        s !== "sweet-celebration" &&
+        s !== "tpl-sweet-celebration" &&
+        s !== "love-animation" &&
+        s !== "tpl-love-animation"
+    );
     return merged;
   } catch {
     return REMOVED_CELEBRATION_SLUGS;
@@ -210,7 +216,14 @@ export function getDeletedTemplateSlugs(): string[] {
 }
 
 export function isTemplateDeleted(slugOrId: string): boolean {
-  if (slugOrId === "sweet-celebration" || slugOrId === "tpl-sweet-celebration") return false;
+  if (
+    slugOrId === "sweet-celebration" ||
+    slugOrId === "tpl-sweet-celebration" ||
+    slugOrId === "love-animation" ||
+    slugOrId === "tpl-love-animation"
+  ) {
+    return false;
+  }
   return getDeletedTemplateSlugs().includes(slugOrId);
 }
 
@@ -279,7 +292,13 @@ class AdminStore {
       // 1. Ensure permanent blacklist in localStorage has all removed celebration slugs
       const rawDeleted = localStorage.getItem(DELETED_TEMPLATES_STORAGE_KEY);
       const existingDeleted: string[] = rawDeleted ? JSON.parse(rawDeleted) : [];
-      const updatedBlacklist = Array.from(new Set([...existingDeleted, ...REMOVED_CELEBRATION_SLUGS]));
+      const updatedBlacklist = Array.from(new Set([...existingDeleted, ...REMOVED_CELEBRATION_SLUGS])).filter(
+        (s) =>
+          s !== "sweet-celebration" &&
+          s !== "tpl-sweet-celebration" &&
+          s !== "love-animation" &&
+          s !== "tpl-love-animation"
+      );
       localStorage.setItem(DELETED_TEMPLATES_STORAGE_KEY, JSON.stringify(updatedBlacklist));
 
       // 2. Remove purged templates from in-memory maps and engine registry
