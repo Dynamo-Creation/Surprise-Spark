@@ -34,7 +34,9 @@ function checkIsDeleted(slugOrId: string): boolean {
     slugOrId === "sweet-celebration" ||
     slugOrId === "tpl-sweet-celebration" ||
     slugOrId === "love-animation" ||
-    slugOrId === "tpl-love-animation"
+    slugOrId === "tpl-love-animation" ||
+    slugOrId === "the-golden-proposal" ||
+    slugOrId === "tpl-the-golden-proposal"
   ) {
     return false;
   }
@@ -44,7 +46,18 @@ function checkIsDeleted(slugOrId: string): boolean {
     const raw = localStorage.getItem("surprisespark_deleted_templates_v1");
     if (!raw) return false;
     const deleted: string[] = JSON.parse(raw);
-    return Array.isArray(deleted) && deleted.filter((s) => s !== "love-animation" && s !== "tpl-love-animation").includes(slugOrId);
+    return (
+      Array.isArray(deleted) &&
+      deleted
+        .filter(
+          (s) =>
+            s !== "love-animation" &&
+            s !== "tpl-love-animation" &&
+            s !== "the-golden-proposal" &&
+            s !== "tpl-the-golden-proposal"
+        )
+        .includes(slugOrId)
+    );
   } catch {
     return false;
   }

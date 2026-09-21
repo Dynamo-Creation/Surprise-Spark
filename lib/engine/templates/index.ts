@@ -8,6 +8,7 @@ export * from "./rainbowSurpriseTemplate";
 export * from "./cuteCharacterTemplate";
 export * from "./sweetCelebrationTemplate";
 export * from "./loveAnimationTemplate";
+export * from "./goldenProposalTemplate";
 
 import { TemplateModel } from "../types";
 import { MAGIC_GIFT_TEMPLATE } from "./magicGiftTemplate";
@@ -20,9 +21,11 @@ import { RAINBOW_SURPRISE_TEMPLATE } from "./rainbowSurpriseTemplate";
 import { CUTE_CHARACTER_TEMPLATE } from "./cuteCharacterTemplate";
 import { SWEET_CELEBRATION_TEMPLATE } from "./sweetCelebrationTemplate";
 import { LOVE_ANIMATION_TEMPLATE } from "./loveAnimationTemplate";
+import { GOLDEN_PROPOSAL_TEMPLATE } from "./goldenProposalTemplate";
 
 export const ALL_BIRTHDAY_TEMPLATES: TemplateModel[] = [
   SWEET_CELEBRATION_TEMPLATE,
   LOVE_ANIMATION_TEMPLATE,
+  GOLDEN_PROPOSAL_TEMPLATE,
 ];
 

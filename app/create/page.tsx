@@ -898,6 +898,12 @@ function CreateStudioContent() {
                 className="w-full h-[640px] border-none"
                 title="Love Animation Interactive Preview"
               />
+            ) : currentTemplate.slug === "the-golden-proposal" ? (
+              <iframe
+                src={`/api/admin/templates/preview?slug=the-golden-proposal&recipientName=${encodeURIComponent(recipientName)}&senderName=${encodeURIComponent(senderName)}&message=${encodeURIComponent(customMessage)}`}
+                className="w-full h-[640px] border-none"
+                title="The Golden Proposal Interactive Preview"
+              />
             ) : (
               <ExperiencePlayer
                 template={currentTemplate}

@@ -1,0 +1,27 @@
+{
+  "id": "tpl-the-golden-proposal",
+  "slug": "the-golden-proposal",
+  "name": "The Golden Proposal 💍",
+  "categoryId": "love",
+  "description": "A cinematic romantic love story and interactive proposal experience with responsive landscape auto-rotation, illustrated cutscenes, personalized confession, interactive dialogue, audio synthesizer, and playful yes/no dodging physics.",
+  "tagline": "Step into a golden romantic confession with unforgettable proposal magic.",
+  "thumbnailUrl": "/templates/the-golden-proposal/images/propose.png",
+  "previewUrl": "/api/admin/templates/preview?slug=the-golden-proposal",
+  "supportsPhotos": true,
+  "maxPhotos": 3,
+  "supportsMusic": true,
+  "audioDuration": 60,
+  "status": "active",
+  "createdAt": "2026-09-21T00:00:00.000Z",
+  "updatedAt": "2026-09-21T00:00:00.000Z",
+  "files": [
+    "index.html",
+    "styles.css",
+    "script.js",
+    "template.json",
+    "images/couple-happy.png",
+    "images/girl and boy face to face.png",
+    "images/hug.png",
+    "images/propose.png"
+  ]
+}

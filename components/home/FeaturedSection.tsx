@@ -108,6 +108,22 @@ const TEMPLATE_META: Record<
       { icon: Sparkles, color: "text-purple-500", title: "Cybernetic Rain" },
     ],
   },
+  "the-golden-proposal": {
+    gradientClass: styles.gradientCake,
+    circleClass: styles.circleCake,
+    emoji: "💍",
+    shimmerColor: "#f59e0b",
+    buttonGradient: "linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #e11d48 100%)",
+    demoBorderHover: "hover:border-amber-400 hover:text-amber-600 dark:hover:text-amber-300 hover:shadow-[0_0_14px_rgba(245,158,11,0.35)]",
+    demoGlow: "bg-amber-50/80 dark:bg-amber-950/40",
+    demoIconColor: "text-amber-500",
+    accentColor: "text-amber-600 dark:text-amber-400",
+    microActions: [
+      { icon: Heart, color: "text-rose-500", title: "Cinematic Proposal" },
+      { icon: Sparkles, color: "text-amber-500", title: "Auto-Landscape Mode" },
+      { icon: Music, color: "text-pink-500", title: "Audio Synthesizer" },
+    ],
+  },
   "balloon-room": {
     gradientClass: styles.gradientBalloon,
     circleClass: styles.circleBalloon,
@@ -139,8 +155,8 @@ export function FeaturedSection() {
     [router]
   );
 
-  // Spotlight signature featured templates: Sweet Celebration & Love Animation
-  const FEATURED_SLUGS = useMemo(() => ["sweet-celebration", "love-animation"], []);
+  // Spotlight signature featured templates: Sweet Celebration, Love Animation & The Golden Proposal
+  const FEATURED_SLUGS = useMemo(() => ["sweet-celebration", "love-animation", "the-golden-proposal"], []);
 
   const featuredTemplates = useMemo(() => {
     const list = FEATURED_SLUGS.map((slug) =>
@@ -165,10 +181,10 @@ export function FeaturedSection() {
             </Badge>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-            Featured Birthday Wonders
+            Featured Signature Wonders
           </h2>
           <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300">
-            Handcrafted interactive 3D worlds ready to be personalized and delivered in minutes.
+            Handcrafted interactive worlds ready to be personalized and delivered in minutes.
           </p>
         </div>
 
@@ -180,6 +196,8 @@ export function FeaturedSection() {
               ? "max-w-md mx-auto"
               : featuredTemplates.length === 2
               ? "max-w-3xl mx-auto grid-cols-1 md:grid-cols-2"
+              : featuredTemplates.length === 3
+              ? "max-w-6xl mx-auto grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
               : "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4"
           )}
         >

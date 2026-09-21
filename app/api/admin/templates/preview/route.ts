@@ -48,6 +48,26 @@ export async function GET(request: NextRequest) {
     }
 
     if (!htmlContent) {
+      // Fallback: try fetching from public static URL (ensures compatibility on serverless platforms)
+      for (const s of targetSlugs) {
+        for (const sub of ["dist/index.html", "index.html"]) {
+          try {
+            const staticUrl = new URL(`/templates/${s}/${sub}`, request.url);
+            const res = await fetch(staticUrl.toString());
+            if (res.ok) {
+              htmlContent = await res.text();
+              foundPath = staticUrl.pathname;
+              break;
+            }
+          } catch {
+            // continue
+          }
+        }
+        if (htmlContent) break;
+      }
+    }
+
+    if (!htmlContent) {
       // If no index.html exists, return an interactive fallback animation player
       const fallbackHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -140,14 +160,15 @@ export async function GET(request: NextRequest) {
       .replace(/window\.location\.port === ["']3000["']/g, "false")
       .replace(/window\.location\.hostname\.includes\(["']run\.app["']\)/g, "false");
 
-    // Inject base href for compiled dist bundles so scripts, styles, and assets resolve correctly
-    if (foundPath.includes("dist")) {
-      const baseTag = `<base href="/templates/${effectiveSlug}/dist/">`;
-      if (patchedHtml.includes("<head>")) {
-        patchedHtml = patchedHtml.replace("<head>", `<head>\n    ${baseTag}`);
-      } else {
-        patchedHtml = baseTag + patchedHtml;
-      }
+    // Inject base href so scripts, styles, and assets resolve correctly
+    const baseHref = foundPath.includes("dist")
+      ? `/templates/${effectiveSlug}/dist/`
+      : `/templates/${effectiveSlug}/`;
+    const baseTag = `<base href="${baseHref}">`;
+    if (patchedHtml.includes("<head>")) {
+      patchedHtml = patchedHtml.replace("<head>", `<head>\n    ${baseTag}`);
+    } else {
+      patchedHtml = baseTag + patchedHtml;
     }
 
     // Dynamically inject personalized recipient/sender text into templates with hardcoded texts
@@ -156,11 +177,25 @@ export async function GET(request: NextRequest) {
         "const heartText = 'I Love ❤️ You';",
         `const heartText = 'I Love ❤️ ' + ${JSON.stringify(recipientName)};`
       );
+      patchedHtml = patchedHtml.replace(
+        /For Someone<br><span>So Special<\/span>/g,
+        `For ${recipientName}<br><span>My Everything</span>`
+      );
     }
     if (senderName && senderName !== "Alex") {
       patchedHtml = patchedHtml.replace(
         "const heartSubText = 'Always & Forever';",
         `const heartSubText = 'Always & Forever — ' + ${JSON.stringify(senderName)};`
+      );
+      patchedHtml = patchedHtml.replace(
+        /See What He Wants To Say/g,
+        `See What ${senderName} Wants To Say`
+      );
+    }
+    if (message && !message.startsWith("Wishing you the happiest")) {
+      patchedHtml = patchedHtml.replace(
+        /"Of all the love stories in the world, ours will forever be my favorite\."/g,
+        JSON.stringify(message)
       );
     }
 

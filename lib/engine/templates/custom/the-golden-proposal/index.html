@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A cinematic romantic love story and proposal experience — beautiful, interactive, and unforgettable.">
+  <title>The Golden Proposal 💍 — A Heartfelt Confession</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Dancing+Script:wght@400;600;700&family=Nunito:wght@300;400;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Preload Cutscene Image Assets for Instant Smooth Transitions -->
+  <link rel="preload" href="images/propose.png" as="image">
+  <link rel="preload" href="images/hug.png" as="image">
+  <link rel="preload" href="images/couple-happy.png" as="image">
+</head>
+<body class="theme-rose">
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+
+  <main class="app-stage" id="appStage">
+    <button type="button" class="ambient-music-btn" id="soundBtn" aria-label="Toggle romantic audio" title="Click for romantic music & chimes">
+      <span id="soundIcon">🎵</span>
+    </button>
+
+    <!-- Ambient Background Elements -->
+    <div class="ambient-glow-orb orb-1" aria-hidden="true"></div>
+    <div class="ambient-glow-orb orb-2" aria-hidden="true"></div>
+    <div class="big-heart-bg" aria-hidden="true">♡</div>
+    <div class="petals-container" id="petalsContainer" aria-hidden="true"></div>
+    <div class="proposal-particles-container" id="proposalParticles" aria-hidden="true"></div>
+    <div class="confetti-container" id="confettiContainer" aria-hidden="true"></div>
+
+    <!-- View 1: Confession Intro View -->
+    <div class="view-stage view-intro active" id="viewIntro">
+      <div class="tagline-badge reveal">
+        <span class="badge-sparkle">✨</span>
+        <span>Something I've Been Wanting To Tell You</span>
+        <span class="badge-sparkle">✨</span>
+      </div>
+
+      <h1 class="opening-title reveal reveal-delay-1">
+        For Someone<br><span>So Special</span>
+      </h1>
+
+      <div class="confession-text-container">
+        <p class="confession-line line-1">"Hey... I've been holding onto a secret for so long 💕</p>
+        <p class="confession-line line-2">Every time I see your smile, my world gets a little brighter ✨</p>
+        <p class="confession-line line-3">Today, I finally gathered the courage to tell you... 🌹"</p>
+      </div>
+
+      <p class="welcome-sub-desc">
+        Take a moment, open your heart, and let me share what's on my mind...
+      </p>
+
+      <button type="button" class="btn-start-proposal" id="btnStartProposal" aria-label="See What He Wants To Say">
+        <span>See What He Wants To Say 💌</span>
+      </button>
+    </div>
+
+    <!-- View 2: Interactive Proposal Cutscene View -->
+    <div class="view-stage view-proposal" id="viewProposal" style="display: none;">
+      <div class="proposal-dialogue-stage" id="proposalDialogueStage">
+        <div class="headside-speech-bubble bubble-left" id="charSpeechBubble" style="display: none;">
+          <div class="bubble-header">
+            <span class="bubble-avatar" id="speakerAvatar">👦</span>
+            <span class="bubble-speaker-name" id="speakerName">Him</span>
+          </div>
+          <p class="bubble-text" id="dialogueText">
+            "I've been hiding these feelings inside my heart for so long... I just really needed to tell you today 💕"
+          </p>
+          <div class="bubble-tail" id="bubbleTail"></div>
+        </div>
+      </div>
+
+      <div class="proposal-hero-frame" id="proposalHeroFrame">
+        <div class="proposal-hero-glow" id="proposalHeroGlow"></div>
+        <div class="character-ground-aura"></div>
+
+        <div class="proposal-img-wrap">
+          <img src="images/girl%20and%20boy%20face%20to%20face.png" alt="Romantic Story Moment" id="proposalStoryImg" class="proposal-hero-img" loading="eager">
+        </div>
+      </div>
+
+      <div class="proposal-badge-wrap">
+        <span class="proposal-sparkle-badge" id="proposalStoryBadge">💫 Looking Deep Into Your Eyes</span>
+      </div>
+
+      <div class="proposal-dynamic-action" id="dynamicActionZone">
+        <!-- Phase 1: Conversation & Girl's Reply -->
+        <div class="phase-action-box" id="phase1Action">
+          <button type="button" class="btn-next-dialogue" id="btnNextDialogue" style="display: none;">
+            <span id="nextDialogueText">Reply To Him 💕</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+
+          <!-- Girl's Custom Reply Input Box -->
+          <div class="girl-custom-reply-wrap" id="girlReplyContainer" style="display: none;">
+            <div class="reply-input-group">
+              <input type="text" class="girl-reply-input" id="girlReplyInput" placeholder="Type your response... (e.g. Accha?... 😊)" maxlength="120">
+              <button type="button" class="btn-send-reply" id="btnSendReply">
+                <span>Send 💌</span>
+              </button>
+            </div>
+
+            <!-- Quick Reply Suggestion Pills -->
+            <div class="quick-reply-pills">
+              <button type="button" class="reply-pill" data-reply="I was actually hoping you'd say something... 😊✨">🌸 "I was hoping you'd say something..."</button>
+              <button type="button" class="reply-pill" data-reply="Accha?... 😊💖">💖 "Accha?..."</button>
+              <button type="button" class="reply-pill" data-reply="My heart is beating so fast right now... 💓">✨ "My heart is beating so fast..."</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 2: Proposal Question (YES & Dodge NO) -->
+        <div class="phase-action-box" id="phase2Action" style="display: none;">
+          <h2 class="finale-title" id="proposalTitle">Will You Be Mine?</h2>
+          <p class="finale-sub" id="proposalSub">"Of all the love stories in the world, ours will forever be my favorite." 🌹</p>
+
+          <div class="proposal-action-zone" id="proposalZone">
+            <div class="dodge-tooltip-wrap">
+              <div class="dodge-tooltip" id="dodgeTooltip">Aise kaise mana kar sakti ho! 😉💖</div>
+            </div>
+            <div class="buttons-wrap" id="buttonsWrap">
+              <button type="button" class="btn-finale-yes" id="btnYes">
+                <span>YES! 💖</span>
+                <small>With all my heart, YES! 🌹</small>
+              </button>
+
+              <button type="button" class="btn-finale-no" id="btnNo">
+                <span id="noText">No</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 3: Embrace Cutscene Text -->
+        <div class="phase-action-box" id="phase3Action" style="display: none;">
+          <p class="hug-celebration-text">"In your arms, I found my forever home... I'm never letting you go 💕"</p>
+        </div>
+
+        <!-- Phase 4: Finale Screen -->
+        <div class="phase-action-box" id="phase4Action" style="display: none;">
+          <h2 class="finale-title">Here's To Our Beautiful <span class="no-break">Beginning 💕</span></h2>
+          <p class="finale-sub">"I pray this is the start of a story we will both cherish forever." 🌹✨</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

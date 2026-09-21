@@ -235,6 +235,12 @@ export function PublicSurpriseClient({
               className="w-full h-screen border-none"
               title="Love Animation Experience"
             />
+          ) : template.slug === "the-golden-proposal" ? (
+            <iframe
+              src={`/api/admin/templates/preview?slug=the-golden-proposal&recipientName=${encodeURIComponent(personalization.recipient_name)}&senderName=${encodeURIComponent(personalization.sender_name)}&message=${encodeURIComponent(personalization.message)}`}
+              className="w-full h-screen border-none"
+              title="The Golden Proposal Experience"
+            />
           ) : isWebGLSupported ? (
             <ExperiencePlayer
               key={playerKey}

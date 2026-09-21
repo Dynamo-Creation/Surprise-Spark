@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 const TEMPLATES_LIST = [
   { slug: "sweet-celebration", name: "Sweet Celebration 💌" },
   { slug: "love-animation", name: "Love Animation 💖" },
+  { slug: "the-golden-proposal", name: "The Golden Proposal 💍" },
 ];
 
 function PreviewContent() {
@@ -31,6 +32,8 @@ function PreviewContent() {
   const previewUrl =
     activeTemplate === "love-animation"
       ? "/api/admin/templates/preview?slug=love-animation"
+      : activeTemplate === "the-golden-proposal"
+      ? "/api/admin/templates/preview?slug=the-golden-proposal"
       : `/s/sample-birthday-123?template=${activeTemplate}`;
 
   return (

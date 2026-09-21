@@ -90,7 +90,16 @@ export function getVisibleTemplates(templates: Template[] = MOCK_TEMPLATES): Tem
     if (!raw) return templates;
     const deleted: string[] = JSON.parse(raw);
     if (!Array.isArray(deleted) || deleted.length === 0) return templates;
-    return templates.filter((t) => !deleted.includes(t.slug) && !deleted.includes(t.id));
+    const cleanDeleted = deleted.filter(
+      (s) =>
+        s !== "sweet-celebration" &&
+        s !== "tpl-sweet-celebration" &&
+        s !== "love-animation" &&
+        s !== "tpl-love-animation" &&
+        s !== "the-golden-proposal" &&
+        s !== "tpl-the-golden-proposal"
+    );
+    return templates.filter((t) => !cleanDeleted.includes(t.slug) && !cleanDeleted.includes(t.id));
   } catch {
     return templates;
   }
@@ -124,6 +133,23 @@ export const MOCK_TEMPLATES: Template[] = [
     tags: ["Interactive Envelope", "Wax Seal", "Cyber Rain", "Particle Heart", "Romantic", "Audio Synth"],
     thumbnailUrl: "/templates/sweet-celebration/thumbnail.jpg",
     coverGradient: "from-rose-600 via-pink-600 to-purple-600",
+    sceneCount: 3,
+    estimatedDuration: "2 mins",
+    isFeatured: true,
+    isNew: true,
+    isPremium: false,
+    defaultScenes: [],
+  },
+  {
+    id: "tpl-the-golden-proposal",
+    slug: "the-golden-proposal",
+    name: "The Golden Proposal 💍",
+    category: "love",
+    description: "A cinematic romantic love story and interactive proposal experience with responsive landscape auto-rotation, illustrated cutscenes, personalized confession, interactive dialogue, audio synthesizer, and playful yes/no dodging physics.",
+    tagline: "Step into a golden romantic confession with unforgettable proposal magic.",
+    tags: ["Proposal", "Romantic", "Landscape Cinema", "Interactive Dialogue", "Yes/No Physics", "Audio Synth"],
+    thumbnailUrl: "/templates/the-golden-proposal/images/propose.png",
+    coverGradient: "from-amber-500 via-rose-500 to-pink-600",
     sceneCount: 3,
     estimatedDuration: "2 mins",
     isFeatured: true,

@@ -14,7 +14,7 @@ import {
   TriggerDefinition,
 } from "@/lib/engine/types";
 import { TemplateRegistry } from "@/lib/engine/templateRegistry";
-import { ALL_BIRTHDAY_TEMPLATES } from "@/lib/engine/templates";
+import { ALL_BIRTHDAY_TEMPLATES, GOLDEN_PROPOSAL_TEMPLATE } from "@/lib/engine/templates";
 import { ALL_MUSIC_TRACKS } from "@/lib/engine/musicCatalog";
 import { THEMES, ThemeId } from "@/lib/engine/themes";
 import { listDrafts } from "@/lib/creator/draftStorage";
@@ -207,7 +207,9 @@ export function getDeletedTemplateSlugs(): string[] {
         s !== "sweet-celebration" &&
         s !== "tpl-sweet-celebration" &&
         s !== "love-animation" &&
-        s !== "tpl-love-animation"
+        s !== "tpl-love-animation" &&
+        s !== "the-golden-proposal" &&
+        s !== "tpl-the-golden-proposal"
     );
     return merged;
   } catch {
@@ -220,7 +222,9 @@ export function isTemplateDeleted(slugOrId: string): boolean {
     slugOrId === "sweet-celebration" ||
     slugOrId === "tpl-sweet-celebration" ||
     slugOrId === "love-animation" ||
-    slugOrId === "tpl-love-animation"
+    slugOrId === "tpl-love-animation" ||
+    slugOrId === "the-golden-proposal" ||
+    slugOrId === "tpl-the-golden-proposal"
   ) {
     return false;
   }
@@ -297,7 +301,9 @@ class AdminStore {
           s !== "sweet-celebration" &&
           s !== "tpl-sweet-celebration" &&
           s !== "love-animation" &&
-          s !== "tpl-love-animation"
+          s !== "tpl-love-animation" &&
+          s !== "the-golden-proposal" &&
+          s !== "tpl-the-golden-proposal"
       );
       localStorage.setItem(DELETED_TEMPLATES_STORAGE_KEY, JSON.stringify(updatedBlacklist));
 
@@ -350,6 +356,13 @@ class AdminStore {
           cleaned.push(LOVE_ANIMATION_TEMPLATE);
         }
 
+        // Ensure the-golden-proposal is present if not deleted
+        if (!seenSlugs.has(GOLDEN_PROPOSAL_TEMPLATE.slug) && !updatedBlacklist.includes(GOLDEN_PROPOSAL_TEMPLATE.slug)) {
+          this.templates.set(GOLDEN_PROPOSAL_TEMPLATE.slug, GOLDEN_PROPOSAL_TEMPLATE);
+          registry.registerTemplate(GOLDEN_PROPOSAL_TEMPLATE);
+          cleaned.push(GOLDEN_PROPOSAL_TEMPLATE);
+        }
+
         localStorage.setItem(ADMIN_TEMPLATES_STORAGE_KEY, JSON.stringify(cleaned));
       } else {
         // First load fallback
@@ -357,6 +370,10 @@ class AdminStore {
         if (!updatedBlacklist.includes(LOVE_ANIMATION_TEMPLATE.slug)) {
           this.templates.set(LOVE_ANIMATION_TEMPLATE.slug, LOVE_ANIMATION_TEMPLATE);
           registry.registerTemplate(LOVE_ANIMATION_TEMPLATE);
+        }
+        if (!updatedBlacklist.includes(GOLDEN_PROPOSAL_TEMPLATE.slug)) {
+          this.templates.set(GOLDEN_PROPOSAL_TEMPLATE.slug, GOLDEN_PROPOSAL_TEMPLATE);
+          registry.registerTemplate(GOLDEN_PROPOSAL_TEMPLATE);
         }
       }
 
