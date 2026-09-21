@@ -30,6 +30,10 @@ interface PublicSurpriseClientProps {
   initialScenes: SceneModel[];
   initialPersonalization: PersonalizationData;
   initialSurprise: SurpriseModel;
+  endearment?: string;
+  question?: string;
+  dodgeText?: string;
+  audioUrl?: string;
 }
 
 export function PublicSurpriseClient({
@@ -39,6 +43,10 @@ export function PublicSurpriseClient({
   initialScenes,
   initialPersonalization,
   initialSurprise,
+  endearment: initialEndearment,
+  question: initialQuestion,
+  dodgeText: initialDodgeText,
+  audioUrl: initialAudioUrl,
 }: PublicSurpriseClientProps) {
   const [template, setTemplate] = useState<TemplateModel>(initialTemplate);
   const [version, setVersion] = useState<TemplateVersionModel>(initialVersion);
@@ -47,6 +55,11 @@ export function PublicSurpriseClient({
   const [surprise, setSurprise] = useState<SurpriseModel>(initialSurprise);
   const [themeOverride, setThemeOverride] = useState(THEMES["candy"]);
   const [musicPreset, setMusicPreset] = useState("happy");
+
+  const [endearment, setEndearment] = useState(initialEndearment || "My Everything");
+  const [question, setQuestion] = useState(initialQuestion || "Will You Be Mine?");
+  const [dodgeText, setDodgeText] = useState(initialDodgeText || "");
+  const [audioUrl, setAudioUrl] = useState(initialAudioUrl || "");
 
   // UX Stages: Opening Screen -> 3D Experience -> Final Screen
   const [hasEntered, setHasEntered] = useState(false);
@@ -131,6 +144,11 @@ export function PublicSurpriseClient({
         setPersonalization(customPersonalization);
         setSurprise(model);
 
+        if (draft.endearment) setEndearment(draft.endearment);
+        if (draft.question) setQuestion(draft.question);
+        if (draft.dodgeText) setDodgeText(draft.dodgeText);
+        if (draft.audioUrl) setAudioUrl(draft.audioUrl);
+
         if (draft.themeId && THEMES[draft.themeId]) {
           setThemeOverride(THEMES[draft.themeId]);
         }
@@ -208,7 +226,8 @@ export function PublicSurpriseClient({
         <RecipientOpeningCurtain
           recipientName={personalization.recipient_name}
           senderName={personalization.sender_name}
-          musicPreset={musicPreset}
+          templateSlug={template.slug}
+          musicPreset={template.slug === "the-golden-proposal" ? "romantic" : musicPreset}
           onOpen={() => {
             setHasEntered(true);
             trackSurpriseEvent("open", { surpriseId: publicId, templateId: template.id });
@@ -237,7 +256,21 @@ export function PublicSurpriseClient({
             />
           ) : template.slug === "the-golden-proposal" ? (
             <iframe
-              src={`/api/admin/templates/preview?slug=the-golden-proposal&recipientName=${encodeURIComponent(personalization.recipient_name)}&senderName=${encodeURIComponent(personalization.sender_name)}&message=${encodeURIComponent(personalization.message)}`}
+              src={`/api/admin/templates/preview?slug=the-golden-proposal&recipientName=${encodeURIComponent(
+                personalization.recipient_name
+              )}&senderName=${encodeURIComponent(
+                personalization.sender_name
+              )}&message=${encodeURIComponent(
+                personalization.message
+              )}&endearment=${encodeURIComponent(
+                endearment
+              )}&question=${encodeURIComponent(
+                question
+              )}&dodgeText=${encodeURIComponent(
+                dodgeText
+              )}&audioUrl=${encodeURIComponent(
+                audioUrl
+              )}`}
               className="w-full h-screen border-none"
               title="The Golden Proposal Experience"
             />

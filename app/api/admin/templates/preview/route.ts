@@ -176,6 +176,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Dynamically inject personalized recipient/sender text into templates with hardcoded texts
+    const targetEndearment = endearment || "My Everything";
     if (recipientName && recipientName !== "Sarah") {
       patchedHtml = patchedHtml.replace(
         "const heartText = 'I Love ❤️ You';",
@@ -183,9 +184,15 @@ export async function GET(request: NextRequest) {
       );
       patchedHtml = patchedHtml.replace(
         /For Someone<br><span>So Special<\/span>/g,
-        `For ${recipientName}<br><span>My Everything</span>`
+        `For ${recipientName}<br><span>${targetEndearment}</span>`
+      );
+    } else if (endearment) {
+      patchedHtml = patchedHtml.replace(
+        /For Someone<br><span>So Special<\/span>/g,
+        `For Someone<br><span>${targetEndearment}</span>`
       );
     }
+
     if (senderName && senderName !== "Alex") {
       patchedHtml = patchedHtml.replace(
         "const heartSubText = 'Always & Forever';",
@@ -196,10 +203,25 @@ export async function GET(request: NextRequest) {
         `See What ${senderName} Wants To Say`
       );
     }
+
     if (message && !message.startsWith("Wishing you the happiest")) {
       patchedHtml = patchedHtml.replace(
         /"Of all the love stories in the world, ours will forever be my favorite\."/g,
         JSON.stringify(message)
+      );
+    }
+
+    if (question) {
+      patchedHtml = patchedHtml.replace(
+        /Will You Be Mine\?/g,
+        question
+      );
+    }
+
+    if (dodgeText) {
+      patchedHtml = patchedHtml.replace(
+        /Aise kaise mana kar sakti ho! 😉💖/g,
+        dodgeText
       );
     }
 

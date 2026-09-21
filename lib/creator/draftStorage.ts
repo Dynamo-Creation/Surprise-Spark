@@ -25,6 +25,11 @@ export interface DraftSurprise {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+  endearment?: string;
+  question?: string;
+  dodgeText?: string;
+  audioUrl?: string;
+  goldenConfig?: Record<string, any>;
 }
 
 const LOCAL_STORAGE_KEY = "surprisespark_drafts_v1";
@@ -92,6 +97,11 @@ export function saveDraft(data: Partial<DraftSurprise>): DraftSurprise {
       createdAt: data.createdAt || now,
       updatedAt: now,
       publishedAt: data.publishedAt,
+      endearment: data.endearment,
+      question: data.question,
+      dodgeText: data.dodgeText,
+      audioUrl: data.audioUrl,
+      goldenConfig: data.goldenConfig,
     };
     drafts.unshift(record);
   }

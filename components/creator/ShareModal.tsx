@@ -21,8 +21,14 @@ export interface ShareModalProps {
   publicId: string;
   recipientName: string;
   senderName?: string;
+  templateSlug?: string;
   templateName?: string;
   customMessage?: string;
+  endearment?: string;
+  question?: string;
+  dodgeText?: string;
+  audioUrl?: string;
+  photos?: string[];
   onShareSuccess?: () => void;
 }
 
@@ -64,8 +70,14 @@ export function ShareModal({
   publicId,
   recipientName,
   senderName,
+  templateSlug,
   templateName,
   customMessage,
+  endearment,
+  question,
+  dodgeText,
+  audioUrl,
+  photos,
   onShareSuccess,
 }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
@@ -74,14 +86,29 @@ export function ShareModal({
   if (!isOpen) return null;
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://surprisespark.app";
-  const publicUrl = `${origin}/s/${publicId}`;
+
+  // Construct comprehensive URL parameters so any recipient opening on any device sees the exact template & personalization
+  const qp = new URLSearchParams();
+  if (templateSlug) qp.set("template", templateSlug);
+  if (recipientName) qp.set("name", recipientName);
+  if (senderName) qp.set("sender", senderName);
+  if (customMessage) qp.set("message", customMessage);
+  if (endearment) qp.set("endearment", endearment);
+  if (question) qp.set("question", question);
+  if (dodgeText) qp.set("dodgeText", dodgeText);
+  if (audioUrl) qp.set("audioUrl", audioUrl);
+  if (photos && photos.length > 0) qp.set("photos", photos.join(","));
+
+  const queryString = qp.toString();
+  const publicUrl = queryString ? `${origin}/s/${publicId}?${queryString}` : `${origin}/s/${publicId}`;
+
+  const isProposal = templateSlug === "the-golden-proposal";
 
   // WhatsApp text per specification:
-  // "I made something special for you 🎁 Open it when you're ready 😉"
-  const whatsappText = encodeURIComponent(
-    `I made something special for you 🎁 Open it when you're ready 😉 ${publicUrl}`
-  );
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${whatsappText}`;
+  const whatsappMessageText = isProposal
+    ? `I made something special from my heart for you 🌹 Open it when you're ready 💕\n\n${publicUrl}`
+    : `I made something special for you 🎁 Open it when you're ready 😉\n\n${publicUrl}`;
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMessageText)}`;
 
   // Facebook Share URL
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicUrl)}`;
@@ -102,8 +129,12 @@ export function ShareModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `A Birthday Surprise for ${recipientName}! 🎁`,
-          text: `I made something special for you 🎁 Open it when you're ready 😉`,
+          title: isProposal
+            ? `A Heartfelt Proposal Surprise for ${recipientName}! 💍`
+            : `A Special Surprise for ${recipientName}! 🎁`,
+          text: isProposal
+            ? `I made something special from my heart for you 🌹 Open it when you're ready 💕`
+            : `I made something special for you 🎁 Open it when you're ready 😉`,
           url: publicUrl,
         });
         logShare();
@@ -135,15 +166,15 @@ export function ShareModal({
 
         {/* Celebration Header */}
         <div className="text-center space-y-2 pt-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-pink-500/25">
-            <Sparkles className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-pink-500/25 text-2xl">
+            {isProposal ? "💍" : <Sparkles className="w-7 h-7" />}
           </div>
 
           <h2 className="text-2xl font-black tracking-tight text-white">
-            Your surprise is ready! 🎉
+            {isProposal ? "Your Golden Proposal is ready! 🌹" : "Your surprise is ready! 🎉"}
           </h2>
           <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            Personalized for <strong className="text-pink-400">{recipientName}</strong>. Send the link below for an unforgettable unboxing moment!
+            Personalized for <strong className="text-pink-400">{recipientName}</strong>. Send the link below for an unforgettable moment!
           </p>
         </div>
 
@@ -236,7 +267,7 @@ export function ShareModal({
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-800">
           <Link
-            href={`/s/${publicId}`}
+            href={publicUrl}
             target="_blank"
             className="text-xs text-slate-400 hover:text-pink-400 flex items-center gap-1.5 transition-colors"
           >

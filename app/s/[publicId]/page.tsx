@@ -4,24 +4,66 @@ import { SAMPLE_SURPRISE } from "@/lib/constants";
 import { templateRegistry } from "@/lib/engine/templateRegistry";
 import { SurpriseModel, PersonalizationData } from "@/lib/engine/types";
 import { PublicSurpriseClient } from "@/components/experience/PublicSurpriseClient";
-
-// Export metadata and page component
+import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata({
   params,
   searchParams,
 }: {
   params: Promise<{ publicId: string }>;
-  searchParams?: Promise<{ name?: string; sender?: string }>;
+  searchParams?: Promise<{
+    name?: string;
+    sender?: string;
+    template?: string;
+    message?: string;
+  }>;
 }): Promise<Metadata> {
   const { publicId } = await params;
   const query = searchParams ? await searchParams : {};
   const isSample = publicId === SAMPLE_SURPRISE.publicId;
-  const recipientName = query.name || (isSample ? SAMPLE_SURPRISE.recipient.name : "Someone Special");
-  const senderName = query.sender || (isSample ? SAMPLE_SURPRISE.sender.name : "");
 
-  const title = "🎁 Someone has a surprise for you!";
-  const description = "Open your special birthday surprise ✨";
+  let cloudRecord: any = null;
+  if (!isSample) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("published_surprises")
+        .select("template_slug, recipient_name, sender_name")
+        .eq("public_id", publicId)
+        .maybeSingle();
+      cloudRecord = data;
+    } catch {
+      // ignore
+    }
+  }
+
+  const templateSlug =
+    query.template ||
+    cloudRecord?.template_slug ||
+    (publicId.includes("golden") || publicId.includes("proposal")
+      ? "the-golden-proposal"
+      : "sweet-celebration");
+
+  const recipientName =
+    query.name ||
+    cloudRecord?.recipient_name ||
+    (isSample ? SAMPLE_SURPRISE.recipient.name : "Someone Special");
+
+  const senderName =
+    query.sender ||
+    cloudRecord?.sender_name ||
+    (isSample ? SAMPLE_SURPRISE.sender.name : "");
+
+  const isProposal = templateSlug === "the-golden-proposal";
+
+  const title = isProposal
+    ? "💍 Someone has a special question for you..."
+    : "🎁 Someone has a surprise for you!";
+
+  const description = isProposal
+    ? `Open your romantic proposal surprise ${senderName ? `from ${senderName}` : ""} 💕`
+    : "Open your special celebration surprise ✨";
+
   const ogImageUrl = `/api/og?name=${encodeURIComponent(recipientName)}${
     senderName ? `&sender=${encodeURIComponent(senderName)}` : ""
   }`;
@@ -56,32 +98,98 @@ export default async function RecipientSurprisePage({
   searchParams,
 }: {
   params: Promise<{ publicId: string }>;
-  searchParams?: Promise<{ name?: string; sender?: string; message?: string; template?: string; photos?: string }>;
+  searchParams?: Promise<{
+    name?: string;
+    sender?: string;
+    message?: string;
+    template?: string;
+    photos?: string;
+    endearment?: string;
+    question?: string;
+    dodgeText?: string;
+    audioUrl?: string;
+  }>;
 }) {
   const { publicId } = await params;
   const query = searchParams ? await searchParams : {};
-
-  // Resolve Surprise Model
   const isSample = publicId === SAMPLE_SURPRISE.publicId;
-  const recipientName = query.name || (isSample ? SAMPLE_SURPRISE.recipient.name : "Maya");
-  const senderName = query.sender !== undefined ? query.sender : (isSample ? SAMPLE_SURPRISE.sender.name : "Alex");
-  const message =
-    query.message ||
-    (isSample
-      ? SAMPLE_SURPRISE.customMessage
-      : "Happy Birthday! Wishing you a day as brilliant, vibrant, and unforgettable as you are!");
 
-  // Resolve Template Definition from TemplateRegistry
-  const templateSlug = query.template || "sweet-celebration";
+  // 1. Fetch from Supabase published_surprises cloud database
+  let cloudRecord: any = null;
+  if (!isSample) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("published_surprises")
+        .select("*")
+        .eq("public_id", publicId)
+        .maybeSingle();
+      cloudRecord = data;
+    } catch (err) {
+      console.warn("[Recipient Page] Cloud fetch note (using URL query fallback):", err);
+    }
+  }
+
+  // 2. Resolve Template Definition: Query Param -> Cloud Record -> Slug heuristic -> Default
+  const templateSlug =
+    query.template ||
+    cloudRecord?.template_slug ||
+    (publicId.includes("golden") || publicId.includes("proposal")
+      ? "the-golden-proposal"
+      : "sweet-celebration");
+
   const resolvedTemplate =
     templateRegistry.getTemplate(templateSlug) ||
     templateRegistry.getTemplate("sweet-celebration") ||
     templateRegistry.listTemplates()[0];
+
   const resolvedVersion =
     resolvedTemplate?.versions?.[0] ||
     templateRegistry.getTemplateVersion("ver-sweet-celebration-1-0-0")!;
 
-  // Handle Photos (supporting up to 5 photos with dynamic skipping for unused photo scenes)
+  // 3. Resolve Personalization Fields
+  const recipientName =
+    query.name ||
+    cloudRecord?.recipient_name ||
+    (isSample ? SAMPLE_SURPRISE.recipient.name : "Maya");
+
+  const senderName =
+    query.sender !== undefined
+      ? query.sender
+      : cloudRecord?.sender_name !== undefined
+      ? cloudRecord.sender_name
+      : (isSample ? SAMPLE_SURPRISE.sender.name : "Alex");
+
+  const message =
+    query.message ||
+    cloudRecord?.custom_message ||
+    (isSample
+      ? SAMPLE_SURPRISE.customMessage
+      : templateSlug === "the-golden-proposal"
+      ? "Of all the love stories in the world, ours will forever be my favorite."
+      : "Happy Birthday! Wishing you a day as brilliant, vibrant, and unforgettable as you are!");
+
+  const endearment =
+    query.endearment ||
+    cloudRecord?.endearment ||
+    "My Everything";
+
+  const question =
+    query.question ||
+    cloudRecord?.question ||
+    "Will You Be Mine?";
+
+  const dodgeText =
+    query.dodgeText ||
+    cloudRecord?.dodge_text ||
+    `${recipientName}, aise kaise mana kar sakti ho! 😉💖`;
+
+  const audioUrl =
+    query.audioUrl ||
+    cloudRecord?.audio_url ||
+    "";
+
+  // 4. Handle Photos
   let photosList: string[] = [];
   const samplePhotos = [
     "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop",
@@ -92,15 +200,18 @@ export default async function RecipientSurprisePage({
   ];
 
   if (query.photos !== undefined) {
-    const count = parseInt(query.photos, 10);
-    photosList = samplePhotos.slice(0, isNaN(count) ? 2 : count);
+    if (query.photos.includes(",")) {
+      photosList = query.photos.split(",");
+    } else {
+      const count = parseInt(query.photos, 10);
+      photosList = samplePhotos.slice(0, isNaN(count) ? 2 : count);
+    }
+  } else if (Array.isArray(cloudRecord?.photos) && cloudRecord.photos.length > 0) {
+    photosList = cloudRecord.photos;
   } else if (templateSlug === "memory-journey") {
-    // Default to 3 photos for memory journey to showcase dynamic scene skipping for photos 4 & 5
     photosList = samplePhotos.slice(0, 3);
   } else {
-    photosList = [
-      SAMPLE_SURPRISE.photos[0]?.url || samplePhotos[0],
-    ];
+    photosList = [SAMPLE_SURPRISE.photos[0]?.url || samplePhotos[0]];
   }
 
   const surpriseModel: SurpriseModel = {
@@ -108,7 +219,7 @@ export default async function RecipientSurprisePage({
     publicId,
     creatorId: "user-creator-1",
     templateId: resolvedTemplate.id,
-    templateVersionId: resolvedVersion.id, // Locked version immutability
+    templateVersionId: resolvedVersion.id,
     recipientName,
     senderName,
     message,
@@ -121,10 +232,8 @@ export default async function RecipientSurprisePage({
     publishedAt: "2026-09-14T08:00:00Z",
   };
 
-  // Resolve Template, Locked Version, and Scenes from Template Engine (with dynamic photo skipping)
   const { template, version, scenes } = templateRegistry.resolveSurpriseExperience(surpriseModel);
 
-  // Bind Personalization Variables
   const personalization: PersonalizationData = {
     recipient_name: surpriseModel.recipientName,
     sender_name: surpriseModel.senderName,
@@ -145,6 +254,10 @@ export default async function RecipientSurprisePage({
       initialScenes={scenes}
       initialPersonalization={personalization}
       initialSurprise={surpriseModel}
+      endearment={endearment}
+      question={question}
+      dodgeText={dodgeText}
+      audioUrl={audioUrl}
     />
   );
 }

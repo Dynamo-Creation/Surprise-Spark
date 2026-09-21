@@ -171,6 +171,11 @@ function CreateStudioContent() {
       specialDate: genericConfig.specialDate,
       photos: genericConfig.photos,
       status: isPublished ? "published" : "draft",
+      endearment: isGolden ? goldenConfig.recipientEndearment : undefined,
+      question: isGolden ? goldenConfig.proposalQuestion : undefined,
+      dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
+      audioUrl: customAudioUrl || undefined,
+      goldenConfig: isGolden ? goldenConfig : undefined,
     });
 
     setDraftId(draft.id);
@@ -227,7 +232,35 @@ function CreateStudioContent() {
         photos: genericConfig.photos,
         status: "published",
         publishedAt: new Date().toISOString(),
+        endearment: isGolden ? goldenConfig.recipientEndearment : undefined,
+        question: isGolden ? goldenConfig.proposalQuestion : undefined,
+        dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
+        audioUrl: customAudioUrl || undefined,
+        goldenConfig: isGolden ? goldenConfig : undefined,
       });
+
+      // Synchronize published surprise to Supabase cloud published_surprises
+      try {
+        await fetch("/api/surprises", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            publicId: draft.publicId,
+            templateSlug: selectedTemplateSlug,
+            recipientName: cleanRecipient,
+            senderName: cleanSender,
+            customMessage: cleanMessage,
+            endearment: isGolden ? goldenConfig.recipientEndearment : undefined,
+            question: isGolden ? goldenConfig.proposalQuestion : undefined,
+            dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
+            audioUrl: customAudioUrl || undefined,
+            photos: genericConfig.photos,
+            metadata: isGolden ? { goldenConfig } : {},
+          }),
+        });
+      } catch (err) {
+        console.warn("[Publish Flow] Cloud sync notice (proceeding with local & URL backup):", err);
+      }
 
       setDraftId(draft.id);
       setPublicId(draft.publicId);
@@ -421,12 +454,40 @@ function CreateStudioContent() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         publicId={publicId}
+        templateSlug={selectedTemplateSlug}
         recipientName={
           selectedTemplateSlug === "the-golden-proposal"
             ? goldenConfig.recipientName
             : genericConfig.recipientName
         }
+        senderName={
+          selectedTemplateSlug === "the-golden-proposal"
+            ? goldenConfig.senderName
+            : genericConfig.senderName
+        }
         templateName={currentTemplate.name}
+        customMessage={
+          selectedTemplateSlug === "the-golden-proposal"
+            ? goldenConfig.loveQuote
+            : genericConfig.message
+        }
+        endearment={
+          selectedTemplateSlug === "the-golden-proposal"
+            ? goldenConfig.recipientEndearment
+            : undefined
+        }
+        question={
+          selectedTemplateSlug === "the-golden-proposal"
+            ? goldenConfig.proposalQuestion
+            : undefined
+        }
+        dodgeText={
+          selectedTemplateSlug === "the-golden-proposal"
+            ? goldenConfig.dodgeTooltipText
+            : undefined
+        }
+        audioUrl={customAudioUrl || undefined}
+        photos={genericConfig.photos}
       />
     </div>
   );
