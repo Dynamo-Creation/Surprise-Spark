@@ -35,6 +35,8 @@ interface PublicSurpriseClientProps {
   question?: string;
   dodgeText?: string;
   audioUrl?: string;
+  audioStartTime?: number;
+  audioDuration?: number;
 }
 
 export function PublicSurpriseClient({
@@ -48,6 +50,8 @@ export function PublicSurpriseClient({
   question: initialQuestion,
   dodgeText: initialDodgeText,
   audioUrl: initialAudioUrl,
+  audioStartTime: initialAudioStartTime,
+  audioDuration: initialAudioDuration,
 }: PublicSurpriseClientProps) {
   const [template, setTemplate] = useState<TemplateModel>(initialTemplate);
   const [version, setVersion] = useState<TemplateVersionModel>(initialVersion);
@@ -243,6 +247,8 @@ export function PublicSurpriseClient({
           templateSlug={template.slug}
           musicPreset={template.slug === "the-golden-proposal" ? "romantic" : musicPreset}
           audioUrl={audioUrl}
+          audioStartTime={initialAudioStartTime}
+          audioDuration={initialAudioDuration}
           onOpen={() => {
             setHasEntered(true);
             trackSurpriseEvent("open", { surpriseId: publicId, templateId: template.id });
@@ -286,7 +292,7 @@ export function PublicSurpriseClient({
                 dodgeText
               )}&audioUrl=${encodeURIComponent(
                 audioUrl
-              )}`}
+              )}&audioStartTime=${initialAudioStartTime ?? 0}&audioDuration=${initialAudioDuration ?? 0}`}
               className="w-full h-screen border-none"
               title="The Golden Proposal Experience"
               allow="autoplay"

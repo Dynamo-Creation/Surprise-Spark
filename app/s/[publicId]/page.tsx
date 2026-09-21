@@ -189,6 +189,11 @@ export default async function RecipientSurprisePage({
     cloudRecord?.audio_url ||
     "";
 
+  // 3b. Resolve audio trim data from metadata
+  const metadataObj = cloudRecord?.metadata || {};
+  const audioStartTime: number = typeof metadataObj.audioStartTime === "number" ? metadataObj.audioStartTime : 0;
+  const audioDuration: number | undefined = typeof metadataObj.audioDuration === "number" ? metadataObj.audioDuration : undefined;
+
   // 4. Handle Photos
   let photosList: string[] = [];
   const samplePhotos = [
@@ -258,6 +263,8 @@ export default async function RecipientSurprisePage({
       question={question}
       dodgeText={dodgeText}
       audioUrl={audioUrl}
+      audioStartTime={audioStartTime}
+      audioDuration={audioDuration}
     />
   );
 }

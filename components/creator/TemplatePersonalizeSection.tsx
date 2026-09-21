@@ -56,6 +56,8 @@ interface TemplatePersonalizeSectionProps {
   } | null) => void;
   onUploadingChange?: (isUploading: boolean) => void;
   initialAudioUrl?: string;
+  initialAudioStartTime?: number;
+  initialAudioDuration?: number;
 }
 
 export function TemplatePersonalizeSection({
@@ -67,6 +69,8 @@ export function TemplatePersonalizeSection({
   onAudioChange,
   onUploadingChange,
   initialAudioUrl,
+  initialAudioStartTime,
+  initialAudioDuration,
 }: TemplatePersonalizeSectionProps) {
   const isGoldenProposal = template.slug === "the-golden-proposal";
   const isSweetCelebration = template.slug === "sweet-celebration";
@@ -420,6 +424,8 @@ export function TemplatePersonalizeSection({
         onAudioChange={onAudioChange}
         onUploadingChange={onUploadingChange}
         initialAudioUrl={initialAudioUrl}
+        initialStartTime={initialAudioStartTime}
+        initialDuration={initialAudioDuration}
       />
     </div>
   );

@@ -29,6 +29,8 @@ export interface DraftSurprise {
   question?: string;
   dodgeText?: string;
   audioUrl?: string;
+  audioStartTime?: number;
+  audioDuration?: number;
   goldenConfig?: Record<string, any>;
 }
 

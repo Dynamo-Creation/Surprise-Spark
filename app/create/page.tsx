@@ -73,6 +73,8 @@ function CreateStudioContent() {
 
   // Audio / Voice Note Configuration
   const [customAudioUrl, setCustomAudioUrl] = useState<string | null>(null);
+  const [customAudioStartTime, setCustomAudioStartTime] = useState<number>(0);
+  const [customAudioDuration, setCustomAudioDuration] = useState<number | undefined>(undefined);
   const [isAudioUploading, setIsAudioUploading] = useState(false);
 
   // Publishing & Share State
@@ -113,6 +115,12 @@ function CreateStudioContent() {
         // Restore saved audio URL from draft — only if it's a permanent cloud URL
         if (existing.audioUrl && existing.audioUrl.startsWith("http")) {
           setCustomAudioUrl(existing.audioUrl);
+        }
+        if (existing.audioStartTime !== undefined) {
+          setCustomAudioStartTime(existing.audioStartTime);
+        }
+        if (existing.audioDuration !== undefined) {
+          setCustomAudioDuration(existing.audioDuration);
         }
       }
     }
@@ -252,6 +260,8 @@ function CreateStudioContent() {
         question: isGolden ? goldenConfig.proposalQuestion : undefined,
         dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
         audioUrl: safeAudioUrl,
+        audioStartTime: customAudioStartTime,
+        audioDuration: customAudioDuration,
         goldenConfig: isGolden ? goldenConfig : undefined,
       });
 
@@ -271,7 +281,11 @@ function CreateStudioContent() {
             dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
             audioUrl: safeAudioUrl,
             photos: genericConfig.photos,
-            metadata: isGolden ? { goldenConfig } : {},
+            metadata: {
+              ...(isGolden ? { goldenConfig } : {}),
+              audioStartTime: customAudioStartTime,
+              audioDuration: customAudioDuration,
+            },
           }),
         });
       } catch (err) {
@@ -398,9 +412,13 @@ function CreateStudioContent() {
             onGenericConfigChange={handleUpdateGenericConfig}
             onAudioChange={(audioData) => {
               setCustomAudioUrl(audioData?.url || null);
+              setCustomAudioStartTime(audioData?.startTime ?? 0);
+              setCustomAudioDuration(audioData?.duration);
             }}
             onUploadingChange={setIsAudioUploading}
             initialAudioUrl={customAudioUrl || undefined}
+            initialAudioStartTime={customAudioStartTime}
+            initialAudioDuration={customAudioDuration}
           />
 
           {/* Bottom Actions Row */}

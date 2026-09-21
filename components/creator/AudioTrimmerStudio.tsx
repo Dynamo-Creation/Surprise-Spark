@@ -13,12 +13,14 @@ import {
   Check,
   FolderOpen,
   Loader2,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { BorderBeam } from "@/components/magicui/border-beam";
 
 interface AudioTrimmerStudioProps {
-  maxDurationSec?: number; // Bounded by template design duration (e.g., 60s for The Golden Proposal)
+  maxDurationSec?: number;
   templateName?: string;
   onAudioChange?: (audioData: {
     url: string;
@@ -30,6 +32,8 @@ interface AudioTrimmerStudioProps {
   } | null) => void;
   onUploadingChange?: (isUploading: boolean) => void;
   initialAudioUrl?: string;
+  initialStartTime?: number;
+  initialDuration?: number;
 }
 
 export function AudioTrimmerStudio({
@@ -38,6 +42,8 @@ export function AudioTrimmerStudio({
   onAudioChange,
   onUploadingChange,
   initialAudioUrl,
+  initialStartTime = 0,
+  initialDuration,
 }: AudioTrimmerStudioProps) {
   const [activeTab, setActiveTab] = useState<"upload" | "record">("upload");
 
@@ -47,11 +53,15 @@ export function AudioTrimmerStudio({
   const [audioDuration, setAudioDuration] = useState<number>(0);
   const [waveformPeaks, setWaveformPeaks] = useState<number[]>([]);
 
-  // Trimming state (in seconds)
-  const [startTime, setStartTime] = useState<number>(0);
-  const [clipDuration, setClipDuration] = useState<number>(maxDurationSec);
+  // Dual-handle trim state (in seconds)
+  const [trimStart, setTrimStart] = useState<number>(initialStartTime);
+  const [trimEnd, setTrimEnd] = useState<number>(initialDuration ? initialStartTime + initialDuration : maxDurationSec);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [playbackProgress, setPlaybackProgress] = useState<number>(0); // 0 to 1
+  const [playbackProgress, setPlaybackProgress] = useState<number>(0);
+
+  // Drag state for trim handles
+  const [dragging, setDragging] = useState<"start" | "end" | null>(null);
+  const waveformRef = useRef<HTMLDivElement>(null);
 
   // Recording state
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -66,22 +76,42 @@ export function AudioTrimmerStudio({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const allFilesInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Upload state for Supabase Storage persistence
+  // Upload state
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
 
-  // Keep clip duration bounded to template duration
+  const MIN_CLIP_SEC = 3;
+
+  const clipDuration = Math.max(0, trimEnd - trimStart);
+
+  // When audio duration is known, initialize trim end correctly
   useEffect(() => {
     if (audioDuration > 0) {
-      const allowed = Math.min(audioDuration, maxDurationSec);
-      setClipDuration(allowed);
-      if (startTime + allowed > audioDuration) {
-        setStartTime(Math.max(0, audioDuration - allowed));
+      const maxEnd = Math.min(audioDuration, trimStart + maxDurationSec);
+      if (initialDuration && initialStartTime + initialDuration <= audioDuration) {
+        setTrimEnd(initialStartTime + initialDuration);
+      } else if (trimEnd > audioDuration || trimEnd > maxEnd) {
+        setTrimEnd(maxEnd);
       }
     }
-  }, [audioDuration, maxDurationSec, startTime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioDuration]);
 
-  // Decode audio file into Web Audio API AudioBuffer for waveform generation
+  // Fire onAudioChange when trim changes (debounced via effect)
+  const notifyTrimChange = useCallback(() => {
+    if (onAudioChange && audioUrl) {
+      onAudioChange({
+        url: audioUrl,
+        blob: audioFile || undefined,
+        startTime: trimStart,
+        duration: Math.max(0, trimEnd - trimStart),
+        name: audioFile?.name || "Personal Audio",
+        type: activeTab === "record" ? "voice_note" : "custom_music",
+      });
+    }
+  }, [onAudioChange, audioUrl, audioFile, trimStart, trimEnd, activeTab]);
+
+  // Decode audio to generate waveform
   const decodeAudio = useCallback(async (blobOrFile: Blob) => {
     try {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -90,9 +120,8 @@ export function AudioTrimmerStudio({
       const decoded = await ctx.decodeAudioData(arrayBuffer);
       setAudioDuration(decoded.duration);
 
-      // Extract 60 peak samples for the visual waveform
       const rawData = decoded.getChannelData(0);
-      const samples = 64;
+      const samples = 80;
       const blockSize = Math.floor(rawData.length / samples);
       const peaks: number[] = [];
 
@@ -105,20 +134,18 @@ export function AudioTrimmerStudio({
         peaks.push(sum / blockSize);
       }
 
-      // Normalize peaks between 0.15 and 1.0
       const maxPeak = Math.max(...peaks, 0.001);
-      const normalized = peaks.map((p) => Math.max(0.18, p / maxPeak));
+      const normalized = peaks.map((p) => Math.max(0.15, p / maxPeak));
       setWaveformPeaks(normalized);
       ctx.close();
     } catch (e) {
-      console.warn("Could not decode waveform directly:", e);
-      // Fallback pseudo waveform if browser decoding fails
-      const fallback = Array.from({ length: 64 }, () => Math.random() * 0.7 + 0.3);
+      console.warn("Could not decode waveform:", e);
+      const fallback = Array.from({ length: 80 }, () => Math.random() * 0.7 + 0.3);
       setWaveformPeaks(fallback);
     }
   }, []);
 
-  // Upload audio blob/file to Supabase Storage for permanent URL (Client direct + API fallback)
+  // Upload audio to Supabase (dual-layer: client direct + API fallback)
   const uploadToSupabase = useCallback(async (
     blobOrFile: Blob | File,
     fileName: string,
@@ -137,16 +164,12 @@ export function AudioTrimmerStudio({
       .substring(0, 30);
     const storagePath = `surprises/${sanitizedOriginalName}_${timestamp}_${randomSuffix}.${ext}`;
 
-    // 1. First attempt: Direct client-side upload to Supabase Storage
     try {
       const supabase = createClient();
       const contentType = blobOrFile.type || (audioType === "voice_note" ? "audio/webm" : "audio/mpeg");
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("music")
-        .upload(storagePath, blobOrFile, {
-          contentType,
-          upsert: true,
-        });
+        .upload(storagePath, blobOrFile, { contentType, upsert: true });
 
       if (!uploadError && uploadData) {
         const { data: publicUrlData } = supabase.storage
@@ -161,10 +184,9 @@ export function AudioTrimmerStudio({
         }
       }
     } catch (directErr) {
-      console.warn("[AudioTrimmer] Direct Supabase upload notice, trying API route:", directErr);
+      console.warn("[AudioTrimmer] Direct upload fallback:", directErr);
     }
 
-    // 2. Second attempt: Next.js API server-side upload endpoint
     try {
       const formData = new FormData();
       const file = blobOrFile instanceof File
@@ -172,11 +194,7 @@ export function AudioTrimmerStudio({
         : new File([blobOrFile], fileName, { type: blobOrFile.type || "audio/webm" });
       formData.append("file", file);
 
-      const res = await fetch("/api/upload-audio", {
-        method: "POST",
-        body: formData,
-      });
-
+      const res = await fetch("/api/upload-audio", { method: "POST", body: formData });
       if (res.ok) {
         const result = await res.json();
         if (result.publicUrl) {
@@ -185,12 +203,9 @@ export function AudioTrimmerStudio({
           onUploadingChange?.(false);
           return result.publicUrl;
         }
-      } else {
-        const errorBody = await res.json().catch(() => ({ error: "Upload failed" }));
-        console.error("[AudioTrimmer] API upload error:", errorBody);
       }
     } catch (err) {
-      console.error("[AudioTrimmer] API upload exception:", err);
+      console.error("[AudioTrimmer] API upload error:", err);
     }
 
     setUploadStatus("error");
@@ -204,7 +219,6 @@ export function AudioTrimmerStudio({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate that the chosen file is a supported audio format
     const isAudio =
       file.type.startsWith("audio/") ||
       file.type === "application/ogg" ||
@@ -223,35 +237,19 @@ export function AudioTrimmerStudio({
     const localUrl = URL.createObjectURL(file);
     setAudioFile(file);
     setAudioUrl(localUrl);
-    setStartTime(0);
+    setTrimStart(0);
     setIsPlaying(false);
 
     await decodeAudio(file);
 
-    // Upload to Supabase Storage for a permanent URL
     const permanentUrl = await uploadToSupabase(file, file.name, "custom_music");
-
     const finalUrl = permanentUrl || localUrl;
     if (permanentUrl) {
-      // Switch to permanent URL for playback too
       setAudioUrl(permanentUrl);
-      if (localUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(localUrl);
-      }
+      if (localUrl.startsWith("blob:")) URL.revokeObjectURL(localUrl);
     }
 
-    if (onAudioChange) {
-      onAudioChange({
-        url: finalUrl,
-        blob: file,
-        startTime: 0,
-        duration: Math.min(file.size / 16000, maxDurationSec),
-        name: file.name,
-        type: "custom_music",
-      });
-    }
-
-    // Reset input so user can re-select if needed
+    // trimEnd will be set properly once audioDuration is known via the useEffect
     e.target.value = "";
   };
 
@@ -264,9 +262,7 @@ export function AudioTrimmerStudio({
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
 
       recorder.onstop = async () => {
@@ -275,33 +271,18 @@ export function AudioTrimmerStudio({
         setAudioUrl(localUrl);
         setAudioFile(new File([audioBlob], "Voice_Note.webm", { type: "audio/webm" }));
         setIsPlaying(false);
-        setStartTime(0);
+        setTrimStart(0);
 
         await decodeAudio(audioBlob);
 
-        // Upload to Supabase Storage for a permanent URL
         const permanentUrl = await uploadToSupabase(audioBlob, "Voice_Note.webm", "voice_note");
-
         const finalUrl = permanentUrl || localUrl;
         if (permanentUrl) {
           setAudioUrl(permanentUrl);
-          if (localUrl.startsWith("blob:")) {
-            URL.revokeObjectURL(localUrl);
-          }
+          if (localUrl.startsWith("blob:")) URL.revokeObjectURL(localUrl);
         }
 
-        if (onAudioChange) {
-          onAudioChange({
-            url: finalUrl,
-            blob: audioBlob,
-            startTime: 0,
-            duration: recordingSeconds,
-            name: "Personal Voice Note",
-            type: "voice_note",
-          });
-        }
-
-        // Stop all mic tracks
+        // Will notify via useEffect once trimEnd is properly set
         stream.getTracks().forEach((track) => track.stop());
       };
 
@@ -324,18 +305,15 @@ export function AudioTrimmerStudio({
     }
   };
 
-  // Stop Voice Note Recording
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-      }
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     }
   };
 
-  // Toggle trimmed playback
+  // Toggle trimmed playback (plays ONLY trimStart → trimEnd)
   const togglePlay = () => {
     const audio = audioElementRef.current;
     if (!audio) return;
@@ -343,27 +321,21 @@ export function AudioTrimmerStudio({
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     } else {
-      audio.currentTime = startTime;
+      audio.currentTime = trimStart;
       audio.play().then(() => {
         setIsPlaying(true);
         const updateLoop = () => {
           if (!audio.paused) {
             const current = audio.currentTime;
-            const end = startTime + clipDuration;
-            if (current >= end) {
-              audio.pause();
-              audio.currentTime = startTime;
-              setIsPlaying(false);
-              setPlaybackProgress(0);
-            } else {
-              const prog = (current - startTime) / clipDuration;
-              setPlaybackProgress(Math.max(0, Math.min(1, prog)));
-              animationFrameRef.current = requestAnimationFrame(updateLoop);
+            if (current >= trimEnd) {
+              // Loop back to trimStart
+              audio.currentTime = trimStart;
             }
+            const prog = (current - trimStart) / Math.max(clipDuration, 0.1);
+            setPlaybackProgress(Math.max(0, Math.min(1, prog)));
+            animationFrameRef.current = requestAnimationFrame(updateLoop);
           }
         };
         animationFrameRef.current = requestAnimationFrame(updateLoop);
@@ -371,30 +343,86 @@ export function AudioTrimmerStudio({
     }
   };
 
+  // Stop playback
+  const stopPlayback = () => {
+    const audio = audioElementRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = trimStart;
+    }
+    setIsPlaying(false);
+    setPlaybackProgress(0);
+    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+  };
+
   // Clear loaded audio
   const handleRemoveAudio = () => {
-    if (audioElementRef.current) {
-      audioElementRef.current.pause();
-    }
-    if (audioUrl && audioUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(audioUrl);
-    }
+    stopPlayback();
+    if (audioUrl && audioUrl.startsWith("blob:")) URL.revokeObjectURL(audioUrl);
     setAudioFile(null);
     setAudioUrl(null);
     setAudioDuration(0);
     setWaveformPeaks([]);
-    setIsPlaying(false);
-    setStartTime(0);
-    if (onAudioChange) {
-      onAudioChange(null);
-    }
+    setTrimStart(0);
+    setTrimEnd(maxDurationSec);
+    if (onAudioChange) onAudioChange(null);
   };
+
+  // ===== DRAG HANDLING FOR TRIM HANDLES =====
+  const getTimeFromPointer = useCallback((clientX: number): number => {
+    if (!waveformRef.current || audioDuration <= 0) return 0;
+    const rect = waveformRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return ratio * audioDuration;
+  }, [audioDuration]);
+
+  const handlePointerDown = useCallback((handle: "start" | "end", e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(handle);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging) return;
+    const time = getTimeFromPointer(e.clientX);
+
+    if (dragging === "start") {
+      const newStart = Math.max(0, Math.min(time, trimEnd - MIN_CLIP_SEC));
+      const clamped = trimEnd - newStart > maxDurationSec ? trimEnd - maxDurationSec : newStart;
+      setTrimStart(Math.max(0, clamped));
+    } else {
+      const newEnd = Math.min(audioDuration, Math.max(time, trimStart + MIN_CLIP_SEC));
+      const clamped = newEnd - trimStart > maxDurationSec ? trimStart + maxDurationSec : newEnd;
+      setTrimEnd(Math.min(audioDuration, clamped));
+    }
+  }, [dragging, trimStart, trimEnd, audioDuration, maxDurationSec, getTimeFromPointer]);
+
+  const handlePointerUp = useCallback(() => {
+    if (dragging) {
+      setDragging(null);
+      notifyTrimChange();
+    }
+  }, [dragging, notifyTrimChange]);
+
+  // Waveform click to seek (only within trimmed region during playback)
+  const handleWaveformClick = useCallback((e: React.MouseEvent) => {
+    if (dragging) return;
+    const time = getTimeFromPointer(e.clientX);
+    if (audioElementRef.current && time >= trimStart && time <= trimEnd) {
+      audioElementRef.current.currentTime = time;
+    }
+  }, [dragging, getTimeFromPointer, trimStart, trimEnd]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // Compute percentages for visual overlay
+  const startPct = audioDuration > 0 ? (trimStart / audioDuration) * 100 : 0;
+  const endPct = audioDuration > 0 ? (trimEnd / audioDuration) * 100 : 100;
 
   return (
     <div className="rounded-3xl border border-slate-200/80 dark:border-rose-950/60 bg-gradient-to-b from-white/90 to-rose-50/20 dark:from-slate-900/90 dark:to-slate-950/90 p-5 backdrop-blur-md shadow-lg space-y-4">
@@ -405,9 +433,7 @@ export function AudioTrimmerStudio({
           src={audioUrl}
           onLoadedMetadata={(e) => {
             const d = e.currentTarget.duration;
-            if (d && !isNaN(d) && d > 0) {
-              setAudioDuration(d);
-            }
+            if (d && !isNaN(d) && d > 0) setAudioDuration(d);
           }}
         />
       )}
@@ -428,7 +454,6 @@ export function AudioTrimmerStudio({
           </p>
         </div>
 
-        {/* Max Duration Badge according to template design duration */}
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
           <Scissors className="w-3 h-3 text-amber-500" />
           <span>Max Duration: {maxDurationSec}s</span>
@@ -504,10 +529,9 @@ export function AudioTrimmerStudio({
         </div>
       )}
 
-      {/* Mode 1: Device Audio File Upload Dropzone (Dual Option for Phones) */}
+      {/* Mode 1: Device Audio File Upload Dropzone */}
       {!audioUrl && !isRecording && activeTab === "upload" && (
         <div className="space-y-3">
-          {/* Audio / Music Picker Input: File extensions first prevents Android from hijacking to sound recorder */}
           <input
             ref={fileInputRef}
             type="file"
@@ -515,8 +539,6 @@ export function AudioTrimmerStudio({
             className="hidden"
             onChange={handleFileUpload}
           />
-
-          {/* Direct File Manager Input: forces phone to open Files / File Manager */}
           <input
             ref={allFilesInputRef}
             type="file"
@@ -526,7 +548,6 @@ export function AudioTrimmerStudio({
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Option A: Music & Audio Picker */}
             <div
               onClick={() => fileInputRef.current?.click()}
               className="border-2 border-dashed border-rose-300/80 dark:border-rose-900/60 hover:border-rose-500 rounded-2xl p-5 text-center cursor-pointer transition-all bg-white/60 dark:bg-slate-950/60 hover:bg-rose-50/40 dark:hover:bg-rose-950/30 group flex flex-col items-center justify-between"
@@ -545,7 +566,6 @@ export function AudioTrimmerStudio({
               </span>
             </div>
 
-            {/* Option B: File Manager / Files App (Bypasses phone voice recorder/gallery prompt) */}
             <div
               onClick={() => allFilesInputRef.current?.click()}
               className="border-2 border-dashed border-amber-300/80 dark:border-amber-900/60 hover:border-amber-500 rounded-2xl p-5 text-center cursor-pointer transition-all bg-white/60 dark:bg-slate-950/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/30 group flex flex-col items-center justify-between"
@@ -601,10 +621,12 @@ export function AudioTrimmerStudio({
         </div>
       )}
 
-      {/* Audio Loaded: Instagram/WhatsApp Style Audio Trimmer Workspace */}
+      {/* ========================================================================= */}
+      {/* 🎵 AUDIO LOADED — MAGIC UI DUAL-HANDLE WAVEFORM TRIMMER                */}
+      {/* ========================================================================= */}
       {audioUrl && (
         <div className="space-y-4 animate-in fade-in">
-          {/* Audio Item Meta Bar */}
+          {/* Audio Meta Bar with Play Button */}
           <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80">
             <div className="flex items-center gap-3 min-w-0">
               <button
@@ -624,7 +646,7 @@ export function AudioTrimmerStudio({
                   <span>Total: {formatTime(audioDuration || 60)}</span>
                   <span>•</span>
                   <span className="font-semibold text-rose-600 dark:text-rose-400">
-                    Selected: {formatTime(clipDuration)} (Max {maxDurationSec}s)
+                    Trimmed: {formatTime(clipDuration)}
                   </span>
                 </div>
               </div>
@@ -640,100 +662,162 @@ export function AudioTrimmerStudio({
             </button>
           </div>
 
-          {/* Instagram / WhatsApp Waveform Scrubber with Trimming Bounding Box */}
+          {/* ===== MAGIC UI WAVEFORM TRIMMER ===== */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               <span className="flex items-center gap-1">
                 <Scissors className="w-3 h-3 text-rose-500" />
-                <span>Drag slider to trim best section ({formatTime(startTime)} – {formatTime(startTime + clipDuration)})</span>
+                <span>Drag handles to select your best section</span>
               </span>
-              <span className="text-[10px] text-slate-400">
-                {formatTime(startTime)} / {formatTime(audioDuration || maxDurationSec)}
+              <span className="text-[10px] font-mono text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full">
+                {formatTime(trimStart)} → {formatTime(trimEnd)} ({formatTime(clipDuration)})
               </span>
             </div>
 
-            {/* Waveform Visualization Canvas */}
-            <div className="relative h-16 w-full rounded-2xl bg-slate-950 border border-slate-800 p-2 overflow-hidden flex items-end justify-between gap-1 select-none">
-              {/* Waveform Bars */}
-              {waveformPeaks.length > 0 ? (
-                waveformPeaks.map((peak, idx) => {
-                  const barTime = ((idx / waveformPeaks.length) * (audioDuration || 60));
-                  const isInsideTrim = barTime >= startTime && barTime <= (startTime + clipDuration);
+            {/* Waveform Container with Trim Overlay */}
+            <div
+              className="relative rounded-2xl overflow-hidden border border-slate-700/80 dark:border-slate-700 shadow-inner select-none touch-none"
+              style={{ contain: "layout" }}
+            >
+              {/* Magic UI BorderBeam effect on the waveform */}
+              <BorderBeam
+                size={120}
+                duration={4}
+                colorFrom="#f43f5e"
+                colorTo="#f59e0b"
+                borderWidth={1}
+              />
 
-                  return (
+              {/* Waveform bars + trim overlay */}
+              <div
+                ref={waveformRef}
+                className="relative h-20 w-full bg-gradient-to-b from-slate-950 to-slate-900 p-2 flex items-end justify-between gap-[1px] cursor-pointer"
+                onClick={handleWaveformClick}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+              >
+                {/* Dimmed overlay BEFORE trim start */}
+                <div
+                  className="absolute inset-y-0 left-0 bg-slate-950/70 z-10 pointer-events-none transition-all duration-100"
+                  style={{ width: `${startPct}%` }}
+                />
+
+                {/* Dimmed overlay AFTER trim end */}
+                <div
+                  className="absolute inset-y-0 right-0 bg-slate-950/70 z-10 pointer-events-none transition-all duration-100"
+                  style={{ width: `${100 - endPct}%` }}
+                />
+
+                {/* Selected region top/bottom border glow */}
+                <div
+                  className="absolute top-0 h-[2px] bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 z-20 pointer-events-none"
+                  style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }}
+                />
+                <div
+                  className="absolute bottom-0 h-[2px] bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 z-20 pointer-events-none"
+                  style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }}
+                />
+
+                {/* Waveform Bars */}
+                {waveformPeaks.length > 0 ? (
+                  waveformPeaks.map((peak, idx) => {
+                    const barPct = (idx / waveformPeaks.length) * 100;
+                    const isInside = barPct >= startPct && barPct <= endPct;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="flex-1 rounded-full transition-colors duration-100"
+                        style={{
+                          height: `${Math.round(peak * 100)}%`,
+                          backgroundColor: isInside
+                            ? "rgba(244, 63, 94, 0.85)"
+                            : "rgba(100, 116, 139, 0.25)",
+                          boxShadow: isInside ? "0 0 4px rgba(244, 63, 94, 0.4)" : "none",
+                        }}
+                      />
+                    );
+                  })
+                ) : (
+                  Array.from({ length: 80 }).map((_, i) => (
                     <div
-                      key={idx}
-                      className="flex-1 rounded-full transition-all duration-150"
-                      style={{
-                        height: `${Math.round(peak * 100)}%`,
-                        backgroundColor: isInsideTrim
-                          ? "rgba(244, 63, 94, 0.9)"
-                          : "rgba(100, 116, 139, 0.3)",
-                        boxShadow: isInsideTrim ? "0 0 6px rgba(244, 63, 94, 0.5)" : "none",
-                      }}
+                      key={i}
+                      className="flex-1 bg-rose-500/60 rounded-full"
+                      style={{ height: `${Math.sin(i * 0.25) * 35 + 45}%` }}
                     />
-                  );
-                })
-              ) : (
-                /* Fallback pulsing wave bars */
-                Array.from({ length: 48 }).map((_, i) => (
+                  ))
+                )}
+
+                {/* Playhead line */}
+                {isPlaying && (
                   <div
-                    key={i}
-                    className="flex-1 bg-rose-500/80 rounded-full"
+                    className="absolute top-0 bottom-0 w-[2px] bg-white shadow-[0_0_10px_#ffffff] z-30 pointer-events-none"
                     style={{
-                      height: `${Math.sin(i * 0.3) * 35 + 45}%`,
+                      left: `${((trimStart + playbackProgress * clipDuration) / (audioDuration || 1)) * 100}%`,
                     }}
                   />
-                ))
-              )}
+                )}
 
-              {/* Scrubber Playhead Line */}
-              {isPlaying && (
+                {/* ===== LEFT HANDLE (Trim Start) ===== */}
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_#ffffff] z-20 pointer-events-none transition-all duration-75"
-                  style={{
-                    left: `${((startTime + playbackProgress * clipDuration) / (audioDuration || 60)) * 100}%`,
-                  }}
-                />
-              )}
-            </div>
+                  className={`absolute top-0 bottom-0 z-30 flex items-center cursor-ew-resize group`}
+                  style={{ left: `calc(${startPct}% - 10px)` }}
+                  onPointerDown={(e) => handlePointerDown("start", e)}
+                >
+                  <div className={`w-[20px] h-full flex items-center justify-center ${dragging === "start" ? "scale-110" : ""} transition-transform`}>
+                    <div className="w-[4px] h-10 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.6)] group-hover:shadow-[0_0_14px_rgba(16,185,129,0.8)] transition-shadow">
+                      <div className="absolute top-1/2 -translate-y-1/2 -translate-x-[3px]">
+                        <GripVertical className="w-[10px] h-[10px] text-emerald-200" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Trim Slider Handle (Instagram-style scrubber) */}
-            {audioDuration > maxDurationSec && (
-              <div className="pt-1">
-                <input
-                  type="range"
-                  min={0}
-                  max={Math.max(0, audioDuration - maxDurationSec)}
-                  step={0.5}
-                  value={startTime}
-                  onChange={(e) => {
-                    const newStart = parseFloat(e.target.value);
-                    setStartTime(newStart);
-                    if (audioElementRef.current) {
-                      audioElementRef.current.currentTime = newStart;
-                    }
-                    if (onAudioChange && audioUrl) {
-                      onAudioChange({
-                        url: audioUrl,
-                        blob: audioFile || undefined,
-                        startTime: newStart,
-                        duration: clipDuration,
-                        name: audioFile?.name || "Personal Audio",
-                        type: activeTab === "record" ? "voice_note" : "custom_music",
-                      });
-                    }
-                  }}
-                  className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
-                  <span>Start: {formatTime(startTime)}</span>
-                  <span>End: {formatTime(startTime + clipDuration)}</span>
+                {/* ===== RIGHT HANDLE (Trim End) ===== */}
+                <div
+                  className={`absolute top-0 bottom-0 z-30 flex items-center cursor-ew-resize group`}
+                  style={{ left: `calc(${endPct}% - 10px)` }}
+                  onPointerDown={(e) => handlePointerDown("end", e)}
+                >
+                  <div className={`w-[20px] h-full flex items-center justify-center ${dragging === "end" ? "scale-110" : ""} transition-transform`}>
+                    <div className="w-[4px] h-10 rounded-full bg-gradient-to-b from-rose-400 to-rose-600 shadow-[0_0_8px_rgba(244,63,94,0.6)] group-hover:shadow-[0_0_14px_rgba(244,63,94,0.8)] transition-shadow">
+                      <div className="absolute top-1/2 -translate-y-1/2 -translate-x-[3px]">
+                        <GripVertical className="w-[10px] h-[10px] text-rose-200" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
+
+              {/* Time markers under waveform */}
+              <div className="flex justify-between px-2 py-1 bg-slate-900 text-[9px] font-mono text-slate-500">
+                <span>0:00</span>
+                <span className="text-emerald-400 font-bold">▶ {formatTime(trimStart)}</span>
+                <span className="text-slate-400">{formatTime(audioDuration / 2)}</span>
+                <span className="text-rose-400 font-bold">{formatTime(trimEnd)} ◀</span>
+                <span>{formatTime(audioDuration)}</span>
+              </div>
+            </div>
+
+            {/* Trim info badges */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Start: {formatTime(trimStart)}
+              </div>
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-[10px] font-bold text-rose-700 dark:text-rose-300">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                End: {formatTime(trimEnd)}
+              </div>
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                <Scissors className="w-2.5 h-2.5" />
+                Duration: {formatTime(clipDuration)} / {maxDurationSec}s max
+              </div>
+            </div>
           </div>
 
+          {/* Status bar */}
           <div className="flex items-center justify-between text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60">
             <span className="flex items-center gap-1.5 font-bold">
               {isUploading ? (
@@ -753,7 +837,7 @@ export function AudioTrimmerStudio({
               )}
             </span>
             <span className="text-[10px] font-mono">
-              {uploadStatus === "done" ? "Permanent ✓" : `Synchronized to ${formatTime(clipDuration)}`}
+              {uploadStatus === "done" ? "Permanent ✓" : `Trimmed to ${formatTime(clipDuration)}`}
             </span>
           </div>
         </div>

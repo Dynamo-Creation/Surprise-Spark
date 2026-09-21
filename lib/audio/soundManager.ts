@@ -308,10 +308,12 @@ class SoundManager {
    * Play a custom background audio track from a permanent URL.
    * Used when the creator uploaded a personal song, voice note, or chose a soundtrack.
    * Automatically suppresses procedural BGM while this track is playing.
+   * Supports trimmed playback: if startTime and duration are provided, playback
+   * starts at the trim start and loops back at trim end.
    */
   public playBackgroundAudio(
     url: string,
-    options?: { loop?: boolean; volume?: number }
+    options?: { loop?: boolean; volume?: number; startTime?: number; duration?: number }
   ) {
     if (typeof window === "undefined" || !url) return;
 
@@ -337,19 +339,54 @@ class SoundManager {
     try {
       const audio = new Audio(url);
       audio.crossOrigin = "anonymous";
-      audio.loop = options?.loop !== false; // default loop = true
       audio.volume = options?.volume ?? 0.75;
       audio.muted = this.isMuted;
       audio.preload = "auto";
       audio.setAttribute("playsinline", "true");
       audio.setAttribute("webkit-playsinline", "true");
 
-      // Handle playback end (if not looping)
-      audio.addEventListener("ended", () => {
-        if (!audio.loop) {
-          this.isCustomAudioActive = false;
-        }
-      });
+      const trimStart = options?.startTime ?? 0;
+      const trimDuration = options?.duration;
+      const hasTrim = trimStart > 0 || (trimDuration !== undefined && trimDuration > 0);
+
+      // If we have trim data, use manual timeupdate loop instead of native loop
+      if (hasTrim && trimDuration && trimDuration > 0) {
+        audio.loop = false; // We handle looping manually for trimmed audio
+        audio.currentTime = trimStart;
+
+        // Timeupdate-based trim enforcement
+        audio.addEventListener("timeupdate", () => {
+          const trimEnd = trimStart + trimDuration;
+          if (audio.currentTime >= trimEnd) {
+            if (options?.loop !== false) {
+              // Loop back to trim start
+              audio.currentTime = trimStart;
+            } else {
+              audio.pause();
+              this.isCustomAudioActive = false;
+            }
+          }
+        });
+
+        // If audio reaches natural end before trimEnd, loop back
+        audio.addEventListener("ended", () => {
+          if (options?.loop !== false) {
+            audio.currentTime = trimStart;
+            audio.play().catch(() => {});
+          } else {
+            this.isCustomAudioActive = false;
+          }
+        });
+      } else {
+        // No trim: use native loop
+        audio.loop = options?.loop !== false;
+
+        audio.addEventListener("ended", () => {
+          if (!audio.loop) {
+            this.isCustomAudioActive = false;
+          }
+        });
+      }
 
       // Handle errors gracefully
       audio.addEventListener("error", (e) => {
@@ -367,6 +404,9 @@ class SoundManager {
         playPromise.catch(() => {
           // Browser blocked autoplay — set up a one-time gesture listener to retry
           const unlockHandler = () => {
+            if (hasTrim && trimDuration) {
+              audio.currentTime = trimStart;
+            }
             audio.play().catch(() => {});
             document.removeEventListener("click", unlockHandler);
             document.removeEventListener("touchstart", unlockHandler);

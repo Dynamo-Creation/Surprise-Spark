@@ -10,6 +10,8 @@ interface RecipientOpeningCurtainProps {
   templateSlug?: string;
   musicPreset?: string;
   audioUrl?: string;
+  audioStartTime?: number;
+  audioDuration?: number;
   onOpen: () => void;
 }
 
@@ -19,6 +21,8 @@ export function RecipientOpeningCurtain({
   templateSlug,
   musicPreset = "happy",
   audioUrl,
+  audioStartTime,
+  audioDuration,
   onOpen,
 }: RecipientOpeningCurtainProps) {
   const [isOpening, setIsOpening] = useState(false);
@@ -34,7 +38,12 @@ export function RecipientOpeningCurtain({
 
       // If creator set a custom audio URL, play it as background audio
       if (audioUrl && audioUrl.startsWith("http")) {
-        soundManager.playBackgroundAudio(audioUrl, { loop: true, volume: 0.75 });
+        soundManager.playBackgroundAudio(audioUrl, {
+          loop: true,
+          volume: 0.75,
+          startTime: audioStartTime,
+          duration: audioDuration,
+        });
       } else {
         // Fall back to procedural BGM preset
         soundManager.startBgm(isProposal ? "romantic" : musicPreset);
