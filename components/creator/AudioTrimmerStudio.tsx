@@ -11,6 +11,7 @@ import {
   Trash2,
   Scissors,
   Check,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -59,6 +60,7 @@ export function AudioTrimmerStudio({
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const allFilesInputRef = useRef<HTMLInputElement | null>(null);
 
   // Keep clip duration bounded to template duration
   useEffect(() => {
@@ -113,6 +115,18 @@ export function AudioTrimmerStudio({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate that the chosen file is a supported audio format
+    const isAudio =
+      file.type.startsWith("audio/") ||
+      file.type === "application/ogg" ||
+      /\.(mp3|wav|m4a|aac|ogg|flac|opus|wma|weba|webm)$/i.test(file.name);
+
+    if (!isAudio) {
+      alert("Please select a valid audio or music file (.mp3, .wav, .m4a, .aac, .ogg, .flac).");
+      e.target.value = "";
+      return;
+    }
+
     if (audioUrl && audioUrl.startsWith("blob:")) {
       URL.revokeObjectURL(audioUrl);
     }
@@ -135,6 +149,9 @@ export function AudioTrimmerStudio({
         type: "custom_music",
       });
     }
+
+    // Reset input so user can re-select if needed
+    e.target.value = "";
   };
 
   // Start Voice Note Recording
@@ -375,31 +392,73 @@ export function AudioTrimmerStudio({
         </div>
       )}
 
-      {/* Mode 1: Device Audio File Upload Dropzone */}
+      {/* Mode 1: Device Audio File Upload Dropzone (Dual Option for Phones) */}
       {!audioUrl && !isRecording && activeTab === "upload" && (
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-rose-400 dark:hover:border-rose-500/80 rounded-2xl p-6 text-center cursor-pointer transition-all bg-white/40 dark:bg-slate-950/40 hover:bg-rose-50/30 dark:hover:bg-rose-950/20 group"
-        >
+        <div className="space-y-3">
+          {/* Audio / Music Picker Input: File extensions first prevents Android from hijacking to sound recorder */}
           <input
             ref={fileInputRef}
             type="file"
-            accept="audio/mp3,audio/wav,audio/m4a,audio/aac,audio/*"
+            accept=".mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.wma,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/aac,audio/ogg,audio/flac,audio/*"
             className="hidden"
             onChange={handleFileUpload}
           />
-          <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-            <Upload className="w-5 h-5" />
+
+          {/* Direct File Manager Input: forces phone to open Files / File Manager */}
+          <input
+            ref={allFilesInputRef}
+            type="file"
+            accept="*/*"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Option A: Music & Audio Picker */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-rose-300/80 dark:border-rose-900/60 hover:border-rose-500 rounded-2xl p-5 text-center cursor-pointer transition-all bg-white/60 dark:bg-slate-950/60 hover:bg-rose-50/40 dark:hover:bg-rose-950/30 group flex flex-col items-center justify-between"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-md">
+                <Music className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-black text-slate-800 dark:text-slate-100">
+                Music & Audio Picker
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                Select from phone Audio files, Music player, or Recordings
+              </p>
+              <span className="mt-2.5 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/60">
+                MP3, WAV, M4A, AAC
+              </span>
+            </div>
+
+            {/* Option B: File Manager / Files App (Bypasses phone voice recorder/gallery prompt) */}
+            <div
+              onClick={() => allFilesInputRef.current?.click()}
+              className="border-2 border-dashed border-amber-300/80 dark:border-amber-900/60 hover:border-amber-500 rounded-2xl p-5 text-center cursor-pointer transition-all bg-white/60 dark:bg-slate-950/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/30 group flex flex-col items-center justify-between"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-md">
+                <FolderOpen className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-black text-slate-800 dark:text-slate-100">
+                Browse File Manager
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                Open phone Files / Downloads / Internal Storage to pick any song
+              </p>
+              <span className="mt-2.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-900/60">
+                Direct Files Access 📁
+              </span>
+            </div>
           </div>
-          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-            Click to upload your favorite song or audio clip
-          </p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-            Supports MP3, WAV, M4A, AAC from your phone or PC.
-          </p>
-          <span className="inline-block mt-3 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-full border border-rose-200/60 dark:border-rose-900/60">
-            Instagram & WhatsApp style Trimmer available after upload
-          </span>
+
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-300">
+            <span className="text-amber-500 shrink-0 text-sm">💡</span>
+            <span>
+              <strong>Phone tip:</strong> If your phone defaults to Voice Recorder or Gallery, tap <strong>&quot;Browse File Manager&quot;</strong> to directly browse your device&apos;s audio and music files.
+            </span>
+          </div>
         </div>
       )}
 
