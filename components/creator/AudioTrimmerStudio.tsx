@@ -12,8 +12,10 @@ import {
   Scissors,
   Check,
   FolderOpen,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 interface AudioTrimmerStudioProps {
   maxDurationSec?: number; // Bounded by template design duration (e.g., 60s for The Golden Proposal)
@@ -26,6 +28,7 @@ interface AudioTrimmerStudioProps {
     name: string;
     type: "voice_note" | "custom_music";
   } | null) => void;
+  onUploadingChange?: (isUploading: boolean) => void;
   initialAudioUrl?: string;
 }
 
@@ -33,6 +36,7 @@ export function AudioTrimmerStudio({
   maxDurationSec = 60,
   templateName = "The Golden Proposal",
   onAudioChange,
+  onUploadingChange,
   initialAudioUrl,
 }: AudioTrimmerStudioProps) {
   const [activeTab, setActiveTab] = useState<"upload" | "record">("upload");
@@ -61,6 +65,10 @@ export function AudioTrimmerStudio({
   const animationFrameRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const allFilesInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Upload state for Supabase Storage persistence
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
 
   // Keep clip duration bounded to template duration
   useEffect(() => {
@@ -110,6 +118,87 @@ export function AudioTrimmerStudio({
     }
   }, []);
 
+  // Upload audio blob/file to Supabase Storage for permanent URL (Client direct + API fallback)
+  const uploadToSupabase = useCallback(async (
+    blobOrFile: Blob | File,
+    fileName: string,
+    audioType: "voice_note" | "custom_music"
+  ): Promise<string | null> => {
+    setIsUploading(true);
+    setUploadStatus("uploading");
+    onUploadingChange?.(true);
+
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const ext = fileName.split(".").pop()?.toLowerCase() || (audioType === "voice_note" ? "webm" : "mp3");
+    const sanitizedOriginalName = fileName
+      .replace(/\.[^.]+$/, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .substring(0, 30);
+    const storagePath = `surprises/${sanitizedOriginalName}_${timestamp}_${randomSuffix}.${ext}`;
+
+    // 1. First attempt: Direct client-side upload to Supabase Storage
+    try {
+      const supabase = createClient();
+      const contentType = blobOrFile.type || (audioType === "voice_note" ? "audio/webm" : "audio/mpeg");
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("music")
+        .upload(storagePath, blobOrFile, {
+          contentType,
+          upsert: true,
+        });
+
+      if (!uploadError && uploadData) {
+        const { data: publicUrlData } = supabase.storage
+          .from("music")
+          .getPublicUrl(storagePath);
+
+        if (publicUrlData?.publicUrl) {
+          setUploadStatus("done");
+          setIsUploading(false);
+          onUploadingChange?.(false);
+          return publicUrlData.publicUrl;
+        }
+      }
+    } catch (directErr) {
+      console.warn("[AudioTrimmer] Direct Supabase upload notice, trying API route:", directErr);
+    }
+
+    // 2. Second attempt: Next.js API server-side upload endpoint
+    try {
+      const formData = new FormData();
+      const file = blobOrFile instanceof File
+        ? blobOrFile
+        : new File([blobOrFile], fileName, { type: blobOrFile.type || "audio/webm" });
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload-audio", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        if (result.publicUrl) {
+          setUploadStatus("done");
+          setIsUploading(false);
+          onUploadingChange?.(false);
+          return result.publicUrl;
+        }
+      } else {
+        const errorBody = await res.json().catch(() => ({ error: "Upload failed" }));
+        console.error("[AudioTrimmer] API upload error:", errorBody);
+      }
+    } catch (err) {
+      console.error("[AudioTrimmer] API upload exception:", err);
+    }
+
+    setUploadStatus("error");
+    setIsUploading(false);
+    onUploadingChange?.(false);
+    return null;
+  }, [onUploadingChange]);
+
   // Handle file upload from device
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -131,17 +220,29 @@ export function AudioTrimmerStudio({
       URL.revokeObjectURL(audioUrl);
     }
 
-    const url = URL.createObjectURL(file);
+    const localUrl = URL.createObjectURL(file);
     setAudioFile(file);
-    setAudioUrl(url);
+    setAudioUrl(localUrl);
     setStartTime(0);
     setIsPlaying(false);
 
     await decodeAudio(file);
 
+    // Upload to Supabase Storage for a permanent URL
+    const permanentUrl = await uploadToSupabase(file, file.name, "custom_music");
+
+    const finalUrl = permanentUrl || localUrl;
+    if (permanentUrl) {
+      // Switch to permanent URL for playback too
+      setAudioUrl(permanentUrl);
+      if (localUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(localUrl);
+      }
+    }
+
     if (onAudioChange) {
       onAudioChange({
-        url,
+        url: finalUrl,
         blob: file,
         startTime: 0,
         duration: Math.min(file.size / 16000, maxDurationSec),
@@ -170,17 +271,28 @@ export function AudioTrimmerStudio({
 
       recorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm;codecs=opus" });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
+        const localUrl = URL.createObjectURL(audioBlob);
+        setAudioUrl(localUrl);
         setAudioFile(new File([audioBlob], "Voice_Note.webm", { type: "audio/webm" }));
         setIsPlaying(false);
         setStartTime(0);
 
         await decodeAudio(audioBlob);
 
+        // Upload to Supabase Storage for a permanent URL
+        const permanentUrl = await uploadToSupabase(audioBlob, "Voice_Note.webm", "voice_note");
+
+        const finalUrl = permanentUrl || localUrl;
+        if (permanentUrl) {
+          setAudioUrl(permanentUrl);
+          if (localUrl.startsWith("blob:")) {
+            URL.revokeObjectURL(localUrl);
+          }
+        }
+
         if (onAudioChange) {
           onAudioChange({
-            url,
+            url: finalUrl,
             blob: audioBlob,
             startTime: 0,
             duration: recordingSeconds,
@@ -624,10 +736,24 @@ export function AudioTrimmerStudio({
 
           <div className="flex items-center justify-between text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60">
             <span className="flex items-center gap-1.5 font-bold">
-              <Check className="w-3.5 h-3.5" /> Audio Ready for {templateName}
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Uploading & Syncing Audio...
+                </>
+              ) : uploadStatus === "error" ? (
+                <>
+                  <span className="text-amber-500">⚠️</span>
+                  <span className="text-amber-600 dark:text-amber-400">Upload failed — audio uses local preview only</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5" /> Audio Ready for {templateName}
+                </>
+              )}
             </span>
             <span className="text-[10px] font-mono">
-              Synchronized to {formatTime(clipDuration)}
+              {uploadStatus === "done" ? "Permanent ✓" : `Synchronized to ${formatTime(clipDuration)}`}
             </span>
           </div>
         </div>

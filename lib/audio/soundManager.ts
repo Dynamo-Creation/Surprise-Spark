@@ -14,6 +14,11 @@ class SoundManager {
   private isBgmPlaying = false;
   private bgmInterval: NodeJS.Timeout | null = null;
 
+  // Custom background audio (user-uploaded tracks / voice notes)
+  private customAudioElement: HTMLAudioElement | null = null;
+  private isCustomAudioActive = false;
+  private customAudioUrl: string | null = null;
+
   private initContext(): AudioContext | null {
     if (typeof window === "undefined") return null;
     if (!this.ctx) {
@@ -39,6 +44,10 @@ class SoundManager {
     this.isMuted = muted;
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.setTargetAtTime(muted ? 0 : 0.7, this.ctx.currentTime, 0.05);
+    }
+    // Sync mute state with custom audio element
+    if (this.customAudioElement) {
+      this.customAudioElement.muted = muted;
     }
   }
 
@@ -193,6 +202,11 @@ class SoundManager {
    * Procedural Ambient Background Music with Mood-Specific Scales & Synthesis
    */
   public startBgm(mood: string = "happy") {
+    // If custom background audio is actively playing, suppress procedural BGM
+    if (this.isCustomAudioActive && this.customAudioElement && !this.customAudioElement.paused) {
+      return;
+    }
+
     // If already playing the requested mood, no-op
     if (this.isBgmPlaying && this.currentMood === mood) return;
 
@@ -288,6 +302,119 @@ class SoundManager {
 
   public getBgmCategory(): string {
     return this.currentMood;
+  }
+
+  /**
+   * Play a custom background audio track from a permanent URL.
+   * Used when the creator uploaded a personal song, voice note, or chose a soundtrack.
+   * Automatically suppresses procedural BGM while this track is playing.
+   */
+  public playBackgroundAudio(
+    url: string,
+    options?: { loop?: boolean; volume?: number }
+  ) {
+    if (typeof window === "undefined" || !url) return;
+
+    // If we're already playing this exact URL, no-op
+    if (
+      this.isCustomAudioActive &&
+      this.customAudioUrl === url &&
+      this.customAudioElement &&
+      !this.customAudioElement.paused
+    ) {
+      return;
+    }
+
+    // Stop any existing custom audio
+    this.stopBackgroundAudio();
+
+    // Also stop procedural BGM so it doesn't overlap
+    this.stopBgm();
+
+    // Unlock Web Audio context using the current user gesture
+    this.initContext();
+
+    try {
+      const audio = new Audio(url);
+      audio.crossOrigin = "anonymous";
+      audio.loop = options?.loop !== false; // default loop = true
+      audio.volume = options?.volume ?? 0.75;
+      audio.muted = this.isMuted;
+      audio.preload = "auto";
+      audio.setAttribute("playsinline", "true");
+      audio.setAttribute("webkit-playsinline", "true");
+
+      // Handle playback end (if not looping)
+      audio.addEventListener("ended", () => {
+        if (!audio.loop) {
+          this.isCustomAudioActive = false;
+        }
+      });
+
+      // Handle errors gracefully
+      audio.addEventListener("error", (e) => {
+        console.warn("[SoundManager] Custom audio playback error:", e);
+        this.isCustomAudioActive = false;
+      });
+
+      this.customAudioElement = audio;
+      this.customAudioUrl = url;
+      this.isCustomAudioActive = true;
+
+      // Attempt immediate playback (relies on prior user gesture from curtain tap)
+      const playPromise = audio.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // Browser blocked autoplay — set up a one-time gesture listener to retry
+          const unlockHandler = () => {
+            audio.play().catch(() => {});
+            document.removeEventListener("click", unlockHandler);
+            document.removeEventListener("touchstart", unlockHandler);
+          };
+          document.addEventListener("click", unlockHandler, { once: true });
+          document.addEventListener("touchstart", unlockHandler, { once: true });
+        });
+      }
+    } catch (err) {
+      console.warn("[SoundManager] Failed to create custom audio:", err);
+      this.isCustomAudioActive = false;
+    }
+  }
+
+  /**
+   * Stop custom background audio playback and clean up.
+   */
+  public stopBackgroundAudio() {
+    if (this.customAudioElement) {
+      try {
+        this.customAudioElement.pause();
+        this.customAudioElement.src = "";
+        this.customAudioElement.load();
+      } catch {
+        // Ignore cleanup errors
+      }
+      this.customAudioElement = null;
+    }
+    this.isCustomAudioActive = false;
+    this.customAudioUrl = null;
+  }
+
+  /**
+   * Check if custom background audio is actively playing.
+   */
+  public isCustomAudioPlaying(): boolean {
+    return (
+      this.isCustomAudioActive &&
+      this.customAudioElement !== null &&
+      !this.customAudioElement.paused
+    );
+  }
+
+  /**
+   * Check if any audio (custom or procedural BGM) is currently playing.
+   */
+  public isAnyAudioPlaying(): boolean {
+    return this.isCustomAudioPlaying() || this.isBgmPlaying;
   }
 }
 

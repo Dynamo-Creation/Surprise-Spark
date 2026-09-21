@@ -73,6 +73,7 @@ function CreateStudioContent() {
 
   // Audio / Voice Note Configuration
   const [customAudioUrl, setCustomAudioUrl] = useState<string | null>(null);
+  const [isAudioUploading, setIsAudioUploading] = useState(false);
 
   // Publishing & Share State
   const [isPublishing, setIsPublishing] = useState(false);
@@ -108,6 +109,10 @@ function CreateStudioContent() {
         }
         if (existing.status === "published") {
           setIsPublished(true);
+        }
+        // Restore saved audio URL from draft — only if it's a permanent cloud URL
+        if (existing.audioUrl && existing.audioUrl.startsWith("http")) {
+          setCustomAudioUrl(existing.audioUrl);
         }
       }
     }
@@ -208,6 +213,11 @@ function CreateStudioContent() {
       return;
     }
 
+    if (isAudioUploading) {
+      alert("Please wait a moment — your audio is uploading to cloud storage so it will play for your recipient!");
+      return;
+    }
+
     setIsPublishing(true);
 
     try {
@@ -219,6 +229,12 @@ function CreateStudioContent() {
       const cleanRecipient = sanitizeText(rawRecipient, 40);
       const cleanSender = sanitizeText(rawSender, 40);
       const cleanMessage = sanitizeText(rawMessage, 500);
+
+      // Only store permanent cloud URLs (never ephemeral browser blobs)
+      const safeAudioUrl =
+        customAudioUrl && customAudioUrl.startsWith("http")
+          ? customAudioUrl
+          : undefined;
 
       const draft = saveDraft({
         id: draftId || undefined,
@@ -235,7 +251,7 @@ function CreateStudioContent() {
         endearment: isGolden ? goldenConfig.recipientEndearment : undefined,
         question: isGolden ? goldenConfig.proposalQuestion : undefined,
         dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
-        audioUrl: customAudioUrl || undefined,
+        audioUrl: safeAudioUrl,
         goldenConfig: isGolden ? goldenConfig : undefined,
       });
 
@@ -253,7 +269,7 @@ function CreateStudioContent() {
             endearment: isGolden ? goldenConfig.recipientEndearment : undefined,
             question: isGolden ? goldenConfig.proposalQuestion : undefined,
             dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
-            audioUrl: customAudioUrl || undefined,
+            audioUrl: safeAudioUrl,
             photos: genericConfig.photos,
             metadata: isGolden ? { goldenConfig } : {},
           }),
@@ -354,12 +370,16 @@ function CreateStudioContent() {
           {/* Publish Action with Magic UI ShimmerButton */}
           <ShimmerButton
             onClick={handlePublish}
-            disabled={isPublishing}
+            disabled={isPublishing || isAudioUploading}
             shimmerColor={selectedTemplateSlug === "the-golden-proposal" ? "#fbbf24" : "#f472b6"}
             background="linear-gradient(135deg, #e11d48 0%, #be185d 50%, #9d174d 100%)"
             className="h-9 px-4 text-xs font-bold shadow-lg cursor-pointer"
           >
-            {isPublishing ? "Publishing..." : "Publish & Share 🚀"}
+            {isPublishing
+              ? "Publishing..."
+              : isAudioUploading
+              ? "Uploading Audio... ⏳"
+              : "Publish & Share 🚀"}
           </ShimmerButton>
         </div>
       </div>
@@ -379,6 +399,7 @@ function CreateStudioContent() {
             onAudioChange={(audioData) => {
               setCustomAudioUrl(audioData?.url || null);
             }}
+            onUploadingChange={setIsAudioUploading}
             initialAudioUrl={customAudioUrl || undefined}
           />
 
@@ -395,12 +416,16 @@ function CreateStudioContent() {
 
             <ShimmerButton
               onClick={handlePublish}
-              disabled={isPublishing}
+              disabled={isPublishing || isAudioUploading}
               shimmerColor="#fbbf24"
               background="linear-gradient(135deg, #e11d48 0%, #be185d 100%)"
               className="px-6 py-2.5 text-xs font-bold shadow-md cursor-pointer"
             >
-              {isPublishing ? "Preparing..." : "Ready? Publish Surprise 🎉"}
+              {isPublishing
+                ? "Preparing..."
+                : isAudioUploading
+                ? "Uploading Audio... ⏳"
+                : "Ready? Publish Surprise 🎉"}
             </ShimmerButton>
           </div>
         </div>

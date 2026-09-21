@@ -54,6 +54,7 @@ interface TemplatePersonalizeSectionProps {
     name: string;
     type: "voice_note" | "custom_music";
   } | null) => void;
+  onUploadingChange?: (isUploading: boolean) => void;
   initialAudioUrl?: string;
 }
 
@@ -64,6 +65,7 @@ export function TemplatePersonalizeSection({
   genericConfig,
   onGenericConfigChange,
   onAudioChange,
+  onUploadingChange,
   initialAudioUrl,
 }: TemplatePersonalizeSectionProps) {
   const isGoldenProposal = template.slug === "the-golden-proposal";
@@ -416,6 +418,7 @@ export function TemplatePersonalizeSection({
         maxDurationSec={templateDuration}
         templateName={template.name}
         onAudioChange={onAudioChange}
+        onUploadingChange={onUploadingChange}
         initialAudioUrl={initialAudioUrl}
       />
     </div>

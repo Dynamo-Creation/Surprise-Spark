@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 import {
   TemplateModel,
   TemplateVersionModel,
@@ -147,7 +148,9 @@ export function PublicSurpriseClient({
         if (draft.endearment) setEndearment(draft.endearment);
         if (draft.question) setQuestion(draft.question);
         if (draft.dodgeText) setDodgeText(draft.dodgeText);
-        if (draft.audioUrl) setAudioUrl(draft.audioUrl);
+        if (draft.audioUrl && draft.audioUrl.startsWith("http")) {
+          setAudioUrl(draft.audioUrl);
+        }
 
         if (draft.themeId && THEMES[draft.themeId]) {
           setThemeOverride(THEMES[draft.themeId]);
@@ -182,6 +185,17 @@ export function PublicSurpriseClient({
     const loadTime = typeof performance !== "undefined" ? Math.round(performance.now()) : 350;
     trackPerformance({ loadTimeMs: loadTime, webGlAvailable: isWebGLSupported }, publicId);
   }, [publicId, isWebGLSupported]);
+
+  // Sync iframe mute requests with parent soundManager
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "SURPRISE_TOGGLE_MUTE") {
+        soundManager.toggleMute();
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   // Replay Handler
   const handleReplay = useCallback(() => {
@@ -228,6 +242,7 @@ export function PublicSurpriseClient({
           senderName={personalization.sender_name}
           templateSlug={template.slug}
           musicPreset={template.slug === "the-golden-proposal" ? "romantic" : musicPreset}
+          audioUrl={audioUrl}
           onOpen={() => {
             setHasEntered(true);
             trackSurpriseEvent("open", { surpriseId: publicId, templateId: template.id });
@@ -253,6 +268,7 @@ export function PublicSurpriseClient({
               src={`/api/admin/templates/preview?slug=love-animation&recipientName=${encodeURIComponent(personalization.recipient_name)}&senderName=${encodeURIComponent(personalization.sender_name)}&message=${encodeURIComponent(personalization.message)}`}
               className="w-full h-screen border-none"
               title="Love Animation Experience"
+              allow="autoplay"
             />
           ) : template.slug === "the-golden-proposal" ? (
             <iframe
@@ -273,6 +289,7 @@ export function PublicSurpriseClient({
               )}`}
               className="w-full h-screen border-none"
               title="The Golden Proposal Experience"
+              allow="autoplay"
             />
           ) : isWebGLSupported ? (
             <ExperiencePlayer
@@ -320,6 +337,35 @@ export function PublicSurpriseClient({
         recipientName={personalization.recipient_name}
         senderName={personalization.sender_name}
       />
+
+      {/* 5. Floating Audio Mute/Unmute Controller */}
+      {hasEntered && !showFinalScreen && (
+        <button
+          onClick={() => {
+            const currentMuted = soundManager.getMuted();
+            soundManager.setMuted(!currentMuted);
+          }}
+          className="fixed bottom-6 right-6 z-[9999] w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/60 transition-all duration-300 shadow-lg"
+          title="Toggle audio"
+          aria-label="Toggle audio mute"
+        >
+          <AudioToggleIcon />
+        </button>
+      )}
     </div>
   );
+}
+
+/** Small helper component so React re-renders the icon on mute state changes */
+function AudioToggleIcon() {
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMuted(soundManager.getMuted());
+    }, 300);
+    return () => clearInterval(interval);
+  }, []);
+
+  return muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />;
 }

@@ -375,20 +375,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Custom Audio Playback override
-    if (customAudioUrl) {
-      const customAudio = new Audio(customAudioUrl);
-      customAudio.loop = true;
+    const isInIframe = window.parent && window.parent !== window;
+    if (customAudioUrl && customAudioUrl.startsWith('http')) {
+      let customAudio = null;
+
+      // If running standalone (preview / direct template load), play directly
+      if (!isInIframe) {
+        customAudio = new Audio(customAudioUrl);
+        customAudio.crossOrigin = 'anonymous';
+        customAudio.loop = true;
+        customAudio.volume = 0.75;
+        customAudio.preload = 'auto';
+
+        const tryPlay = () => {
+          const playPromise = customAudio.play();
+          if (playPromise) {
+            playPromise.catch(() => {
+              const unlockAudio = () => {
+                customAudio.play().catch(() => {});
+                document.removeEventListener('click', unlockAudio);
+                document.removeEventListener('touchstart', unlockAudio);
+              };
+              document.addEventListener('click', unlockAudio, { once: true });
+              document.addEventListener('touchstart', unlockAudio, { once: true });
+            });
+          }
+        };
+
+        if (customAudio.readyState >= 2) {
+          tryPlay();
+        } else {
+          customAudio.addEventListener('canplay', tryPlay, { once: true });
+          setTimeout(tryPlay, 1000);
+        }
+      }
+
+      // Sound toggle button coordination
       if (soundBtn) {
         soundBtn.addEventListener('click', () => {
-          if (customAudio.paused) {
-            customAudio.play().catch(() => {});
-            if (soundIcon) soundIcon.textContent = '🔊';
-          } else {
-            customAudio.pause();
-            if (soundIcon) soundIcon.textContent = '🔇';
+          if (isInIframe) {
+            try {
+              window.parent.postMessage({ type: 'SURPRISE_TOGGLE_MUTE' }, '*');
+            } catch (e) {}
+          } else if (customAudio) {
+            if (customAudio.paused) {
+              customAudio.play().catch(() => {});
+              if (soundIcon) soundIcon.textContent = '🔊';
+            } else {
+              customAudio.pause();
+              if (soundIcon) soundIcon.textContent = '🔇';
+            }
           }
         });
       }
+
+      // Listen for mute commands from parent frame's floating audio controller
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SURPRISE_MUTE_AUDIO') {
+          if (customAudio) customAudio.muted = true;
+          if (soundIcon) soundIcon.textContent = '🔇';
+        } else if (event.data && event.data.type === 'SURPRISE_UNMUTE_AUDIO') {
+          if (customAudio) customAudio.muted = false;
+          if (soundIcon) soundIcon.textContent = '🔊';
+        }
+      });
     }
   } catch (e) {
     console.warn('Personalization initialization notice:', e);

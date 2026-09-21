@@ -9,6 +9,7 @@ interface RecipientOpeningCurtainProps {
   senderName?: string;
   templateSlug?: string;
   musicPreset?: string;
+  audioUrl?: string;
   onOpen: () => void;
 }
 
@@ -17,6 +18,7 @@ export function RecipientOpeningCurtain({
   senderName,
   templateSlug,
   musicPreset = "happy",
+  audioUrl,
   onOpen,
 }: RecipientOpeningCurtainProps) {
   const [isOpening, setIsOpening] = useState(false);
@@ -29,7 +31,14 @@ export function RecipientOpeningCurtain({
     // Initialize Web Audio playback on user touch/click gesture
     try {
       soundManager.playSoundEffect("sparkle");
-      soundManager.startBgm(isProposal ? "romantic" : musicPreset);
+
+      // If creator set a custom audio URL, play it as background audio
+      if (audioUrl && audioUrl.startsWith("http")) {
+        soundManager.playBackgroundAudio(audioUrl, { loop: true, volume: 0.75 });
+      } else {
+        // Fall back to procedural BGM preset
+        soundManager.startBgm(isProposal ? "romantic" : musicPreset);
+      }
     } catch {
       // Audio autoplay fallback handled gracefully
     }
