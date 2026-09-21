@@ -38,20 +38,20 @@ export async function generateMetadata({
   }
 
   const templateSlug =
-    query.template ||
     cloudRecord?.template_slug ||
-    (publicId.includes("golden") || publicId.includes("proposal")
+    query.template ||
+    (publicId.includes("golden") || publicId.includes("proposal") || publicId.startsWith("love-")
       ? "the-golden-proposal"
       : "sweet-celebration");
 
   const recipientName =
-    query.name ||
     cloudRecord?.recipient_name ||
+    query.name ||
     (isSample ? SAMPLE_SURPRISE.recipient.name : "Someone Special");
 
   const senderName =
-    query.sender ||
     cloudRecord?.sender_name ||
+    query.sender ||
     (isSample ? SAMPLE_SURPRISE.sender.name : "");
 
   const isProposal = templateSlug === "the-golden-proposal";
@@ -130,11 +130,11 @@ export default async function RecipientSurprisePage({
     }
   }
 
-  // 2. Resolve Template Definition: Query Param -> Cloud Record -> Slug heuristic -> Default
+  // 2. Resolve Template Definition: Cloud Record -> Query Param -> Slug heuristic -> Default
   const templateSlug =
-    query.template ||
     cloudRecord?.template_slug ||
-    (publicId.includes("golden") || publicId.includes("proposal")
+    query.template ||
+    (publicId.includes("golden") || publicId.includes("proposal") || publicId.startsWith("love-")
       ? "the-golden-proposal"
       : "sweet-celebration");
 

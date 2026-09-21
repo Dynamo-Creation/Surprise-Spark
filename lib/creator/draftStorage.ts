@@ -34,9 +34,15 @@ export interface DraftSurprise {
 
 const LOCAL_STORAGE_KEY = "surprisespark_drafts_v1";
 
-function generatePublicId(): string {
+export function generatePublicId(templateSlug?: string): string {
   const chars = "abcdefghjkmnpqrstuvwxyz23456789";
-  let result = "bday-";
+  let prefix = "spark-";
+  if (templateSlug === "the-golden-proposal" || templateSlug === "love-animation") {
+    prefix = "love-";
+  } else if (templateSlug === "sweet-celebration" || templateSlug?.includes("bday") || templateSlug?.includes("birthday")) {
+    prefix = "bday-";
+  }
+  let result = prefix;
   for (let i = 0; i < 6; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -80,7 +86,7 @@ export function saveDraft(data: Partial<DraftSurprise>): DraftSurprise {
   } else {
     record = {
       id: data.id || "draft_" + Math.random().toString(36).substring(2, 10),
-      publicId: data.publicId || generatePublicId(),
+      publicId: data.publicId || generatePublicId(data.templateSlug),
       userId: data.userId,
       templateSlug: data.templateSlug || "sweet-celebration",
       recipientName: data.recipientName || "Someone Special",

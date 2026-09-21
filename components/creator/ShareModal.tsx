@@ -87,20 +87,8 @@ export function ShareModal({
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://surprisespark.app";
 
-  // Construct comprehensive URL parameters so any recipient opening on any device sees the exact template & personalization
-  const qp = new URLSearchParams();
-  if (templateSlug) qp.set("template", templateSlug);
-  if (recipientName) qp.set("name", recipientName);
-  if (senderName) qp.set("sender", senderName);
-  if (customMessage) qp.set("message", customMessage);
-  if (endearment) qp.set("endearment", endearment);
-  if (question) qp.set("question", question);
-  if (dodgeText) qp.set("dodgeText", dodgeText);
-  if (audioUrl) qp.set("audioUrl", audioUrl);
-  if (photos && photos.length > 0) qp.set("photos", photos.join(","));
-
-  const queryString = qp.toString();
-  const publicUrl = queryString ? `${origin}/s/${publicId}?${queryString}` : `${origin}/s/${publicId}`;
+  // Clean, short, private URL that keeps the surprise hidden until opened
+  const publicUrl = `${origin}/s/${publicId}`;
 
   const isProposal = templateSlug === "the-golden-proposal";
 
