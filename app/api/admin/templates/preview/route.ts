@@ -11,6 +11,10 @@ export async function GET(request: NextRequest) {
     const recipientName = searchParams.get("recipientName") || searchParams.get("name") || "Sarah";
     const senderName = searchParams.get("senderName") || searchParams.get("sender") || "Alex";
     const message = searchParams.get("message") || "Wishing you the happiest celebration filled with love and magic!";
+    const endearment = searchParams.get("endearment") || "";
+    const question = searchParams.get("question") || "";
+    const dodgeText = searchParams.get("dodgeText") || "";
+    const audioUrl = searchParams.get("audioUrl") || "";
 
     if (!slug) {
       return new NextResponse("Template slug is required", { status: 400 });
@@ -206,8 +210,12 @@ export async function GET(request: NextRequest) {
         console.log("[Live Preview Panel] Initializing template animation preview for ${effectiveSlug}...");
         window.isTemplatePreview = true;
         window.recipientName = ${JSON.stringify(recipientName)};
+        window.recipientEndearment = ${JSON.stringify(endearment)};
         window.senderName = ${JSON.stringify(senderName)};
         window.customMessage = ${JSON.stringify(message)};
+        window.proposalQuestion = ${JSON.stringify(question)};
+        window.dodgeTooltipText = ${JSON.stringify(dodgeText)};
+        window.customAudioUrl = ${JSON.stringify(audioUrl)};
 
         function autoLaunch() {
           var rootEl = document.getElementById("root");
