@@ -208,11 +208,11 @@ export default function App() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.08)_0%,transparent_70%)] pointer-events-none" />
 
           {/* Floating Message */}
-          <div className="text-center mb-10 z-10 px-6">
-            <span className="text-[10px] font-mono tracking-[0.2em] text-rose-500 uppercase font-bold block mb-3 animate-pulse">
+          <div className="text-center mb-6 sm:mb-10 z-10 px-4 sm:px-6">
+            <span className="text-[10px] font-mono tracking-[0.2em] text-rose-500 uppercase font-bold block mb-2 sm:mb-3 animate-pulse">
               💖 A SURPRISE LOVE NOTE 💖
             </span>
-            <h1 className="text-2xl md:text-3xl font-serif italic text-white font-medium tracking-wide">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-serif italic text-white font-medium tracking-wide">
               You have received a magical love letter...
             </h1>
             <p className="text-xs text-neutral-400 font-sans mt-2 tracking-wider">
@@ -223,7 +223,7 @@ export default function App() {
           {/* Envelope Card */}
           <div 
             onClick={handleOpenEnvelope}
-            className={`relative w-80 h-52 bg-[#140b17] border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(244,63,94,0.25)] flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-105 hover:border-rose-500/40 group ${
+            className={`relative w-[88vw] max-w-[330px] h-48 sm:h-52 bg-[#140b17] border border-white/10 rounded-2xl shadow-[0_25px_60px_-15px_rgba(244,63,94,0.25)] flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-105 hover:border-rose-500/40 group ${
               isOpening ? 'translate-y-[-100px] opacity-0 rotate-12 scale-90' : ''
             }`}
           >
@@ -236,10 +236,10 @@ export default function App() {
 
             {/* Glowing Red Wax Seal Pulsing Heart */}
             <div className="relative z-10 flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-rose-700 to-red-500 flex items-center justify-center shadow-[0_0_25px_rgba(244,63,94,0.6)] border border-rose-400/30 group-hover:scale-110 transition-transform duration-300">
-                <Heart className="w-10 h-10 text-white fill-white animate-pulse" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-rose-700 to-red-500 flex items-center justify-center shadow-[0_0_25px_rgba(244,63,94,0.6)] border border-rose-400/30 group-hover:scale-110 transition-transform duration-300">
+                <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-white fill-white animate-pulse" />
               </div>
-              <span className="text-[9px] font-mono tracking-widest text-rose-400 uppercase font-bold mt-4 group-hover:text-rose-300">
+              <span className="text-[9px] font-mono tracking-widest text-rose-400 uppercase font-bold mt-3 sm:mt-4 group-hover:text-rose-300">
                 TAP TO OPEN
               </span>
             </div>
@@ -248,7 +248,7 @@ export default function App() {
             <div className="absolute left-0 bottom-0 w-full h-1.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 rounded-b-2xl opacity-60" />
           </div>
 
-          <p className="text-[10px] font-mono text-neutral-600 mt-12 tracking-widest uppercase">
+          <p className="text-[10px] font-mono text-neutral-600 mt-8 sm:mt-12 tracking-widest uppercase">
             Designed with absolute love &bull; Web Synthesis
           </p>
         </div>

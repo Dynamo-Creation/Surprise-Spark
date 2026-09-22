@@ -310,6 +310,10 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
     const reinitializeParticles = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
+      const container = containerRef.current;
+      const dpr = stateRef.current.dpr || 1;
+      const w = container?.clientWidth || (canvas.width / dpr);
+      const h = container?.clientHeight || (canvas.height / dpr);
 
       const count = config.particleCount;
       const list: Particle[] = [];
@@ -318,9 +322,9 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
       stateRef.current.entranceTime = 0;
 
       for (let i = 0; i < count; i++) {
-        const x = Math.random() * canvas.width;
+        const x = Math.random() * w;
         // Start partially on-screen to be revealed seamlessly, and partially above the screen
-        const y = Math.random() * canvas.height * 1.5 - canvas.height * 0.5;
+        const y = Math.random() * h * 1.5 - h * 0.5;
         list.push({
           x,
           y,
@@ -361,25 +365,25 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
 
       const isCountdownDigit = upperText.length === 1 && !isNaN(Number(upperText));
 
-      // Determine responsive size
+      // Determine responsive size - beautifully proportioned on both mobile portrait and desktop
       let fontSize: number;
       if (isCountdownDigit) {
         // Prominent, majestic size for countdown numbers (e.g. 3, 2, 1)
-        fontSize = Math.floor(Math.min(height * 0.52, width * 0.35));
+        fontSize = Math.floor(Math.min(height * 0.46, width * 0.42));
       } else if (upperText.length > 4) {
-        fontSize = Math.floor(width * (0.8 / upperText.length));
+        fontSize = Math.floor(width * (0.82 / upperText.length));
       } else {
-        fontSize = Math.floor(width * 0.18);
+        fontSize = Math.floor(Math.min(width * 0.24, height * 0.18));
       }
-      fontSize = Math.min(fontSize, Math.floor(height * 0.52));
-      fontSize = Math.max(fontSize, 32);
+      fontSize = Math.min(fontSize, Math.floor(height * 0.48));
+      fontSize = Math.max(fontSize, 34);
 
       oCtx.font = `900 ${fontSize}px "Space Grotesk", "Inter", sans-serif`;
       oCtx.textAlign = 'center';
       oCtx.textBaseline = 'middle';
       oCtx.fillStyle = '#ffffff';
 
-      // Draw text
+      // Draw text exactly centered in logical viewport
       oCtx.fillText(upperText, width / 2, height / 2);
 
       // Read pixels
@@ -414,11 +418,16 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
       const centerX = width / 2;
       const centerY = height / 2 - height * 0.05; // Slightly higher
       
-      // Responsive scale for the heart - adaptively scale up for longer text so it fits beautifully
+      // Responsive scale for the heart: on mobile portrait (width < 640), scale up generously so it fills the screen majestically!
+      const isMobile = width < 640;
       const textLen = heartText ? heartText.length : 12;
-      let scale = Math.min(width, height) * 0.016;
+      let scale = isMobile 
+        ? Math.min(width, height) * 0.022 
+        : Math.min(width, height) * 0.016;
       if (textLen > 12) {
-        scale = Math.min(width, height) * (0.016 + Math.min(0.008, (textLen - 12) * 0.0011));
+        scale = isMobile
+          ? Math.min(width, height) * (0.022 + Math.min(0.006, (textLen - 12) * 0.0008))
+          : Math.min(width, height) * (0.016 + Math.min(0.008, (textLen - 12) * 0.0011));
       }
 
       // Draw a thick, highly dense double outline of the heart for perfect contrast
@@ -438,8 +447,6 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         }
       }
 
-      // We do NOT add filled interior points to keep the centerpiece heart interior completely clean, 
-      // so the romantic message is extremely sharp, readable and stunning inside the glowing outline!
       return points;
     };
 
@@ -447,6 +454,10 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
     const triggerSlideTransition = (slideIdx: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
+      const container = containerRef.current;
+      const dpr = stateRef.current.dpr || 1;
+      const w = container?.clientWidth || (canvas.width / dpr);
+      const h = container?.clientHeight || (canvas.height / dpr);
 
       let targets: { x: number; y: number }[] = [];
       const isHeartSlide = slideIdx === config.slides.length;
@@ -456,11 +467,11 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
       if (slideIdx === -1) {
         // Entrance Phase - no targets, let all particles drift
       } else if (isHeartSlide) {
-        // Heart Slide target
-        targets = sampleHeartPoints(canvas.width, canvas.height, Math.floor(config.particleCount * 0.65), config.heartText);
+        // Heart Slide target using logical w and h
+        targets = sampleHeartPoints(w, h, Math.floor(config.particleCount * 0.65), config.heartText);
       } else if (currentSlide) {
         // Countdown and normal words are all formed by the particles!
-        targets = sampleTextPoints(currentSlide.text, canvas.width, canvas.height);
+        targets = sampleTextPoints(currentSlide.text, w, h);
       }
 
       // Play Sound Effects only when actively playing
@@ -927,8 +938,8 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           const word = vocabulary[Math.floor(Math.random() * vocabulary.length)].toUpperCase();
           activeWords.push({
             text: word,
-            x: Math.random() * canvas.width,
-            y: canvas.height + 40,
+            x: Math.random() * w,
+            y: h + 40,
             vx: (Math.random() - 0.5) * 0.4,
             vy: -(0.5 + Math.random() * 0.8),
             size: 15 + Math.random() * 12,
@@ -946,41 +957,41 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
 
         // Update and Draw floating words
         for (let i = activeWords.length - 1; i >= 0; i--) {
-          const w = activeWords[i];
-          w.life++;
+          const wd = activeWords[i];
+          wd.life++;
           
           // Gentle wave/sway motion
-          w.x += w.vx + Math.sin(timeVal * w.swaySpeed + w.swayOffset) * 0.15;
-          w.y += w.vy;
+          wd.x += wd.vx + Math.sin(timeVal * wd.swaySpeed + wd.swayOffset) * 0.15;
+          wd.y += wd.vy;
 
           // Fade in at start, fade out at end
-          if (w.life < 50) {
-            w.alpha = w.life / 50;
-          } else if (w.life > w.maxLife - 50) {
-            w.alpha = (w.maxLife - w.life) / 50;
+          if (wd.life < 50) {
+            wd.alpha = wd.life / 50;
+          } else if (wd.life > wd.maxLife - 50) {
+            wd.alpha = (wd.maxLife - wd.life) / 50;
           } else {
-            w.alpha = 1.0;
+            wd.alpha = 1.0;
           }
 
           // Check if hovered/touched by mouse to trigger "instant gorgeous dissolution/mixing"
           const mouse = stateRef.current.mouse;
-          const dx = mouse.x - w.x;
-          const dy = mouse.y - w.y;
+          const dx = mouse.x - wd.x;
+          const dy = mouse.y - wd.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 45 && !w.dissolving) {
-            w.dissolving = true;
+          if (dist < 45 && !wd.dissolving) {
+            wd.dissolving = true;
             // Create a burst of sparkles/hearts at the word position when it dissolves!
             if (config.enableSoundEffects) {
               synthesizer.playSparkle();
             }
             // Spawn multiple dissolve star/heart particles
-            const wordColor = w.color.includes('rgba') ? 'rgba(244, 63, 94, 0.9)' : w.color;
+            const wordColor = wd.color.includes('rgba') ? 'rgba(244, 63, 94, 0.9)' : wd.color;
             for (let k = 0; k < 15; k++) {
               const angle = Math.random() * Math.PI * 2;
               const speed = 0.6 + Math.random() * 2.5;
               activeHearts.push({
-                x: w.x + (Math.random() - 0.5) * 40,
-                y: w.y + (Math.random() - 0.5) * 15,
+                x: wd.x + (Math.random() - 0.5) * 40,
+                y: wd.y + (Math.random() - 0.5) * 15,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed - 0.5,
                 size: 3 + Math.random() * 4.5,
@@ -993,15 +1004,15 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           }
 
           // If word is dissolving or reached the end of life, splice out
-          if (w.dissolving || w.life >= w.maxLife || w.y < -40 || w.x < -100 || w.x > canvas.width + 100) {
+          if (wd.dissolving || wd.life >= wd.maxLife || wd.y < -40 || wd.x < -100 || wd.x > w + 100) {
             // If it naturally reached end of life, trigger small dissolution chimes
-            if (!w.dissolving && w.life >= w.maxLife) {
-              const wordColor = w.color.includes('rgba') ? 'rgba(244, 63, 94, 0.9)' : w.color;
+            if (!wd.dissolving && wd.life >= wd.maxLife) {
+              const wordColor = wd.color.includes('rgba') ? 'rgba(244, 63, 94, 0.9)' : wd.color;
               for (let k = 0; k < 6; k++) {
                 const angle = Math.random() * Math.PI * 2;
                 activeHearts.push({
-                  x: w.x,
-                  y: w.y,
+                  x: wd.x,
+                  y: wd.y,
                   vx: Math.cos(angle) * 0.8,
                   vy: Math.sin(angle) * 0.8 - 0.2,
                   size: 2.5 + Math.random() * 3,
@@ -1018,18 +1029,18 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
 
           // Draw the beautiful floating word
           ctx.save();
-          ctx.globalAlpha = w.alpha * 0.85;
+          ctx.globalAlpha = wd.alpha * 0.85;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
           // Beautiful drop shadow glow
           ctx.shadowBlur = 10;
-          ctx.shadowColor = w.glow;
+          ctx.shadowColor = wd.glow;
           ctx.fillStyle = '#ffffff'; // White letters with glowing edges looks stunning
           
-          ctx.font = `900 ${w.size}px "Space Grotesk", sans-serif`;
+          ctx.font = `900 ${wd.size}px "Space Grotesk", sans-serif`;
           
-          ctx.fillText(w.text, w.x, w.y);
+          ctx.fillText(wd.text, wd.x, wd.y);
           ctx.restore();
         }
 
@@ -1049,20 +1060,26 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
 
-          // Center text (Main Message) - adaptively scale down font size for longer messages
+          // Center text (Main Message) - adaptively scale for mobile portrait vs desktop
           const textLen = config.heartText.length;
           let fontSizeMultiplier = 1.0;
           if (textLen > 12) {
             fontSizeMultiplier = Math.max(0.62, 12 / textLen);
           }
-          const fontSizeMain = Math.max(16, Math.floor(w * 0.038 * fontSizeMultiplier) * textPulse);
+          const baseDim = Math.min(w, h);
+          const isMobilePortrait = w < 640 && h > w;
+          const fontSizeMain = isMobilePortrait
+            ? Math.max(22, Math.floor(baseDim * 0.065 * fontSizeMultiplier) * textPulse)
+            : Math.max(18, Math.floor(w * 0.038 * fontSizeMultiplier) * textPulse);
           ctx.font = `bold ${fontSizeMain}px "Space Grotesk", "Inter", sans-serif`;
           ctx.fillText(config.heartText, centerX, centerY);
 
           // Sub text (Underneath)
           if (config.heartSubText) {
-            const fontSizeSub = Math.max(11, Math.floor(w * 0.02 * fontSizeMultiplier) * textPulse);
-            ctx.font = `500 ${fontSizeSub}px monospace`;
+            const fontSizeSub = isMobilePortrait
+              ? Math.max(12, Math.floor(baseDim * 0.034 * fontSizeMultiplier) * textPulse)
+              : Math.max(11, Math.floor(w * 0.02 * fontSizeMultiplier) * textPulse);
+            ctx.font = `500 ${fontSizeSub}px "Inter", monospace`;
             ctx.fillStyle = '#ffffff';
             ctx.fillText(config.heartSubText, centerX, centerY + fontSizeMain * 1.45);
           }
