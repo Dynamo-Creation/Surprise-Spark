@@ -252,17 +252,42 @@
         const rosePetals = [];
         const offscreenCanvas = document.createElement('canvas');
 
-        // Draw a crisp heart at coordinates helper
-        function drawTinyHeart(ctx, x, y, size) {
-          ctx.beginPath();
-          const d = size * 1.35;
-          ctx.moveTo(x, y + d * 0.3);
-          ctx.bezierCurveTo(x, y - d * 0.45, x - d * 0.95, y - d * 0.45, x - d * 0.95, y + d * 0.2);
-          ctx.bezierCurveTo(x - d * 0.95, y + d * 0.7, x - d * 0.45, y + d * 1.05, x, y + d * 1.4);
-          ctx.bezierCurveTo(x + d * 0.45, y + d * 1.05, x + d * 0.95, y + d * 0.7, x + d * 0.95, y + d * 0.2);
-          ctx.bezierCurveTo(x + d * 0.95, y - d * 0.45, x, y - d * 0.45, x, y + d * 0.3);
-          ctx.closePath();
-          ctx.fill();
+        // Pre-render crisp vector heart sprites for hardware-accelerated 60fps blits
+        function createHeartSprite(fillColor, glowColor = null, glowBlur = 0) {
+          const spriteSize = 64;
+          const sc = document.createElement('canvas');
+          sc.width = spriteSize;
+          sc.height = spriteSize;
+          const sCtx = sc.getContext('2d');
+          if (!sCtx) return sc;
+          sCtx.clearRect(0, 0, spriteSize, spriteSize);
+          if (glowColor && glowBlur > 0) {
+            sCtx.shadowColor = glowColor;
+            sCtx.shadowBlur = glowBlur;
+          }
+          sCtx.fillStyle = fillColor;
+          const cx = spriteSize / 2;
+          const cy = spriteSize / 2 - 2;
+          const d = 16;
+          sCtx.beginPath();
+          sCtx.moveTo(cx, cy + d * 0.3);
+          sCtx.bezierCurveTo(cx, cy - d * 0.45, cx - d * 0.95, cy - d * 0.45, cx - d * 0.95, cy + d * 0.2);
+          sCtx.bezierCurveTo(cx - d * 0.95, cy + d * 0.7, cx - d * 0.45, cy + d * 1.05, cx, cy + d * 1.4);
+          sCtx.bezierCurveTo(cx + d * 0.45, cy + d * 1.05, cx + d * 0.95, cy + d * 0.7, cx + d * 0.95, cy + d * 0.2);
+          sCtx.bezierCurveTo(cx + d * 0.95, cy - d * 0.45, cx, cy - d * 0.45, cx, cy + d * 0.3);
+          sCtx.closePath();
+          sCtx.fill();
+          return sc;
+        }
+
+        const whiteHeartSprite = createHeartSprite('#ffffff');
+        const pinkHeartSprite = createHeartSprite('rgba(244, 63, 94, 0.45)');
+        const magentaHeartSprite = createHeartSprite('rgba(255, 30, 130, 0.95)', 'rgba(255, 20, 120, 0.6)', 4);
+
+        // Draw a crisp heart at coordinates helper using pre-rendered sprite
+        function drawTinyHeart(ctx, x, y, size, sprite = whiteHeartSprite) {
+          const s = size * 2.4;
+          ctx.drawImage(sprite, x - s / 2, y - s / 2, s, s);
         }
 
         // Initialize particles with a portion starting on-screen to be revealed seamlessly by the scanline
@@ -314,7 +339,7 @@
           return pts;
         }
 
-        // Rasterize text text points
+        // Rasterize text text points with single-digit countdown optimization
         function sampleTextPoints(text, w, h) {
           const upperText = text.toUpperCase();
           offscreenCanvas.width = w;
@@ -325,12 +350,15 @@
           oCtx.fillStyle = '#000000';
           oCtx.fillRect(0, 0, w, h);
 
+          const isSingleDigit = /^[0-9]$/.test(text.trim());
           let fontSize = Math.floor(w * 0.18);
-          if (upperText.length > 4) {
+          if (isSingleDigit) {
+            fontSize = Math.floor(Math.min(h * 0.52, w * 0.38));
+          } else if (upperText.length > 4) {
             fontSize = Math.floor(w * (0.8 / upperText.length));
           }
           fontSize = Math.min(fontSize, Math.floor(h * 0.5));
-          fontSize = Math.max(fontSize, 28);
+          fontSize = Math.max(fontSize, 32);
 
           oCtx.font = `900 ${fontSize}px "Space Grotesk", sans-serif`;
           oCtx.textAlign = 'center';
@@ -341,7 +369,9 @@
           const imgData = oCtx.getImageData(0, 0, w, h);
           const data = imgData.data;
           const pts = [];
-          const step = Math.max(2, Math.floor((w * h) / 100000));
+          const step = isSingleDigit
+            ? Math.max(5, Math.floor(fontSize * 0.048))
+            : Math.max(3, Math.floor(fontSize * 0.038));
 
           for (let y = 0; y < h; y += step) {
             for (let x = 0; x < w; x += step) {
@@ -360,6 +390,7 @@
         function triggerSlideTransition(slideIdx) {
           let targets = [];
           const isHeartSlide = slideIdx === slides.length;
+          const isCountdown = slideIdx >= 0 && slideIdx < slides.length && /^[0-9]$/.test(slides[slideIdx].text.trim());
 
           if (slideIdx === -1) {
             // Entrance
@@ -398,6 +429,7 @@
               p.originalTargetY = targets[i].y;
               p.isSpare = false;
               p.color = '#ffffff'; // countdown and text particles are pure white
+              p.size = isCountdown ? 5.2 : 2.5; // Big, distinct cute heart particles for countdown
             } else {
               p.isSpare = true;
               p.vx = (Math.random() - 0.5) * 0.3;
@@ -405,6 +437,7 @@
               p.targetX = p.x;
               p.targetY = p.y;
               p.color = '#f43f5e';
+              p.size = 1.8;
             }
           }
         }
@@ -563,9 +596,9 @@
             }
           }
 
-          // Set active shadow glow
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = isHeartSlide ? 'rgba(255, 30, 130, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+          // Set active shadow glow - disable heavy blur on white text for ultra-crisp hearts
+          ctx.shadowBlur = isHeartSlide ? 6 : 0;
+          ctx.shadowColor = isHeartSlide ? 'rgba(255, 30, 130, 0.7)' : 'transparent';
 
           // Update & Render particles (with clipping mask during entrance phase to reveal falling hearts organically)
           ctx.save();
@@ -596,7 +629,7 @@
               if (p.x < 0) p.x = window.innerWidth;
               if (p.x > window.innerWidth) p.x = 0;
             } else {
-              // Morph towards active layout coordinates
+              // Morph towards active layout coordinates with springy response
               let targetX = p.targetX;
               let targetY = p.targetY;
 
@@ -609,25 +642,20 @@
                 targetY = dirtyYP + dy * heartPulse;
               }
 
-              p.x += (targetX - p.x) * 0.12;
-              p.y += (targetY - p.y) * 0.12;
+              p.x += (targetX - p.x) * 0.14;
+              p.y += (targetY - p.y) * 0.14;
             }
 
-            // Render matching styling filters
+            // Render matching styling filters using pre-rendered sprites (60 FPS)
             if (p.isSpare) {
               // low-density falling rose heart rain
               if (i % 10 === 0) {
-                ctx.save();
-                ctx.fillStyle = 'rgba(244, 63, 94, 0.35)';
-                ctx.shadowBlur = 4;
-                ctx.shadowColor = 'rgba(244, 63, 94, 0.5)';
-                drawTinyHeart(ctx, p.x, p.y, p.size * 0.85);
-                ctx.restore();
+                drawTinyHeart(ctx, p.x, p.y, p.size * 0.85, pinkHeartSprite);
               }
             } else {
-              // Active white lettering/heart particles
-              ctx.fillStyle = p.color;
-              drawTinyHeart(ctx, p.x, p.y, p.size * 1.15);
+              // Active white lettering/heart particles (crystal-clear cute hearts)
+              const sprite = isHeartSlide ? magentaHeartSprite : whiteHeartSprite;
+              drawTinyHeart(ctx, p.x, p.y, p.size, sprite);
 
               // Occasional beautiful fairy-dust/stardust sparkles on text particles
               if (Math.random() < 0.004) {

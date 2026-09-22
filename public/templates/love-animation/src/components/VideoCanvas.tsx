@@ -16,6 +16,39 @@ const drawTinyHeart = (ctx: CanvasRenderingContext2D, x: number, y: number, size
   ctx.fill();
 };
 
+// Pre-render a crisp vector heart sprite to an offscreen canvas for hardware-accelerated 60fps rendering
+const createHeartSprite = (fillColor: string, strokeColor?: string): HTMLCanvasElement => {
+  const sprite = document.createElement('canvas');
+  const s = 64; // High-res 64x64 base ensures razor-sharp detail on Retina/High-DPI displays
+  sprite.width = s;
+  sprite.height = s;
+  const sCtx = sprite.getContext('2d');
+  if (!sCtx) return sprite;
+
+  const cx = s / 2;
+  const cy = s / 2 - 2;
+  const d = s * 0.34;
+
+  sCtx.beginPath();
+  sCtx.moveTo(cx, cy + d * 0.3);
+  sCtx.bezierCurveTo(cx, cy - d * 0.45, cx - d * 0.95, cy - d * 0.45, cx - d * 0.95, cy + d * 0.2);
+  sCtx.bezierCurveTo(cx - d * 0.95, cy + d * 0.7, cx - d * 0.45, cy + d * 1.05, cx, cy + d * 1.4);
+  sCtx.bezierCurveTo(cx + d * 0.45, cy + d * 1.05, cx + d * 0.95, cy + d * 0.7, cx + d * 0.95, cy + d * 0.2);
+  sCtx.bezierCurveTo(cx + d * 0.95, cy - d * 0.45, cx, cy - d * 0.45, cx, cy + d * 0.3);
+  sCtx.closePath();
+
+  sCtx.fillStyle = fillColor;
+  sCtx.fill();
+
+  if (strokeColor) {
+    sCtx.lineWidth = 2.5;
+    sCtx.strokeStyle = strokeColor;
+    sCtx.stroke();
+  }
+
+  return sprite;
+};
+
 interface VideoCanvasProps {
   config: VideoConfig;
   onTimelineUpdate?: (currentSlideIdx: number, elapsed: number, totalDuration: number) => void;
@@ -57,6 +90,19 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
   ({ config, onTimelineUpdate, onPlaybackComplete, isFullscreen = false }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+
+    // Pre-rendered high-DPI heart sprites for 60fps hardware-accelerated crisp rendering
+    const whiteHeartSpriteRef = useRef<HTMLCanvasElement | null>(null);
+    const pinkHeartSpriteRef = useRef<HTMLCanvasElement | null>(null);
+    const magentaHeartSpriteRef = useRef<HTMLCanvasElement | null>(null);
+
+    useEffect(() => {
+      if (!whiteHeartSpriteRef.current && typeof document !== 'undefined') {
+        whiteHeartSpriteRef.current = createHeartSprite('#ffffff', 'rgba(255, 150, 190, 0.4)');
+        pinkHeartSpriteRef.current = createHeartSprite('rgba(244, 63, 94, 0.65)');
+        magentaHeartSpriteRef.current = createHeartSprite('#ff1478', 'rgba(255, 255, 255, 0.5)');
+      }
+    }, []);
     
     // Playback state - paused by default until wax envelope is opened
     const [isPlaying, setIsPlaying] = useState(false);
@@ -73,6 +119,7 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
       lastFrameTime: 0,
       recordingChunks: [] as Blob[],
       mediaRecorder: null as MediaRecorder | null,
+      dpr: 1,
     });
 
     // Handle incoming config updates
@@ -312,17 +359,22 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
       oCtx.fillStyle = '#000000';
       oCtx.fillRect(0, 0, width, height);
 
-      // Determine responsive size
-      let fontSize = Math.floor(width * 0.18);
-      // For longer words, scale down size
-      if (upperText.length > 4) {
-        fontSize = Math.floor(width * (0.8 / upperText.length));
-      }
-      // Limit bounds
-      fontSize = Math.min(fontSize, Math.floor(height * 0.5));
-      fontSize = Math.max(fontSize, 28);
+      const isCountdownDigit = upperText.length === 1 && !isNaN(Number(upperText));
 
-      oCtx.font = `900 ${fontSize}px "Inter", "Space Grotesk", sans-serif`;
+      // Determine responsive size
+      let fontSize: number;
+      if (isCountdownDigit) {
+        // Prominent, majestic size for countdown numbers (e.g. 3, 2, 1)
+        fontSize = Math.floor(Math.min(height * 0.52, width * 0.35));
+      } else if (upperText.length > 4) {
+        fontSize = Math.floor(width * (0.8 / upperText.length));
+      } else {
+        fontSize = Math.floor(width * 0.18);
+      }
+      fontSize = Math.min(fontSize, Math.floor(height * 0.52));
+      fontSize = Math.max(fontSize, 32);
+
+      oCtx.font = `900 ${fontSize}px "Space Grotesk", "Inter", sans-serif`;
       oCtx.textAlign = 'center';
       oCtx.textBaseline = 'middle';
       oCtx.fillStyle = '#ffffff';
@@ -335,18 +387,19 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
       const data = imgData.data;
       const points: { x: number; y: number }[] = [];
 
-      // Determine step based on canvas size and density
-      const step = Math.max(2, Math.floor((width * height) / 100000));
+      // Determine step: countdown numbers get optimal spacing so every heart is distinct and non-overlapping!
+      const step = isCountdownDigit 
+        ? Math.max(5, Math.floor(fontSize * 0.048)) 
+        : Math.max(3, Math.floor(fontSize * 0.038));
 
       for (let y = 0; y < height; y += step) {
         for (let x = 0; x < width; x += step) {
           const idx = (y * width + x) * 4;
           const r = data[idx];
           if (r > 128) {
-            // Add some jitter for nicer visual dust organic styling
             points.push({
-              x: x + (Math.random() - 0.5) * 1.5,
-              y: y + (Math.random() - 0.5) * 1.5,
+              x: x + (Math.random() - 0.5) * 0.8,
+              y: y + (Math.random() - 0.5) * 0.8,
             });
           }
         }
@@ -467,9 +520,18 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         if (container) {
           const newWidth = container.clientWidth;
           const newHeight = container.clientHeight;
-          if (canvas.width !== newWidth || canvas.height !== newHeight || !particlesInitialized.current) {
-            canvas.width = newWidth;
-            canvas.height = newHeight;
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          stateRef.current.dpr = dpr;
+
+          const targetCanvasWidth = Math.floor(newWidth * dpr);
+          const targetCanvasHeight = Math.floor(newHeight * dpr);
+
+          if (canvas.width !== targetCanvasWidth || canvas.height !== targetCanvasHeight || !particlesInitialized.current) {
+            canvas.width = targetCanvasWidth;
+            canvas.height = targetCanvasHeight;
+            canvas.style.width = `${newWidth}px`;
+            canvas.style.height = `${newHeight}px`;
+
             particlesInitialized.current = true;
             setupMatrixRain(newWidth);
             reinitializeParticles();
@@ -493,17 +555,23 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        const dpr = stateRef.current.dpr || 1;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const w = containerRef.current?.clientWidth || (canvas.width / dpr);
+        const h = containerRef.current?.clientHeight || (canvas.height / dpr);
+
         const isEntrance = stateRef.current.currentSlideIdx === -1 && stateRef.current.isPlaying;
         const scanY = isEntrance 
-          ? (Math.min(1.0, stateRef.current.elapsedInSlide / 2.0) * canvas.height) 
-          : canvas.height;
+          ? (Math.min(1.0, stateRef.current.elapsedInSlide / 2.0) * h) 
+          : h;
 
         // 1. Draw Background trail effect for romantic falling hearts
         // Make sure to reset any active shadows so the background rectangle doesn't glow or blur!
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
         ctx.fillStyle = config.backgroundColor + '1e'; // alpha for beautiful trailing hearts effect
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, w, h);
 
         // 1b. Pulsing background radial glow (Aurora behind heart centerpiece)
         const currentIdxForBg = stateRef.current.currentSlideIdx;
@@ -512,9 +580,9 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
 
         if (isHeartSlideForBg) {
           ctx.save();
-          const centerX = canvas.width / 2;
-          const centerY = canvas.height / 2 - canvas.height * 0.05;
-          const glowRadius = Math.min(canvas.width, canvas.height) * (0.35 + 0.05 * Math.sin(timeValForBg * 5));
+          const centerX = w / 2;
+          const centerY = h / 2 - h * 0.05;
+          const glowRadius = Math.min(w, h) * (0.35 + 0.05 * Math.sin(timeValForBg * 5));
           const bgGlow = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, glowRadius);
           bgGlow.addColorStop(0, 'rgba(244, 63, 94, 0.16)'); // romantic pink aura
           bgGlow.addColorStop(0.5, 'rgba(236, 72, 153, 0.06)'); // pinkish violet dusk
@@ -532,8 +600,8 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           // Initialize some gorgeous drifting rose petals/hearts
           for (let i = 0; i < 28; i++) {
             petals.push({
-              x: Math.random() * canvas.width,
-              y: Math.random() * canvas.height,
+              x: Math.random() * w,
+              y: Math.random() * h,
               size: 4 + Math.random() * 8,
               angle: Math.random() * Math.PI * 2,
               spin: (Math.random() - 0.5) * 0.015,
@@ -554,12 +622,12 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           // Soft sway
           p.x += Math.sin(timeValForBg * 0.8 + i) * 0.22;
 
-          if (p.y > canvas.height + 20) {
+          if (p.y > h + 20) {
             p.y = -20;
-            p.x = Math.random() * canvas.width;
+            p.x = Math.random() * w;
           }
-          if (p.x < -20) p.x = canvas.width + 20;
-          if (p.x > canvas.width + 20) p.x = -20;
+          if (p.x < -20) p.x = w + 20;
+          if (p.x > w + 20) p.x = -20;
 
           ctx.save();
           ctx.translate(p.x, p.y);
@@ -575,7 +643,7 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         // 2b. Draw horizontal line of love/hearts falling down from the top (Entrance Phase)
         if (isEntrance) {
           const progress = Math.min(1.0, stateRef.current.elapsedInSlide / 2.0);
-          const currentScanY = progress * canvas.height;
+          const currentScanY = progress * h;
 
           ctx.save();
           ctx.globalCompositeOperation = 'screen';
@@ -586,19 +654,19 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           grad.addColorStop(0.5, 'rgba(244, 63, 94, 0.28)'); // Rose-500 glow
           grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = grad;
-          ctx.fillRect(0, currentScanY - 30, canvas.width, 60);
+          ctx.fillRect(0, currentScanY - 30, w, 60);
 
           // Render horizontal line of densely spaced, glowing white hearts
           const heartSpacing = 18; // gorgeous compact horizontal spacing
-          const heartCount = Math.floor(canvas.width / heartSpacing) + 1;
+          const heartCount = Math.floor(w / heartSpacing) + 1;
           ctx.shadowBlur = 18;
           ctx.shadowColor = '#f43f5e'; // gorgeous hot pink glow
           ctx.fillStyle = '#ffffff'; // brilliant bright white cores for perfect contrast
 
-          for (let h = 0; h < heartCount; h++) {
+          for (let hIdx = 0; hIdx < heartCount; hIdx++) {
             // Elegant slight sine wave vertical offsets for organic fluid feel
-            const hx = h * heartSpacing + (Math.sin(stateRef.current.globalTime * 6 + h) * 3);
-            const hy = currentScanY + (Math.cos(stateRef.current.globalTime * 4 + h) * 2);
+            const hx = hIdx * heartSpacing + (Math.sin(stateRef.current.globalTime * 6 + hIdx) * 3);
+            const hy = currentScanY + (Math.cos(stateRef.current.globalTime * 4 + hIdx) * 2);
             drawTinyHeart(ctx, hx, hy, 4.5);
           }
 
@@ -684,6 +752,8 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         const pList = particles.current;
         const currentIdx = stateRef.current.currentSlideIdx;
         const isHeartSlide = currentIdx === config.slides.length;
+        const currentSlide = config.slides[currentIdx];
+        const isCountdown = currentSlide && !isNaN(Number(currentSlide.text));
         const timeVal = timestamp / 1000;
 
         // Dynamic Heart pulsing scale factor
@@ -699,12 +769,13 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         ctx.save();
         if (isEntrance) {
           ctx.beginPath();
-          ctx.rect(0, 0, canvas.width, scanY);
+          ctx.rect(0, 0, w, scanY);
           ctx.clip();
         }
-        // Setup Glow Effects
-        ctx.shadowBlur = config.glowStrength;
-        ctx.shadowColor = isHeartSlide ? config.glowColor : 'rgba(255, 255, 255, 0.95)';
+
+        // Clean rendering: No heavy global shadow blur that washes out particle details
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
 
         for (let i = 0; i < pList.length; i++) {
           const p = pList[i];
@@ -718,15 +789,15 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
             // Soft floaty breeze sway
             p.x += Math.sin(p.angle + timeVal * 0.6) * 0.12;
 
-            // Wrap bounds
-            if (p.y > canvas.height) {
+            // Wrap bounds using logical width/height
+            if (p.y > h) {
               p.y = -20;
-              p.x = Math.random() * canvas.width;
-              p.vy = 0.5 + Math.random() * 0.8; // extremely gentle slow romantic speed
+              p.x = Math.random() * w;
+              p.vy = 0.5 + Math.random() * 0.8;
               p.vx = (Math.random() - 0.5) * 0.3;
             }
-            if (p.x < 0) p.x = canvas.width;
-            if (p.x > canvas.width) p.x = 0;
+            if (p.x < 0) p.x = w;
+            if (p.x > w) p.x = 0;
           } else {
             // Target guidance physics (Spring Easing)
             let targetX = p.originalTargetX;
@@ -734,8 +805,8 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
 
             // Apply pulse scale if Heart
             if (isHeartSlide) {
-              const centerX = canvas.width / 2;
-              const centerY = canvas.height / 2 - canvas.height * 0.05;
+              const centerX = w / 2;
+              const centerY = h / 2 - h * 0.05;
               targetX = centerX + (p.originalTargetX - centerX) * pulseFactor;
               targetY = centerY + (p.originalTargetY - centerY) * pulseFactor;
             }
@@ -744,13 +815,13 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
             let dx = targetX - p.x;
             let dy = targetY - p.y;
 
-            // Ease towards targets
-            p.vx += dx * 0.06;
-            p.vy += dy * 0.06;
+            // Ease towards targets - fast, snappy, non-laggy response
+            p.vx += dx * 0.12;
+            p.vy += dy * 0.12;
 
             // Apply friction damping
-            p.vx *= 0.75;
-            p.vy *= 0.75;
+            p.vx *= 0.72;
+            p.vy *= 0.72;
 
             // Apply Interactive mouse forces (Repulsion/Attraction)
             if (config.interactiveForce !== 'none' && mouseX > 0) {
@@ -763,11 +834,9 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
                 const force = (config.interactiveRadius - dist) / config.interactiveRadius;
                 
                 if (config.interactiveForce === 'repel') {
-                  // Push away
                   p.vx += (mDx / dist) * force * 15;
                   p.vy += (mDy / dist) * force * 15;
                 } else if (config.interactiveForce === 'attract') {
-                  // Pull towards mouse
                   p.vx -= (mDx / dist) * force * 8;
                   p.vy -= (mDy / dist) * force * 8;
                 }
@@ -779,35 +848,42 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
             p.y += p.vy;
           }
 
-          // Draw Particle as beautiful custom hearts!
+          // Draw Particle as beautiful custom hearts with GPU-accelerated crisp sprites
           if (p.isSpare) {
-            // Low-density filter: only draw a fraction of spare particles for a perfect subtle rain
-            if (i % 10 === 0) {
-              ctx.save();
-              ctx.fillStyle = 'rgba(244, 63, 94, 0.35)'; // beautiful translucent pink-rose falling drizzle
-              ctx.shadowBlur = 4;
-              ctx.shadowColor = 'rgba(244, 63, 94, 0.5)';
-              drawTinyHeart(ctx, p.x, p.y, p.size * 0.85);
-              ctx.restore();
+            // Subtle pink background rain
+            if (i % 8 === 0) {
+              if (pinkHeartSpriteRef.current) {
+                const s = p.size * 2.0;
+                ctx.drawImage(pinkHeartSpriteRef.current, p.x - s / 2, p.y - s / 2, s, s);
+              } else {
+                ctx.fillStyle = 'rgba(244, 63, 94, 0.4)';
+                drawTinyHeart(ctx, p.x, p.y, p.size * 0.85);
+              }
             }
           } else {
-            // Bright, solid, glowing active text forming hearts
-            ctx.fillStyle = p.color;
-            drawTinyHeart(ctx, p.x, p.y, p.size * 1.15);
+            // Active countdown & text particles: razor-sharp, distinct white hearts!
+            const sprite = isHeartSlide ? magentaHeartSpriteRef.current : whiteHeartSpriteRef.current;
+            if (sprite) {
+              // Distinct cute heart size for countdown: crisp & visible!
+              const hr = isCountdown ? 5.2 : (isHeartSlide ? 3.8 : 4.0);
+              const hd = hr * 2;
+              ctx.drawImage(sprite, p.x - hr, p.y - hr, hd, hd);
+            } else {
+              ctx.fillStyle = p.color;
+              drawTinyHeart(ctx, p.x, p.y, p.size * 1.15);
+            }
 
-            // Occasional beautiful fairy-dust/stardust sparkles on text particles
-            if (Math.random() < 0.004) {
+            // Occasional delicate sparkle on text particles
+            if (Math.random() < 0.003) {
               ctx.save();
               ctx.strokeStyle = '#ffffff';
               ctx.lineWidth = 1.0;
-              ctx.globalAlpha = 0.95;
-              ctx.shadowBlur = 10;
-              ctx.shadowColor = '#ffffff';
+              ctx.globalAlpha = 0.9;
               ctx.beginPath();
-              ctx.moveTo(p.x - 5, p.y);
-              ctx.lineTo(p.x + 5, p.y);
-              ctx.moveTo(p.x, p.y - 5);
-              ctx.lineTo(p.x, p.y + 5);
+              ctx.moveTo(p.x - 4, p.y);
+              ctx.lineTo(p.x + 4, p.y);
+              ctx.moveTo(p.x, p.y - 4);
+              ctx.lineTo(p.x, p.y + 4);
               ctx.stroke();
               ctx.restore();
             }
@@ -960,15 +1036,15 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         // 5. Draw overlay text inside the pulsing Heart
         if (isHeartSlide) {
           ctx.save();
-          const centerX = canvas.width / 2;
-          const centerY = canvas.height / 2 - canvas.height * 0.05;
+          const centerX = w / 2;
+          const centerY = h / 2 - h * 0.05;
 
           // Text animation pulse offset
           const textPulse = 1.0 + 0.03 * Math.sin(timeVal * 4);
 
           // Configure typography
-          ctx.shadowBlur = config.glowStrength;
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(255, 100, 160, 0.6)';
           ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -979,13 +1055,13 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           if (textLen > 12) {
             fontSizeMultiplier = Math.max(0.62, 12 / textLen);
           }
-          const fontSizeMain = Math.max(16, Math.floor(canvas.width * 0.038 * fontSizeMultiplier) * textPulse);
+          const fontSizeMain = Math.max(16, Math.floor(w * 0.038 * fontSizeMultiplier) * textPulse);
           ctx.font = `bold ${fontSizeMain}px "Space Grotesk", "Inter", sans-serif`;
           ctx.fillText(config.heartText, centerX, centerY);
 
           // Sub text (Underneath)
           if (config.heartSubText) {
-            const fontSizeSub = Math.max(11, Math.floor(canvas.width * 0.02 * fontSizeMultiplier) * textPulse);
+            const fontSizeSub = Math.max(11, Math.floor(w * 0.02 * fontSizeMultiplier) * textPulse);
             ctx.font = `500 ${fontSizeSub}px monospace`;
             ctx.fillStyle = '#ffffff';
             ctx.fillText(config.heartSubText, centerX, centerY + fontSizeMain * 1.45);
