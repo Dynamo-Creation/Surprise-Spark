@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Input, Textarea } from "@/components/ui/input";
 import { BorderBeam } from "@/components/magicui/border-beam";
+import { ShineBorder } from "@/components/magicui/shine-border";
 import { AudioTrimmerStudio } from "@/components/creator/AudioTrimmerStudio";
 import { PhotoManager } from "@/components/creator/PhotoManager";
 import { TemplateModel } from "@/lib/engine/types";
@@ -324,9 +325,194 @@ export function TemplatePersonalizeSection({
             </div>
           </div>
         </div>
+      ) : isLoveAnimation ? (
+        /* ========================================================================= */
+        /* 💖 TEMPLATE 3: LOVE ANIMATION — DEDICATED ROMANTIC PERSONALIZER           */
+        /* ========================================================================= */
+        <div className="space-y-6">
+          {/* Card 1: Couple Names — The Only Data This Canvas Animation Needs */}
+          <div className="relative rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-pink-200/80 dark:border-pink-900/40 shadow-xl backdrop-blur-md overflow-hidden space-y-5">
+            <ShineBorder
+              shineColor={["#ec4899", "#f43f5e", "#a855f7"]}
+              borderWidth={1}
+              duration={10}
+            />
+
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-600 text-white flex items-center justify-center shadow-lg">
+                <Heart className="w-4.5 h-4.5 fill-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                  Personalize Your Love Animation
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  These names appear in the glowing heart centerpiece & particle text
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Heart className="w-3 h-3 text-pink-500" />
+                    Their Name *
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {genericConfig.recipientName.length}/40
+                  </span>
+                </div>
+                <Input
+                  id="love-recipient-name"
+                  value={genericConfig.recipientName}
+                  maxLength={40}
+                  onChange={(e) => onGenericConfigChange({ recipientName: e.target.value })}
+                  placeholder="e.g. Maya"
+                  className="border-pink-300/80 dark:border-pink-800/80 focus:ring-pink-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5 text-pink-400" />
+                  Appears as: &quot;I Love ❤️ {genericConfig.recipientName || "Maya"}&quot;
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-rose-500" />
+                    Your Name (Sender)
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {genericConfig.senderName.length}/40
+                  </span>
+                </div>
+                <Input
+                  id="love-sender-name"
+                  value={genericConfig.senderName}
+                  maxLength={40}
+                  onChange={(e) => onGenericConfigChange({ senderName: e.target.value })}
+                  placeholder="e.g. Alex"
+                  className="border-rose-300/80 dark:border-rose-800/80 focus:ring-rose-500"
+                />
+                <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5 text-rose-400" />
+                  Appears as: &quot;Always &amp; Forever — {genericConfig.senderName || "Alex"}&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Animation Experience Timeline Preview */}
+          <div className="relative rounded-3xl p-6 bg-gradient-to-br from-slate-900/95 via-slate-950/95 to-pink-950/40 border border-pink-500/20 shadow-2xl overflow-hidden space-y-5">
+            {/* Ambient glow effects */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-36 h-36 bg-rose-600/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-lg">
+                <Sparkles className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-white tracking-tight">
+                  What Your Recipient Will Experience
+                </h3>
+                <p className="text-[11px] text-pink-300/70">
+                  A mesmerizing 5-act particle animation journey
+                </p>
+              </div>
+            </div>
+
+            {/* Timeline Steps */}
+            <div className="relative space-y-0 pl-5">
+              {/* Vertical timeline line */}
+              <div className="absolute left-[11px] top-3 bottom-3 w-px bg-gradient-to-b from-pink-500/60 via-rose-400/40 to-pink-500/60" />
+
+              {[
+                {
+                  step: "1",
+                  icon: "💌",
+                  title: "Tap to Play",
+                  desc: "An enchanting pulsing heart overlay invites them to begin",
+                  color: "from-pink-500 to-rose-500",
+                },
+                {
+                  step: "2",
+                  icon: "⚡",
+                  title: "Neon Scanline Reveal",
+                  desc: "A glowing love scanline sweeps down, revealing floating heart particles",
+                  color: "from-rose-500 to-red-500",
+                },
+                {
+                  step: "3",
+                  icon: "⏱️",
+                  title: "3, 2, 1... Particle Countdown",
+                  desc: "Thousands of white particles morph into countdown numbers with synth audio",
+                  color: "from-red-500 to-pink-600",
+                },
+                {
+                  step: "4",
+                  icon: "💖",
+                  title: "\"You Are My Love\"",
+                  desc: "Particles sweep into romantic words one by one with chime transitions",
+                  color: "from-pink-600 to-rose-600",
+                },
+                {
+                  step: "5",
+                  icon: "❤️",
+                  title: "Glowing Heart Centerpiece",
+                  desc: `Particles form a pulsing heart with "${genericConfig.recipientName || "Maya"}" and heartbeat audio`,
+                  color: "from-rose-600 to-pink-500",
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="relative flex items-start gap-3.5 pb-4">
+                  {/* Timeline dot */}
+                  <div className={`relative z-10 flex-shrink-0 w-[22px] h-[22px] rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md shadow-pink-500/30`}>
+                    <span className="text-[9px] font-black text-white">{item.step}</span>
+                  </div>
+                  <div className="pt-0.5">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-sm">{item.icon}</span>
+                      <span className="text-xs font-bold text-white">{item.title}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Feature badges */}
+            <div className="relative flex flex-wrap gap-2 pt-1">
+              {["Interactive Touch", "Live Synth Audio", "1300+ Particles", "Heartbeat Sync", "Rose Petals"].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-pink-500/15 text-pink-300 border border-pink-500/25 backdrop-blur-sm"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Info Note: No message/photos needed */}
+          <div className="rounded-2xl p-4 bg-pink-50/80 dark:bg-pink-950/20 border border-pink-200/60 dark:border-pink-900/30 flex items-start gap-3">
+            <div className="w-7 h-7 rounded-lg bg-pink-100 dark:bg-pink-900/40 text-pink-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Check className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-pink-800 dark:text-pink-300">
+                Simple & Elegant — Only Names Needed
+              </p>
+              <p className="text-[11px] text-pink-600/80 dark:text-pink-400/70 mt-0.5 leading-relaxed">
+                This template creates a fully automated particle animation experience. Your names are woven into the glowing heart centerpiece — no personal message or photos required. Add custom audio below to make it even more special!
+              </p>
+            </div>
+          </div>
+        </div>
       ) : (
         /* ========================================================================= */
-        /* 💌 TEMPLATE 2 & 3: SWEET CELEBRATION / LOVE ANIMATION / OTHER TEMPLATES */
+        /* 💌 TEMPLATE 2: SWEET CELEBRATION / OTHER GENERIC TEMPLATES               */
         /* ========================================================================= */
         <div className="space-y-6">
           <div className="rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xl backdrop-blur-md space-y-4">

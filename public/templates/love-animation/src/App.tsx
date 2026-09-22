@@ -173,11 +173,14 @@ export default function App() {
     if (config.enableSoundEffects) {
       synthesizer.playSparkle();
     }
+    // Start countdown smoothly on the canvas
+    canvasRef.current?.play();
+
+    // Complete smooth fade before unmounting overlay
     setTimeout(() => {
       setEnvelopeOpened(true);
       setIsPlaying(true);
-      canvasRef.current?.play();
-    }, 1200);
+    }, 700);
   };
 
   return (
@@ -197,7 +200,7 @@ export default function App() {
       {/* 💌 Interactive Love Letter Envelope Opening Intro */}
       {!envelopeOpened && (
         <div 
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-radial from-[#0f040d] to-[#050206] transition-all duration-1000 ${
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-radial from-[#0f040d] to-[#050206] transition-all duration-700 ease-out ${
             isOpening ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
           }`}
         >

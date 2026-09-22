@@ -270,11 +270,8 @@ export function PublicSurpriseClient({
               onFinish={handleExperienceCompleted}
             />
           ) : template.slug === "love-animation" ? (
-            <iframe
+            <LoveAnimationLandscapeWrapper
               src={`/api/admin/templates/preview?slug=love-animation&recipientName=${encodeURIComponent(personalization.recipient_name)}&senderName=${encodeURIComponent(personalization.sender_name)}&message=${encodeURIComponent(personalization.message)}`}
-              className="w-full h-screen border-none"
-              title="Love Animation Experience"
-              allow="autoplay"
             />
           ) : template.slug === "the-golden-proposal" ? (
             <iframe
@@ -359,6 +356,100 @@ export function PublicSurpriseClient({
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * Love Animation Landscape Wrapper
+ * Fixes particle blur on mobile portrait by forcing landscape orientation.
+ *
+ * ROOT CAUSE of blur: In portrait mode, the canvas `window.innerWidth` inside the
+ * iframe is narrow (~375px on phones). The particle hearts are drawn via bezier curves
+ * at sizes of 1-3px, while `ctx.shadowBlur` is set to 15-18px — the glow completely
+ * overwhelms the tiny shapes, rendering them as indistinct blobs instead of crisp hearts.
+ * In landscape, the wider viewport (812px+) allows particles to render at larger absolute
+ * sizes where the shadow-to-shape ratio is proportionate and visually crisp.
+ *
+ * FIX: On portrait mobile, we rotate the entire iframe container by 90° via CSS transform,
+ * swapping the visual width/height. The iframe's `window.innerWidth` then receives the
+ * full screen height value (~812px), giving particles enough rendering room.
+ */
+function LoveAnimationLandscapeWrapper({ src }: { src: string }) {
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [viewportDims, setViewportDims] = useState({ vw: 0, vh: 0 });
+
+  useEffect(() => {
+    function checkOrientation() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      // Consider "portrait" if on a mobile-sized screen in portrait orientation
+      const isMobilePortrait = vw < 768 && vh > vw;
+      setIsPortrait(isMobilePortrait);
+      setViewportDims({ vw, vh });
+
+      // Try native orientation lock API (works on some mobile browsers)
+      if (isMobilePortrait && screen?.orientation) {
+        const orientation = screen.orientation as any;
+        if (typeof orientation.lock === "function") {
+          orientation.lock("landscape").catch(() => {
+            // Silently fail — CSS rotation handles the fallback
+          });
+        }
+      }
+    }
+
+    checkOrientation();
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("orientationchange", checkOrientation);
+
+    return () => {
+      window.removeEventListener("resize", checkOrientation);
+      window.removeEventListener("orientationchange", checkOrientation);
+      // Unlock orientation on unmount
+      if (screen?.orientation) {
+        const orientation = screen.orientation as any;
+        if (typeof orientation.unlock === "function") {
+          try { orientation.unlock(); } catch { /* ignore */ }
+        }
+      }
+    };
+  }, []);
+
+  if (isPortrait && viewportDims.vw > 0) {
+    // In portrait, rotate the container 90° so the iframe gets landscape dimensions.
+    // The iframe's width becomes vh (taller dimension) and height becomes vw (narrower dimension).
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950" style={{ overflow: "hidden" }}>
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            width: `${viewportDims.vh}px`,
+            height: `${viewportDims.vw}px`,
+            transform: "translate(-50%, -50%) rotate(90deg)",
+            transformOrigin: "center center",
+          }}
+        >
+          <iframe
+            src={src}
+            style={{ width: "100%", height: "100%", border: "none" }}
+            title="Love Animation Experience"
+            allow="autoplay"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop or already landscape — render normally
+  return (
+    <iframe
+      src={src}
+      className="w-full h-screen border-none"
+      title="Love Animation Experience"
+      allow="autoplay"
+    />
   );
 }
 

@@ -34,6 +34,15 @@ export function StudioLiveCanvas({
   const [debouncedUrl, setDebouncedUrl] = useState<string>("");
 
   const isGoldenProposal = template.slug === "the-golden-proposal";
+  const isLoveAnimation = template.slug === "love-animation";
+  const supportsLandscape = isGoldenProposal || isLoveAnimation;
+
+  // Auto-default Love Animation to landscape mode for best particle clarity
+  useEffect(() => {
+    if (isLoveAnimation) {
+      setIsLandscape(true);
+    }
+  }, [isLoveAnimation]);
 
   // Build live preview URL with all synchronized parameters
   useEffect(() => {
@@ -120,8 +129,8 @@ export function StudioLiveCanvas({
               <span>Mobile</span>
             </button>
 
-            {/* Landscape Toggle for The Golden Proposal */}
-            {isGoldenProposal && (
+            {/* Landscape Toggle for Golden Proposal & Love Animation */}
+            {supportsLandscape && (
               <button
                 type="button"
                 onClick={() => {

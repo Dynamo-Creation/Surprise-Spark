@@ -58,13 +58,13 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     
-    // Playback state
-    const [isPlaying, setIsPlaying] = useState(true);
+    // Playback state - paused by default until wax envelope is opened
+    const [isPlaying, setIsPlaying] = useState(false);
     const [currentSlideIdx, setCurrentSlideIdx] = useState(-1);
     const [isRecording, setIsRecording] = useState(false);
     
     const stateRef = useRef({
-      isPlaying: true,
+      isPlaying: false,
       currentSlideIdx: -1,
       elapsedInSlide: 0,
       globalTime: 0,
@@ -85,14 +85,20 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
       play: () => {
         setIsPlaying(true);
         stateRef.current.isPlaying = true;
+        if (stateRef.current.currentSlideIdx === -1) {
+          stateRef.current.currentSlideIdx = 0;
+          stateRef.current.elapsedInSlide = 0;
+          setCurrentSlideIdx(0);
+          triggerSlideTransition(0);
+        }
       },
       pause: () => {
         setIsPlaying(false);
         stateRef.current.isPlaying = false;
       },
       restart: () => {
-        setCurrentSlideIdx(-1);
-        stateRef.current.currentSlideIdx = -1;
+        setCurrentSlideIdx(0);
+        stateRef.current.currentSlideIdx = 0;
         stateRef.current.elapsedInSlide = 0;
         stateRef.current.globalTime = 0;
         stateRef.current.entranceTime = 0;
@@ -100,7 +106,7 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         stateRef.current.isPlaying = true;
         reinitializeParticles();
         if (config.enableSoundEffects) {
-          synthesizer.playTick(500, 0.15);
+          synthesizer.playTick(600, 0.15);
         }
       },
       seekToSlide: (index: number) => {
@@ -109,7 +115,7 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
           stateRef.current.currentSlideIdx = index;
           stateRef.current.elapsedInSlide = 0;
           stateRef.current.entranceTime = 0;
-          reinitializeParticles();
+          triggerSlideTransition(index);
         }
       },
       startRecording: () => {
@@ -404,8 +410,8 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         targets = sampleTextPoints(currentSlide.text, canvas.width, canvas.height);
       }
 
-      // Play Sound Effects
-      if (config.enableSoundEffects && lastActiveSlideRef.current !== slideIdx) {
+      // Play Sound Effects only when actively playing
+      if (config.enableSoundEffects && lastActiveSlideRef.current !== slideIdx && stateRef.current.isPlaying) {
         lastActiveSlideRef.current = slideIdx;
         if (slideIdx === -1) {
           // Play initial bootup sweep sound or chime
@@ -481,13 +487,13 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         if (!stateRef.current.lastFrameTime) {
           stateRef.current.lastFrameTime = timestamp;
         }
-        const delta = (timestamp - stateRef.current.lastFrameTime) / 1000; // in seconds
+        const delta = Math.min(0.05, (timestamp - stateRef.current.lastFrameTime) / 1000); // in seconds, capped to prevent jumps
         stateRef.current.lastFrameTime = timestamp;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const isEntrance = stateRef.current.currentSlideIdx === -1;
+        const isEntrance = stateRef.current.currentSlideIdx === -1 && stateRef.current.isPlaying;
         const scanY = isEntrance 
           ? (Math.min(1.0, stateRef.current.elapsedInSlide / 2.0) * canvas.height) 
           : canvas.height;
@@ -997,7 +1003,7 @@ export const VideoCanvas = forwardRef<VideoCanvasRef, VideoCanvasProps>(
         cancelAnimationFrame(animId);
         window.removeEventListener('resize', resizeCanvas);
       };
-    }, [config, isPlaying]);
+    }, [config]);
 
     // Handle mouse move
     const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
