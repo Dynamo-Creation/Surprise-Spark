@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hero Section Options Preview</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #090a10;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 40px 20px 80px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    p.subtitle {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 40px 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+    }
+    .card {
+      background: #12141f;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .card-header {
+      padding: 22px 28px;
+      background: #171a29;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .tag {
+      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 6px;
+      background: #1e293b;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .tag.highlight {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .tag.pink {
+      background: rgba(236, 72, 153, 0.2);
+      color: #f472b6;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+    }
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      background: #000;
+    }
+    .image-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .card-body {
+      padding: 24px 28px;
+    }
+    .card-body p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .details {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .detail-pill {
+      font-size: 0.8rem;
+      padding: 5px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">🎨 Hero Section Design Comparison</div>
+      <h1>Hero Section Preview: PrismaHero vs 3D Studio</h1>
+      <p class="subtitle">Here are the visual previews for PrismaHero (from 21st.dev) and the MotionSites 3D Studio design so you can see exactly how they look before any code is implemented.</p>
+    </header>
+
+    <div class="grid">
+      <!-- NEW CONCEPT 1: Floating Curved Smartphone -->
+      <div class="card" style="border-color: rgba(236, 72, 153, 0.45); box-shadow: 0 0 35px rgba(236, 72, 153, 0.2);">
+        <div class="card-header">
+          <span class="card-title">📱 Concept 1 (Recommended): Floating Curved Smartphone (iPhone 16 Pro Style)</span>
+          <span class="tag pink">Break Away From Rectangles</span>
+        </div>
+        <div class="image-wrapper" style="text-align: center; background: #070913;">
+          <img src="./preview/phone_mockup_redesign.jpg" alt="Concept 1: Floating Curved Smartphone Redesign" style="max-height: 650px; width: auto; margin: 0 auto;">
+        </div>
+        <div class="card-body">
+          <p>Replaces the boxy rectangular card with an ultra-sleek, ergonomic floating smartphone featuring smooth titanium curves (<code>rounded-[48px]</code>), an authentic <strong>Dynamic Island</strong> (<em>"Maya's Birthday Surprise 🎂"</em> with audio visualizer), floating action pill button, and subtle 3D tilt surrounded by celebration orbits.</p>
+          <div class="details">
+            <span class="detail-pill">📱 Curved Ergonomic Device Frame</span>
+            <span class="detail-pill">🏝️ Interactive Dynamic Island</span>
+            <span class="detail-pill">🎁 3D Tap to Unwrap Stage</span>
+            <span class="detail-pill">🚀 Floating Action Dock Pill</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW CONCEPT 2: Celestial Holographic Surprise Orb -->
+      <div class="card" style="border-color: rgba(168, 85, 247, 0.45); box-shadow: 0 0 35px rgba(168, 85, 247, 0.2);">
+        <div class="card-header">
+          <span class="card-title">🔮 Concept 2: Celestial 3D Holographic "Surprise Orb"</span>
+          <span class="tag highlight">100% Circular Geometry</span>
+        </div>
+        <div class="image-wrapper" style="text-align: center; background: #070913;">
+          <img src="./preview/portal_orb_redesign.jpg" alt="Concept 2: Celestial Holographic Surprise Orb" style="max-height: 650px; width: auto; margin: 0 auto;">
+        </div>
+        <div class="card-body">
+          <p>Completely eliminates sharp corners with a <strong>spherical 3D glass crystal orb</strong>. The glowing gift box floats suspended in mid-air inside a crystal sphere with specular highlights and confetti, perfectly concentric with the orbiting celebration icons.</p>
+          <div class="details">
+            <span class="detail-pill">🔮 100% Spherical Glass Orb</span>
+            <span class="detail-pill">✨ Floating Suspended Gift Box</span>
+            <span class="detail-pill">🪐 Perfectly Concentric Orbital Rings</span>
+            <span class="detail-pill">💎 Detached Iridescent Pill Dock</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. PrismaHero Adapted -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">1. PrismaHero Adapted for Your Platform ("SURPRISE*")</span>
+          <span class="tag highlight">New Option: PrismaHero</span>
+        </div>
+        <div class="image-wrapper">
+          <img src="./preview/prisma_surprise_hero.jpg" alt="PrismaHero Surprise Platform Mockup">
+        </div>
+        <div class="card-body">
+          <p>Adopts the <strong>PrismaHero</strong> layout: A floating pill navigation bar at top, atmospheric cinematic sunset background with subtle floating particles, large bold typographic statement <strong>SURPRISE*</strong>, animated word reveal subtitle, and interactive buttons.</p>
+          <div class="details">
+            <span class="detail-pill">✨ Floating Pill Top Navbar</span>
+            <span class="detail-pill">🌅 Cinematic Sunset Background</span>
+            <span class="detail-pill">🔤 Massive Editorial "SURPRISE*" Header</span>
+            <span class="detail-pill">🎞️ Smooth Word Reveal Animation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. PrismaHero Original from 21st.dev -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Original PrismaHero (from 21st.dev @rahil1202)</span>
+          <span class="tag">Original 21st.dev Component</span>
+        </div>
+        <div class="image-wrapper">
+          <img src="./preview/prisma_hero_actual_preview.png" alt="Original PrismaHero from 21st.dev">
+        </div>
+        <div class="card-body">
+          <p>The original component as authored on 21st.dev featuring a cinematic landscape, floating top bar, and the large bottom title "Prisma*".</p>
+        </div>
+      </div>
+
+      <!-- 3. MotionSites Option A -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">2. MotionSites Style: 3D Surprise Mascot with Glowing Gift Box</span>
+          <span class="tag pink">MotionSites Style</span>
+        </div>
+        <div class="image-wrapper">
+          <img src="./preview/hero_3d_preview_1790273426950.jpg" alt="MotionSites 3D Mascot Preview">
+        </div>
+        <div class="card-body">
+          <p>Features deep crimson radial studio lighting with a friendly 3D claymation/Pixar-style surprise mascot, glowing birthday gift box, and celebration UI.</p>
+          <div class="details">
+            <span class="detail-pill">🧸 3D Tactile Surprise Character</span>
+            <span class="detail-pill">🎨 Crimson Radial Studio Backdrop</span>
+            <span class="detail-pill">🎁 Volumetric Glowing Gift</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

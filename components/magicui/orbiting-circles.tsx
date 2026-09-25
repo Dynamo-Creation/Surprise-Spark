@@ -37,7 +37,7 @@ export function OrbitingCircles({
           className="pointer-events-none absolute inset-0 size-full overflow-visible"
         >
           <circle
-            className={cn("stroke-pink-500/20 stroke-1 dark:stroke-pink-400/20", pathClassName)}
+            className={cn(pathClassName || "stroke-pink-500/30 stroke-1 dark:stroke-pink-400/20")}
             cx="50%"
             cy="50%"
             r={radius}
