@@ -40,13 +40,27 @@ export function SweetCelebrationExperience({
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Date formatting helper: 2005-05-23 -> 23 May 2005
+  const formattedSpecialDate = React.useMemo(() => {
+    if (!specialDate) return "23 May 2005";
+    const isoMatch = specialDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+      const year = isoMatch[1];
+      const monthIdx = parseInt(isoMatch[2], 10) - 1;
+      const day = parseInt(isoMatch[3], 10);
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      return `${day} ${months[monthIdx] || ""} ${year}`;
+    }
+    return specialDate;
+  }, [specialDate]);
+
   // 1. Date of birth typing effect
   useEffect(() => {
     let dateTimer: NodeJS.Timeout;
     let charIndex = 0;
-    const dateChars = (specialDate || "23 May 2005").split("");
+    const dateChars = formattedSpecialDate.split("");
 
-    // Start typing date after flag and title animations land (~7.5s)
+    // Start typing date after flag and title animations land (~2.2s)
     const initialDelay = setTimeout(() => {
       dateTimer = setInterval(() => {
         if (charIndex < dateChars.length) {
@@ -56,14 +70,14 @@ export function SweetCelebrationExperience({
           setIsDateComplete(true);
           clearInterval(dateTimer);
         }
-      }, 90);
-    }, 7500);
+      }, 70);
+    }, 2200);
 
     return () => {
       clearTimeout(initialDelay);
       if (dateTimer) clearInterval(dateTimer);
     };
-  }, [specialDate]);
+  }, [formattedSpecialDate]);
 
   // 2. Interactive Floating Heart Cursor Trail
   useEffect(() => {
@@ -176,9 +190,9 @@ export function SweetCelebrationExperience({
 
   // Fast-Forward / Skip directly to all elements loaded
   const handleFastForward = useCallback(() => {
-    setTypedDate(specialDate || "23 May 2005");
+    setTypedDate(formattedSpecialDate);
     setIsDateComplete(true);
-  }, [specialDate]);
+  }, [formattedSpecialDate]);
 
   return (
     <div ref={containerRef} className={styles.wrapper}>
@@ -206,32 +220,33 @@ export function SweetCelebrationExperience({
         <div className={styles.left}>
           <div className={styles.title}>
             <h1 className={styles.happy}>
-              <span style={{ "--t": "2.0s" } as React.CSSProperties}>H</span>
-              <span style={{ "--t": "2.2s" } as React.CSSProperties}>a</span>
-              <span style={{ "--t": "2.4s" } as React.CSSProperties}>p</span>
-              <span style={{ "--t": "2.6s" } as React.CSSProperties}>p</span>
-              <span style={{ "--t": "2.8s" } as React.CSSProperties}>y</span>
+              <span style={{ "--t": "0.3s" } as React.CSSProperties}>H</span>
+              <span style={{ "--t": "0.4s" } as React.CSSProperties}>a</span>
+              <span style={{ "--t": "0.5s" } as React.CSSProperties}>p</span>
+              <span style={{ "--t": "0.6s" } as React.CSSProperties}>p</span>
+              <span className={styles.letterYAnchor} style={{ "--t": "0.7s" } as React.CSSProperties}>
+                y
+                {/* Birthday Hat perched on Y */}
+                <div className={styles.hat}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/templates/sweet-celebration/hat.png"
+                    alt="Party Hat"
+                    width={85}
+                  />
+                </div>
+              </span>
             </h1>
             <h1 className={styles.birthday}>
-              <span style={{ "--t": "3.0s" } as React.CSSProperties}>B</span>
-              <span style={{ "--t": "3.2s" } as React.CSSProperties}>i</span>
-              <span style={{ "--t": "3.4s" } as React.CSSProperties}>r</span>
-              <span style={{ "--t": "3.6s" } as React.CSSProperties}>t</span>
-              <span style={{ "--t": "3.8s" } as React.CSSProperties}>h</span>
-              <span style={{ "--t": "4.0s" } as React.CSSProperties}>d</span>
-              <span style={{ "--t": "4.2s" } as React.CSSProperties}>a</span>
-              <span style={{ "--t": "4.4s" } as React.CSSProperties}>y</span>
+              <span style={{ "--t": "0.8s" } as React.CSSProperties}>B</span>
+              <span style={{ "--t": "0.9s" } as React.CSSProperties}>i</span>
+              <span style={{ "--t": "1.0s" } as React.CSSProperties}>r</span>
+              <span style={{ "--t": "1.1s" } as React.CSSProperties}>t</span>
+              <span style={{ "--t": "1.2s" } as React.CSSProperties}>h</span>
+              <span style={{ "--t": "1.3s" } as React.CSSProperties}>d</span>
+              <span style={{ "--t": "1.4s" } as React.CSSProperties}>a</span>
+              <span style={{ "--t": "1.5s" } as React.CSSProperties}>y</span>
             </h1>
-
-            {/* Birthday Hat */}
-            <div className={styles.hat}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/templates/sweet-celebration/hat.png"
-                alt="Party Hat"
-                width={130}
-              />
-            </div>
           </div>
 
           {/* Date of Birth Badge with Typewriter Effect */}
@@ -373,8 +388,11 @@ export function SweetCelebrationExperience({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     id="heartLetter"
-                    src="https://media0.giphy.com/media/c76IJLufpNwSULPk77/giphy.gif"
-                    alt="Pulsing Heart"
+                    src="/templates/sweet-celebration/heart_animated.gif"
+                    alt="Animated Pulsing Heart"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/templates/sweet-celebration/heart_letter.png";
+                    }}
                   />
                   {showAnimations && (
                     <>
@@ -396,8 +414,11 @@ export function SweetCelebrationExperience({
                     <div className={styles.loveImg}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src="https://media4.giphy.com/media/W4jyjmIpnw6e38B6Qc/giphy.gif"
-                        alt="Love GIF"
+                        src="/templates/sweet-celebration/love_animated.gif"
+                        alt="Animated Love Art"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/templates/sweet-celebration/love.png";
+                        }}
                       />
                     </div>
                   )}

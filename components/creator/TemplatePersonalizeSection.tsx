@@ -589,6 +589,23 @@ export function TemplatePersonalizeSection({
           {/* Photo Memories (Only shown for templates that specifically support photos) */}
           {template.supportsPhotos && (
             <div className="rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-md space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-pink-100 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 flex items-center justify-center shadow-xs">
+                  <Smile className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                    {template.slug === "sweet-celebration"
+                      ? "Celebrant Photo (Center Circle Frame) 📸"
+                      : "Photo Memories"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {template.slug === "sweet-celebration"
+                      ? "Upload a photo to replace the default celebrant image inside the animated circle frame."
+                      : "Add favorite moments to display in the surprise"}
+                  </p>
+                </div>
+              </div>
               <PhotoManager
                 photos={genericConfig.photos}
                 onChange={(newPhotos) => onGenericConfigChange({ photos: newPhotos })}

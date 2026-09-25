@@ -121,6 +121,9 @@ export const MOCK_TEMPLATES: Template[] = [
     isFeatured: true,
     isNew: true,
     isPremium: false,
+    supportsPhotos: true,
+    maxPhotos: 1,
+    supportsMusic: true,
     defaultScenes: [],
   },
   {

@@ -32,6 +32,7 @@ export function StudioLiveCanvas({
   const [isLandscape, setIsLandscape] = useState<boolean>(false);
   const [iframeKey, setIframeKey] = useState<number>(0);
   const [debouncedUrl, setDebouncedUrl] = useState<string>("");
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
   const isGoldenProposal = template.slug === "the-golden-proposal";
   const isLoveAnimation = template.slug === "love-animation";
@@ -75,13 +76,52 @@ export function StudioLiveCanvas({
         url = `/api/admin/templates/preview?${params.toString()}`;
       } else {
         // Sweet Celebration or other engine template
+        const photo = genericConfig.photos && genericConfig.photos[0] ? genericConfig.photos[0] : "";
+        if (photo) {
+          try {
+            sessionStorage.setItem("sweet_celebration_custom_photo", photo);
+          } catch {
+            // ignore
+          }
+        } else {
+          try {
+            sessionStorage.removeItem("sweet_celebration_custom_photo");
+          } catch {
+            // ignore
+          }
+        }
+
         const params = new URLSearchParams({
           slug: template.slug,
           recipientName: genericConfig.recipientName || "Maya",
           senderName: genericConfig.senderName || "Alex",
           message: genericConfig.message || "Happy Birthday! Let's make this year unforgettable!",
         });
+        if (genericConfig.specialDate) {
+          params.set("specialDate", genericConfig.specialDate);
+        }
+        if (photo && !photo.startsWith("data:")) {
+          params.set("photoUrl", photo);
+        }
+        if (customAudioUrl) {
+          params.set("audioUrl", customAudioUrl);
+        }
         url = `/api/admin/templates/preview?${params.toString()}`;
+
+        // Also broadcast directly to iframe for instantaneous live updates
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          iframeRef.current.contentWindow.postMessage({
+            type: "SURPRISE_UPDATE_PROPS",
+            payload: {
+              recipientName: genericConfig.recipientName || "Maya",
+              senderName: genericConfig.senderName || "Alex",
+              specialDate: genericConfig.specialDate,
+              message: genericConfig.message,
+              photoUrl: photo,
+              audioUrl: customAudioUrl,
+            }
+          }, "*");
+        }
       }
       setDebouncedUrl(url);
     }, 280);
@@ -217,6 +257,7 @@ export function StudioLiveCanvas({
             {/* Iframe Viewport */}
             {debouncedUrl ? (
               <iframe
+                ref={iframeRef}
                 key={`${iframeKey}-${template.slug}`}
                 src={debouncedUrl}
                 className="w-full h-full border-none rounded-[32px] bg-slate-950"
@@ -251,6 +292,7 @@ export function StudioLiveCanvas({
 
             {debouncedUrl ? (
               <iframe
+                ref={iframeRef}
                 key={`${iframeKey}-${template.slug}`}
                 src={debouncedUrl}
                 className="w-full h-full border-none bg-slate-950"

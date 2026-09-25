@@ -36,4 +36,8 @@ export interface Template {
   isPremium?: boolean;
   defaultScenes: SceneInstance[];
   compatibleAssetIds?: string[];
+  supportsPhotos?: boolean;
+  maxPhotos?: number;
+  supportsMusic?: boolean;
+  supportsTheme?: boolean;
 }

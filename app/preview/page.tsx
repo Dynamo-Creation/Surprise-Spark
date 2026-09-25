@@ -34,6 +34,8 @@ function PreviewContent() {
       ? "/api/admin/templates/preview?slug=love-animation"
       : activeTemplate === "the-golden-proposal"
       ? "/api/admin/templates/preview?slug=the-golden-proposal"
+      : activeTemplate === "sweet-celebration"
+      ? "/api/admin/templates/preview?slug=sweet-celebration"
       : `/s/sample-birthday-123?template=${activeTemplate}`;
 
   return (

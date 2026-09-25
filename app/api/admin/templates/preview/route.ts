@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
     const question = searchParams.get("question") || "";
     const dodgeText = searchParams.get("dodgeText") || "";
     const audioUrl = searchParams.get("audioUrl") || "";
+    const specialDate = searchParams.get("specialDate") || searchParams.get("date") || "";
+    const photoUrl = searchParams.get("photoUrl") || searchParams.get("photo") || "";
 
     if (!slug) {
       return new NextResponse("Template slug is required", { status: 400 });
@@ -225,6 +227,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (effectiveSlug === "sweet-celebration") {
+      if (recipientName && recipientName !== "Sarah") {
+        patchedHtml = patchedHtml.replace(/Hayati/g, recipientName);
+      }
+      if (specialDate) {
+        patchedHtml = patchedHtml.replace(/23 May 2005/g, specialDate);
+      }
+      if (photoUrl) {
+        patchedHtml = patchedHtml.replace(/r5\.jpg/g, photoUrl);
+      }
+    }
+
     // Automatically trigger preview interactions
     const autoTriggerScript = `
     <script>
@@ -235,6 +249,8 @@ export async function GET(request: NextRequest) {
         window.recipientEndearment = ${JSON.stringify(endearment)};
         window.senderName = ${JSON.stringify(senderName)};
         window.customMessage = ${JSON.stringify(message)};
+        window.specialDate = ${JSON.stringify(specialDate)};
+        window.photoUrl = ${JSON.stringify(photoUrl)};
         window.proposalQuestion = ${JSON.stringify(question)};
         window.dodgeTooltipText = ${JSON.stringify(dodgeText)};
         window.customAudioUrl = ${JSON.stringify(audioUrl)};
