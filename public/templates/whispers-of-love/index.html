@@ -597,6 +597,10 @@
     return `To ${name}, My Love...`;
   }
 
+  let letterOpened = false;
+  let letterTyping = false;
+  let poemStarted  = false;
+
   let letterHeading = formatLetterHeading(config.recipientName);
   let letterBody    = config.message;
   let signatureText = `— Yours, forever & always, ${config.senderName} 💕`;
@@ -639,9 +643,6 @@
     }
   }
   applyConfig();
-
-  let letterOpened = false;
-  let letterTyping = false;
 
   function typeText(el, text, speed, callback) {
     let i = 0;
@@ -756,7 +757,7 @@
     "Through every season, through the years ahead,",
     "I'll love you more with every word unsaid.",
   ];
-  let poemStarted = false;
+  // poemStarted declared and tracked above
 
   function typeLineSequential(lines, els, speed, lineDelay, onAllDone) {
     let li = 0;
@@ -860,25 +861,33 @@
 
         if (id === 'scene-2') {
           // Trigger star reset on re-entry
-          document.querySelector('.moon').style.animation = 'none';
-          setTimeout(() => document.querySelector('.moon').style.animation = '', 10);
+          const moonEl = document.querySelector('.moon');
+          if (moonEl) {
+            moonEl.style.animation = 'none';
+            setTimeout(() => moonEl.style.animation = '', 10);
+          }
         }
       }
     });
-  }, { threshold: 0.5 });
+  }, { threshold: 0.3 });
 
   scenes.forEach(s => sceneObserver.observe(s));
 
-  // Reveal observer
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.15 });
+  // Reveal observer with fallback
+  const revealElements = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
 
-  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    revealElements.forEach(el => revealObserver.observe(el));
+  } else {
+    revealElements.forEach(el => el.classList.add('visible'));
+  }
 
   // Initial call
   updateCarousel(2);
