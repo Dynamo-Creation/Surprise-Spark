@@ -190,17 +190,6 @@ export function PublicSurpriseClient({
     trackPerformance({ loadTimeMs: loadTime, webGlAvailable: isWebGLSupported }, publicId);
   }, [publicId, isWebGLSupported]);
 
-  // Sync iframe mute requests with parent soundManager
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "SURPRISE_TOGGLE_MUTE") {
-        soundManager.toggleMute();
-      }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
   // Replay Handler
   const handleReplay = useCallback(() => {
     trackSurpriseEvent("replay", { surpriseId: publicId, templateId: template.id });
@@ -223,6 +212,23 @@ export function PublicSurpriseClient({
       setShowFinalScreen(true);
     }, 1800);
   }, [publicId, template.id]);
+
+  // Sync iframe messages with parent soundManager and experience completion
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "SURPRISE_TOGGLE_MUTE") {
+        soundManager.toggleMute();
+      }
+      if (
+        event.data?.type === "SURPRISE_EXPERIENCE_FINISHED" ||
+        event.data?.type === "SURPRISE_COMPLETED"
+      ) {
+        handleExperienceCompleted();
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [handleExperienceCompleted]);
 
   // 1. Error Screen Display
   if (errorType) {
@@ -261,13 +267,21 @@ export function PublicSurpriseClient({
       {hasEntered && (
         <>
           {template.slug === "sweet-celebration" ? (
-            <SweetCelebrationExperience
-              recipientName={personalization.recipient_name}
-              senderName={personalization.sender_name}
-              specialDate={personalization.special_date}
-              message={personalization.message}
-              photos={surprise.photos}
-              onFinish={handleExperienceCompleted}
+            <iframe
+              src={`/api/admin/templates/preview?slug=sweet-celebration&recipientName=${encodeURIComponent(
+                personalization.recipient_name
+              )}&senderName=${encodeURIComponent(
+                personalization.sender_name
+              )}&message=${encodeURIComponent(
+                personalization.message
+              )}&specialDate=${encodeURIComponent(
+                personalization.special_date || ""
+              )}&photoUrl=${encodeURIComponent(
+                surprise.photos?.[0] || ""
+              )}`}
+              className="w-full h-screen border-none"
+              title="Sweet Celebration Experience"
+              allow="autoplay"
             />
           ) : template.slug === "love-animation" ? (
             <iframe

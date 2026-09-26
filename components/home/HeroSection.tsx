@@ -206,7 +206,7 @@ export function HeroSection() {
                         <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
                       </h2>
                       <p className="text-[10.5px] text-slate-300 max-w-[200px] leading-tight">
-                        3D interactive scenes • Candles to blow
+                        Interactive letterbox • Floating polaroids • Music & animations
                       </p>
                     </div>
 
@@ -228,7 +228,7 @@ export function HeroSection() {
 
             {/* Detached Floating Iridescent Action Capsule Button - placed cleanly below with zero overlap */}
             <div className="mt-8 sm:mt-10 relative z-30">
-              <Link href="/s/sample-birthday-123" className="group">
+              <Link href="/preview" className="group">
                 <div className="relative p-[1.5px] rounded-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 shadow-[0_12px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(168,85,247,0.45)] hover:shadow-[0_15px_45px_rgba(0,0,0,0.9),0_0_40px_rgba(236,72,153,0.7)] transition-all duration-300 transform group-hover:scale-105 active:scale-95">
                   <div className="px-6 py-2.5 rounded-full bg-[#0a0d1a]/98 border border-white/10 flex items-center gap-2 text-xs sm:text-sm font-black text-white tracking-wide backdrop-blur-xl">
                     <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
