@@ -474,13 +474,37 @@ function CreateStudioContent() {
                 Log in or sign up to create your permanent surprise link, track views, and save memories forever. Your current draft has been saved.
               </p>
             </div>
-            <div className="flex gap-2 justify-end pt-2">
+            <div className="flex flex-wrap gap-2 justify-end pt-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowLoginPrompt(false)}
               >
                 Continue Editing
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-pink-400 border border-pink-500/30"
+                onClick={() => {
+                  const guestId = "guest-" + Math.random().toString(36).substring(2, 9);
+                  try {
+                    localStorage.setItem("demo_user_session", JSON.stringify({
+                      id: guestId,
+                      email: "guest@surprisespark.app",
+                      fullName: "Guest Creator",
+                      role: "user"
+                    }));
+                  } catch {
+                    // ignore
+                  }
+                  setShowLoginPrompt(false);
+                  setTimeout(() => {
+                    handlePublish();
+                  }, 100);
+                }}
+              >
+                Publish as Guest ⚡
               </Button>
               <Link href={`/login?redirect=/create?draftId=${draftId || "new"}`}>
                 <Button variant="primary" size="sm">
