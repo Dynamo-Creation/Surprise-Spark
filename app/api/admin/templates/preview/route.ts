@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -8,15 +9,57 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
-    const recipientName = searchParams.get("recipientName") || searchParams.get("name") || "Sarah";
-    const senderName = searchParams.get("senderName") || searchParams.get("sender") || "Alex";
-    const message = searchParams.get("message") || "Wishing you the happiest celebration filled with love and magic!";
-    const endearment = searchParams.get("endearment") || "";
-    const question = searchParams.get("question") || "";
-    const dodgeText = searchParams.get("dodgeText") || "";
-    const audioUrl = searchParams.get("audioUrl") || "";
-    const specialDate = searchParams.get("specialDate") || searchParams.get("date") || "";
-    const photoUrl = searchParams.get("photoUrl") || searchParams.get("photo") || "";
+    const publicId = searchParams.get("publicId");
+    let recipientName = searchParams.get("recipientName") || searchParams.get("name") || "";
+    let senderName = searchParams.get("senderName") || searchParams.get("sender") || "";
+    let message = searchParams.get("message") || "";
+    let endearment = searchParams.get("endearment") || "";
+    let question = searchParams.get("question") || "";
+    let dodgeText = searchParams.get("dodgeText") || "";
+    let audioUrl = searchParams.get("audioUrl") || "";
+    let specialDate = searchParams.get("specialDate") || searchParams.get("date") || "";
+    let photoUrl = searchParams.get("photoUrl") || searchParams.get("photo") || "";
+    let photos: string[] = [];
+
+    // Parse photos param safely (avoiding huge base64 query strings)
+    const rawPhotosParam = searchParams.get("photos");
+    if (rawPhotosParam && !rawPhotosParam.startsWith("data:")) {
+      photos = rawPhotosParam.split(",").map((p) => p.trim());
+    }
+
+    // If publicId is provided, hydrate directly from cloud database
+    if (publicId) {
+      try {
+        const supabase = await createClient();
+        const { data } = await supabase
+          .from("published_surprises")
+          .select("*")
+          .eq("public_id", publicId)
+          .maybeSingle();
+
+        if (data) {
+          if (!recipientName) recipientName = data.recipient_name || "";
+          if (!senderName) senderName = data.sender_name || "";
+          if (!message) message = data.custom_message || "";
+          if (!endearment) endearment = data.endearment || "";
+          if (!question) question = data.question || "";
+          if (!dodgeText) dodgeText = data.dodge_text || "";
+          if (!audioUrl) audioUrl = data.audio_url || "";
+          if (Array.isArray(data.photos) && data.photos.length > 0) {
+            photos = data.photos;
+            if (!photoUrl) {
+              photoUrl = data.photos[0];
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[Preview Route] Cloud fetch note:", err);
+      }
+    }
+
+    if (!recipientName) recipientName = "Sarah";
+    if (!senderName) senderName = "Alex";
+    if (!message) message = "Wishing you the happiest celebration filled with love and magic!";
 
     if (!slug) {
       return new NextResponse("Template slug is required", { status: 400 });
@@ -239,6 +282,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (effectiveSlug === "whispers-of-love") {
+      if (recipientName && recipientName !== "Sarah") {
+        patchedHtml = patchedHtml.replace(
+          /<p class="opening-tagline reveal">A Love Story<\/p>/g,
+          `<p class="opening-tagline reveal">A Love Story for ${recipientName} 💕</p>`
+        );
+      }
+    }
+
     // Automatically trigger preview interactions
     const autoTriggerScript = `
     <script>
@@ -251,6 +303,7 @@ export async function GET(request: NextRequest) {
         window.customMessage = ${JSON.stringify(message)};
         window.specialDate = ${JSON.stringify(specialDate)};
         window.photoUrl = ${JSON.stringify(photoUrl)};
+        window.photos = ${JSON.stringify(photos)};
         window.proposalQuestion = ${JSON.stringify(question)};
         window.dodgeTooltipText = ${JSON.stringify(dodgeText)};
         window.customAudioUrl = ${JSON.stringify(audioUrl)};

@@ -39,14 +39,14 @@
     <div class="petals-container" id="petalsContainer" aria-hidden="true"></div>
 
     <div class="scene-1-content">
-      <p class="opening-tagline reveal">A Love Story</p>
+      <p class="opening-tagline reveal" id="openingTagline">A Love Story</p>
       <h1 class="opening-title reveal reveal-delay-1">Whispers<br>of Love</h1>
       <div class="typewriter-wrap">
         <p class="typewriter-text reveal reveal-delay-2">
           <span id="typedText"></span><span class="typed-cursor">|</span>
         </p>
       </div>
-      <div class="scroll-hint reveal reveal-delay-3">
+      <div class="scroll-hint reveal reveal-delay-3" id="scrollHint" style="cursor: pointer;">
         <p>Scroll to begin the journey</p>
         <div class="scroll-arrow"></div>
       </div>
@@ -576,7 +576,11 @@
     senderName: urlParams.get("senderName") || urlParams.get("sender") || window.senderName || "Forever Yours",
     message: urlParams.get("message") || urlParams.get("customMessage") || window.customMessage || "There are not enough words in any language to describe what you mean to me. You are the warmth of the morning sun, the calm of a quiet night, and the joy in between. Every day with you feels like a beautiful dream I never want to wake up from. You have changed my world in the most wonderful way, and I am so grateful that our paths crossed. Thank you for being you — for your laughter, your kindness, and your love. I carry you in my heart, always. 💕",
     photos: (() => {
+      if (Array.isArray(window.photos) && window.photos.length > 0) return window.photos;
+      if (window.photoUrl && typeof window.photoUrl === "string") return [window.photoUrl];
       const p = urlParams.get("photos") || urlParams.get("photoUrl") || window.photoUrl;
+      if (Array.isArray(p)) return p;
+      if (typeof p === "string" && p.startsWith("data:")) return [p];
       if (p) return p.split(",").map(s => s.trim());
       return ["./Images/carousel_1.png", "./Images/carousel_2.png", "./Images/carousel_3.png", "./Images/carousel_4.png"];
     })(),
@@ -641,6 +645,10 @@
     if (sigEl && poemStarted) {
       sigEl.textContent = signatureText;
     }
+    const openingTagline = document.getElementById('openingTagline');
+    if (openingTagline && config.recipientName && !config.recipientName.toLowerCase().includes("sarah") && config.recipientName !== "My Love") {
+      openingTagline.textContent = `A Love Story for ${config.recipientName} 💕`;
+    }
   }
   applyConfig();
 
@@ -682,8 +690,21 @@
     }, 1000);
   }
 
+  const envelopeWrap = document.querySelector('.envelope-wrap');
+  if (envelopeWrap) {
+    envelopeWrap.style.cursor = 'pointer';
+    envelopeWrap.addEventListener('click', openLetter);
+  }
   envelope.addEventListener('click', openLetter);
   envelope.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') openLetter(); });
+
+  const scrollHint = document.querySelector('.scroll-hint');
+  if (scrollHint) {
+    scrollHint.addEventListener('click', () => {
+      const s2 = document.getElementById('scene-2');
+      if (s2) s2.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
 
   // --- SCENE 5: Carousel ---
   const cards     = document.querySelectorAll('.carousel-card');

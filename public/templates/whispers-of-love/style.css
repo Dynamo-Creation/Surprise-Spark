@@ -712,10 +712,11 @@ body {
   will-change: max-height, transform, opacity;
 }
 .letter-paper.revealed {
-  max-height: 600px;
+  max-height: 2500px;
   padding: 2.5rem;
   opacity: 1;
   transform: translateY(0) scale(1);
+  overflow-y: auto;
 }
 .letter-paper::before {
   content: '';

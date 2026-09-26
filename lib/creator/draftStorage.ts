@@ -39,7 +39,9 @@ const LOCAL_STORAGE_KEY = "surprisespark_drafts_v1";
 export function generatePublicId(templateSlug?: string): string {
   const chars = "abcdefghjkmnpqrstuvwxyz23456789";
   let prefix = "spark-";
-  if (templateSlug === "the-golden-proposal" || templateSlug === "love-animation") {
+  if (templateSlug === "whispers-of-love") {
+    prefix = "whispers-";
+  } else if (templateSlug === "the-golden-proposal" || templateSlug === "love-animation") {
     prefix = "love-";
   } else if (templateSlug === "sweet-celebration" || templateSlug?.includes("bday") || templateSlug?.includes("birthday")) {
     prefix = "bday-";

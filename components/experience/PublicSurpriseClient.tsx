@@ -268,7 +268,9 @@ export function PublicSurpriseClient({
         <>
           {template.slug === "sweet-celebration" ? (
             <iframe
-              src={`/api/admin/templates/preview?slug=sweet-celebration&recipientName=${encodeURIComponent(
+              src={`/api/admin/templates/preview?slug=sweet-celebration&publicId=${encodeURIComponent(
+                publicId
+              )}&recipientName=${encodeURIComponent(
                 personalization.recipient_name
               )}&senderName=${encodeURIComponent(
                 personalization.sender_name
@@ -277,28 +279,64 @@ export function PublicSurpriseClient({
               )}&specialDate=${encodeURIComponent(
                 personalization.special_date || ""
               )}&photoUrl=${encodeURIComponent(
-                surprise.photos?.[0] || ""
+                surprise.photos?.[0]?.startsWith("http") ? surprise.photos[0] : ""
               )}`}
               className="w-full h-screen border-none"
               title="Sweet Celebration Experience"
               allow="autoplay"
+              onLoad={(e) => {
+                const iframe = e.currentTarget;
+                if (iframe?.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "SURPRISE_UPDATE_PROPS",
+                      payload: {
+                        recipientName: personalization.recipient_name,
+                        senderName: personalization.sender_name,
+                        message: personalization.message,
+                        photos: surprise.photos || [],
+                        photoUrl: surprise.photos?.[0] || "",
+                      },
+                    },
+                    "*"
+                  );
+                }
+              }}
             />
           ) : template.slug === "whispers-of-love" ? (
             <iframe
-              src={`/api/admin/templates/preview?slug=whispers-of-love&recipientName=${encodeURIComponent(
+              src={`/api/admin/templates/preview?slug=whispers-of-love&publicId=${encodeURIComponent(
+                publicId
+              )}&recipientName=${encodeURIComponent(
                 personalization.recipient_name
               )}&senderName=${encodeURIComponent(
                 personalization.sender_name
               )}&message=${encodeURIComponent(
                 personalization.message
-              )}&photos=${encodeURIComponent(
-                (surprise.photos || []).join(",")
               )}&audioUrl=${encodeURIComponent(
                 audioUrl || ""
               )}`}
               className="w-full h-screen border-none"
               title="Whispers of Love Experience"
               allow="autoplay"
+              onLoad={(e) => {
+                const iframe = e.currentTarget;
+                if (iframe?.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "SURPRISE_UPDATE_PROPS",
+                      payload: {
+                        recipientName: personalization.recipient_name,
+                        senderName: personalization.sender_name,
+                        message: personalization.message,
+                        photos: surprise.photos || [],
+                        audioUrl: audioUrl || "",
+                      },
+                    },
+                    "*"
+                  );
+                }
+              }}
             />
           ) : template.slug === "love-animation" ? (
             <iframe
