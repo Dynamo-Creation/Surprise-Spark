@@ -1,0 +1,27 @@
+{
+  "id": "tpl-whispers-of-love",
+  "slug": "whispers-of-love",
+  "name": "Whispers of Love 💕",
+  "categoryId": "love",
+  "description": "An enchanting 6-chapter romantic journey featuring soft falling rose petals, twilight starry skies, an interactive rose-picking quote garden, wax-sealed love letter, and cherished memory carousel.",
+  "tagline": "A cinematic 6-chapter romantic journey through your love story.",
+  "thumbnailUrl": "/templates/whispers-of-love/thumbnail.jpg",
+  "previewUrl": "/api/admin/templates/preview?slug=whispers-of-love",
+  "supportsPhotos": true,
+  "maxPhotos": 4,
+  "supportsMusic": true,
+  "audioDuration": 60,
+  "status": "active",
+  "createdAt": "2026-09-26T12:00:00.000Z",
+  "updatedAt": "2026-09-26T12:00:00.000Z",
+  "files": [
+    "index.html",
+    "style.css",
+    "template.json",
+    "thumbnail.jpg",
+    "Images/carousel_1.png",
+    "Images/carousel_2.png",
+    "Images/carousel_3.png",
+    "Images/carousel_4.png"
+  ]
+}

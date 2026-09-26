@@ -97,7 +97,9 @@ export function getVisibleTemplates(templates: Template[] = MOCK_TEMPLATES): Tem
         s !== "love-animation" &&
         s !== "tpl-love-animation" &&
         s !== "the-golden-proposal" &&
-        s !== "tpl-the-golden-proposal"
+        s !== "tpl-the-golden-proposal" &&
+        s !== "whispers-of-love" &&
+        s !== "tpl-whispers-of-love"
     );
     return templates.filter((t) => !cleanDeleted.includes(t.slug) && !cleanDeleted.includes(t.id));
   } catch {
@@ -158,6 +160,26 @@ export const MOCK_TEMPLATES: Template[] = [
     isFeatured: true,
     isNew: true,
     isPremium: false,
+    defaultScenes: [],
+  },
+  {
+    id: "tpl-whispers-of-love",
+    slug: "whispers-of-love",
+    name: "Whispers of Love 💕",
+    category: "love",
+    description: "An enchanting 6-chapter romantic journey featuring soft falling rose petals, twilight starry skies, an interactive rose-picking quote garden, wax-sealed love letter, and cherished memory carousel.",
+    tagline: "A cinematic 6-chapter romantic journey through your love story.",
+    tags: ["Romantic Letter", "Rose Petals", "Starry Sky", "Memory Carousel", "Quote Garden", "Love"],
+    thumbnailUrl: "/templates/whispers-of-love/thumbnail.jpg",
+    coverGradient: "from-rose-500 via-pink-500 to-amber-300",
+    sceneCount: 6,
+    estimatedDuration: "3 mins",
+    isFeatured: true,
+    isNew: true,
+    isPremium: false,
+    supportsPhotos: true,
+    maxPhotos: 4,
+    supportsMusic: true,
     defaultScenes: [],
   },
   {

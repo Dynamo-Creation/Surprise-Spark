@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A cinematic romantic love story experience — beautiful, interactive, and unforgettable.">
+  <title>Whispers of Love 💕</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<body>
+
+  <!-- Floating Ambient Sound Toggle Button -->
+  <button type="button" class="whispers-sound-btn" id="soundToggleBtn" aria-label="Toggle Romantic Audio" style="position: fixed; top: 1.2rem; right: 1.2rem; z-index: 1000; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(18,8,16,0.65); backdrop-filter: blur(8px); color: #fda4af; display: flex; align-items: center; justify-content: center; font-size: 17px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s ease;">
+    <span id="soundIcon">🎵</span>
+  </button>
+
+  <!-- Custom Cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+
+  <!-- Scroll Navigation Dots -->
+  <nav class="scroll-indicator" id="scrollNav" aria-label="Scene navigation">
+    <div class="scroll-dot active" data-scene="0" title="Opening"></div>
+    <div class="scroll-dot" data-scene="1" title="Starry Night"></div>
+    <div class="scroll-dot" data-scene="2" title="Garden of Love"></div>
+    <div class="scroll-dot" data-scene="3" title="Love Letter"></div>
+    <div class="scroll-dot" data-scene="4" title="Memories"></div>
+    <div class="scroll-dot" data-scene="5" title="Finale"></div>
+  </nav>
+
+  <!-- =============================================
+       SCENE 1 — THE OPENING
+       ============================================= -->
+  <section class="scene scene-1" id="scene-1">
+    <!-- Big heart watermark -->
+    <div class="big-heart-bg" aria-hidden="true">♡</div>
+
+    <!-- Falling Petals -->
+    <div class="petals-container" id="petalsContainer" aria-hidden="true"></div>
+
+    <div class="scene-1-content">
+      <p class="opening-tagline reveal">A Love Story</p>
+      <h1 class="opening-title reveal reveal-delay-1">Whispers<br>of Love</h1>
+      <div class="typewriter-wrap">
+        <p class="typewriter-text reveal reveal-delay-2">
+          <span id="typedText"></span><span class="typed-cursor">|</span>
+        </p>
+      </div>
+      <div class="scroll-hint reveal reveal-delay-3">
+        <p>Scroll to begin the journey</p>
+        <div class="scroll-arrow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       SCENE 2 — STARRY NIGHT
+       ============================================= -->
+  <section class="scene scene-2" id="scene-2">
+    <div class="stars-container" id="starsContainer" aria-hidden="true"></div>
+    <div class="moon" aria-hidden="true"></div>
+    <div class="floating-sparkles" id="sparklesContainer" aria-hidden="true"></div>
+
+    <div class="scene-2-content">
+      <blockquote class="quote reveal">"In the quiet of the night,<br>I found you."</blockquote>
+      <p class="sub-quote reveal reveal-delay-2">You became my favorite chapter.</p>
+    </div>
+  </section>
+
+  <!-- =============================================
+       SCENE 3 — GARDEN OF LOVE
+       ============================================= -->
+  <section class="scene scene-3" id="scene-3">
+    <!-- Background ripple overlay -->
+    <div class="scene3-ripple" id="scene3Ripple" aria-hidden="true"></div>
+    <!-- Background floating particles container -->
+    <div class="scene3-bg-particles" id="scene3BgParticles" aria-hidden="true"></div>
+
+    <div class="scene-3-content">
+      <p class="section-label reveal">Our Garden</p>
+      <h2 class="section-title reveal reveal-delay-1">Garden of Love</h2>
+      <div class="quote-card reveal reveal-delay-2" id="quoteCard">
+        <div class="quote-inner">
+          <span class="quote-mark">"</span>
+          <p id="loveQuote"></p>
+          <span class="quote-mark close-quote">"</span>
+        </div>
+        <div class="quote-counter" id="quoteCounter">1 / 8</div>
+      </div>
+      <div id="petalEmitter" class="petal-emitter" aria-hidden="true"></div>
+      <button class="btn-rose reveal reveal-delay-3" id="pickRoseBtn" aria-label="Pick a rose to reveal a quote">
+        <span class="btn-icon">🌹</span>
+        <span>Pick a Rose</span>
+      </button>
+    </div>
+
+  </section>
+
+  <!-- =============================================
+       SCENE 4 — THE LOVE LETTER
+       ============================================= -->
+  <section class="scene scene-4" id="scene-4">
+    <div class="scene-4-content">
+      <p class="section-label reveal">A Message for You</p>
+      <h2 class="section-title reveal reveal-delay-1">The Love Letter</h2>
+
+      <!-- Envelope -->
+      <div class="envelope-wrap reveal reveal-delay-2">
+        <div class="envelope" id="envelope" role="button" aria-label="Click to open the love letter" tabindex="0">
+          <div class="envelope-flap"></div>
+          <div class="envelope-body">
+            <div class="envelope-bottom-left"></div>
+            <div class="envelope-bottom-right"></div>
+            <div class="wax-seal" aria-hidden="true">♥</div>
+          </div>
+        </div>
+        <p class="reveal reveal-delay-3" style="margin-top:1rem; font-family:var(--font-serif); font-style:italic; color:var(--rose-gold);">
+          Click the envelope to open 💌
+        </p>
+      </div>
+
+      <!-- Letter Paper -->
+      <div class="letter-paper" id="letterPaper">
+        <div class="corner-rose" aria-hidden="true">🌹</div>
+        <div class="letter-lines">
+          <span class="letter-heading" id="letterHeading"></span>
+          <p class="letter-body" id="letterBody"></p>
+          <p class="letter-sign" id="letterSign">With all my love 💕</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       SCENE 5 — MEMORY CAROUSEL
+       ============================================= -->
+  <section class="scene scene-5" id="scene-5">
+    <div class="scene-5-content">
+      <p class="section-label reveal">Captured Moments</p>
+      <h2 class="section-title reveal reveal-delay-1">Our Memories</h2>
+
+      <div class="carousel-stage reveal reveal-delay-2">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="carousel-card" data-index="0">
+            <img src="./Images/carousel_1.png" alt="Romantic sunset">
+            <p class="card-caption">"Every sunset is an opportunity to reset 🌅"</p>
+          </div>
+          <div class="carousel-card" data-index="1">
+            <img src="./Images/carousel_2.png" alt="Heart of roses">
+            <p class="card-caption">"You are the rose in my garden of life 🌹"</p>
+          </div>
+          <div class="carousel-card active" data-index="2">
+            <img src="./Images/carousel_3.png" alt="Holding hands">
+            <p class="card-caption">"I never want to let go of this hand 🤝"</p>
+          </div>
+          <div class="carousel-card" data-index="3">
+            <img src="./Images/carousel_4.png" alt="Floating lanterns">
+            <p class="card-caption">"Like lanterns, you light up my world ✨"</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="carousel-controls reveal reveal-delay-3">
+        <button class="carousel-btn" id="prevBtn" aria-label="Previous memory">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="carousel-dots" id="carouselDots">
+          <div class="carousel-dot" data-dot="0"></div>
+          <div class="carousel-dot" data-dot="1"></div>
+          <div class="carousel-dot active" data-dot="2"></div>
+          <div class="carousel-dot" data-dot="3"></div>
+        </div>
+        <button class="carousel-btn" id="nextBtn" aria-label="Next memory">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       SCENE 6 — THE FINALE
+       ============================================= -->
+  <section class="scene scene-6" id="scene-6">
+    <div class="confetti-container" id="confettiContainer" aria-hidden="true"></div>
+
+    <div class="scene-6-content">
+
+      <!-- Big Heart -->
+      <span class="big-heart" aria-hidden="true">💕</span>
+
+      <!-- Main Title -->
+      <h2 class="finale-title">Whispers of Love</h2>
+      <p class="finale-sub">You are my greatest adventure 💕</p>
+
+      <!-- Divider -->
+      <div class="finale-divider" aria-hidden="true">
+        <span></span><span class="divider-heart">♥</span><span></span>
+      </div>
+
+      <!-- Typewriter poem -->
+      <div class="finale-poem">
+        <p class="poem-line" id="poemLine1"></p>
+        <p class="poem-line" id="poemLine2"></p>
+        <p class="poem-line" id="poemLine3"></p>
+        <p class="poem-line" id="poemLine4"></p>
+      </div>
+
+      <!-- Floating love note cards -->
+      <div class="finale-notes">
+        <div class="note-card note-1">
+          <span>🌹</span>
+          <p>Every day with you<br>is a beautiful gift</p>
+        </div>
+        <div class="note-card note-2">
+          <span>💌</span>
+          <p>You are home<br>wherever you are</p>
+        </div>
+        <div class="note-card note-3">
+          <span>✨</span>
+          <p>I choose you<br>a thousand times over</p>
+        </div>
+      </div>
+
+      <!-- Final signature -->
+      <p class="finale-signature" id="finaleSignature"></p>
+
+      <!-- Action buttons -->
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
+        <button class="btn-restart" id="restartBtn" aria-label="Go back to beginning">
+          <i class="fa-solid fa-rotate-left"></i> Start Over
+        </button>
+        <button class="btn-restart" id="finishCelebrateBtn" style="background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%); color: #fff; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 6px 20px rgba(244,63,94,0.45); cursor: pointer;" aria-label="Celebrate and complete surprise">
+          <i class="fa-solid fa-heart"></i> Celebrate Together 💖
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+  <script>
+  // ======================================================
+  //  🌹 ROMANTIC WEB ANIMATION — MAIN SCRIPT
+  // ======================================================
+
+  // --- Custom Cursor ---
+  const cursor    = document.getElementById('cursor');
+  const cursorDot = document.getElementById('cursorDot');
+  let mouseX = 0, mouseY = 0;
+  let cursorX = 0, cursorY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    cursorDot.style.left = mouseX + 'px';
+    cursorDot.style.top  = mouseY + 'px';
+
+    // Spawn floating hearts randomly with throttling for smooth 60fps performance
+    if (Math.random() < 0.04) spawnHeart(e.clientX, e.clientY);
+  });
+
+  function animateCursor() {
+    cursorX += (mouseX - cursorX) * 0.12;
+    cursorY += (mouseY - cursorY) * 0.12;
+    cursor.style.left = cursorX + 'px';
+    cursor.style.top  = cursorY + 'px';
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  // --- Floating Hearts on Cursor ---
+  const heartChars = ['♥', '💕', '💖', '💗', '💓'];
+  function spawnHeart(x, y) {
+    const h = document.createElement('div');
+    h.className = 'heart-cursor';
+    h.textContent = heartChars[Math.floor(Math.random() * heartChars.length)];
+    h.style.left = (x + Math.random() * 30 - 15) + 'px';
+    h.style.top  = (y + Math.random() * 30 - 15) + 'px';
+    h.style.fontSize = (Math.random() * 12 + 12) + 'px';
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 1200);
+  }
+
+  // --- SCENE 1: Generate Petals ---
+  const petalColors = [
+    'radial-gradient(ellipse at 30% 30%, #fce4ec, #f48fb1)',
+    'radial-gradient(ellipse at 30% 30%, #f8bbd0, #f06292)',
+    'radial-gradient(ellipse at 30% 30%, #fce4ec, #ec407a)',
+    'radial-gradient(ellipse at 30% 30%, #fff9c4, #ffe082)',
+    'radial-gradient(ellipse at 30% 30%, #fce4ec, #e1a0b8)',
+  ];
+  const container = document.getElementById('petalsContainer');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.style.left              = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (Math.random() * 6 + 5) + 's';
+    p.style.animationDelay    = (Math.random() * 10) + 's';
+    p.style.background        = petalColors[Math.floor(Math.random() * petalColors.length)];
+    p.style.width             = (Math.random() * 12 + 12) + 'px';
+    p.style.height            = (Math.random() * 14 + 14) + 'px';
+    p.style.opacity           = Math.random() * 0.4 + 0.5;
+    container.appendChild(p);
+  }
+
+  // --- SCENE 1: Typewriter Effect ---
+  const quotes = [
+    "Every love story is beautiful...",
+    "...but ours is my favorite. 💕"
+  ];
+  const typedEl = document.getElementById('typedText');
+  let qIdx = 0, charIdx = 0, isDeleting = false;
+
+  function typeLoop() {
+    const current = quotes[qIdx];
+    if (!isDeleting) {
+      typedEl.textContent = current.slice(0, charIdx + 1);
+      charIdx++;
+      if (charIdx === current.length) {
+        if (qIdx === quotes.length - 1) return; // stop after last quote
+        setTimeout(() => { isDeleting = true; typeLoop(); }, 2000);
+        return;
+      }
+    } else {
+      typedEl.textContent = current.slice(0, charIdx - 1);
+      charIdx--;
+      if (charIdx === 0) {
+        isDeleting = false;
+        qIdx = (qIdx + 1) % quotes.length;
+      }
+    }
+    const speed = isDeleting ? 40 : 70;
+    setTimeout(typeLoop, speed);
+  }
+  // Start smoothly after CSS fadeInUp animation completes
+  setTimeout(typeLoop, 2200);
+
+  // --- SCENE 2: Generate Stars ---
+  const starsEl = document.getElementById('starsContainer');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left             = Math.random() * 100 + '%';
+    s.style.top              = Math.random() * 100 + '%';
+    s.style.animationDuration = (Math.random() * 3 + 1.5) + 's';
+    s.style.animationDelay   = (Math.random() * 4) + 's';
+    s.style.width = s.style.height = (Math.random() * 3 + 1) + 'px';
+    // Warm pink-white star colors
+    const starColors = ['#fff0f5', '#ffd6e7', '#ffb3cc', '#ffffff', '#ffe4ed'];
+    s.style.background = starColors[Math.floor(Math.random() * starColors.length)];
+    starsEl.appendChild(s);
+  }
+
+  // Parallax stars on mouse move
+  document.getElementById('scene-2').addEventListener('mousemove', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = (e.clientX - rect.left - rect.width / 2) / rect.width;
+    const cy = (e.clientY - rect.top - rect.height / 2) / rect.height;
+    starsEl.style.transform = `translate(${cx * 20}px, ${cy * 20}px)`;
+  });
+
+  // --- SCENE 2: Sparkles ---
+  const sparkleEl = document.getElementById('sparklesContainer');
+  const sparkleChars = ['✦', '✧', '✨', '⋆', '✵'];
+  for (let i = 0; i < 12; i++) {
+    const sp = document.createElement('span');
+    sp.textContent = sparkleChars[Math.floor(Math.random() * sparkleChars.length)];
+    sp.style.left             = Math.random() * 90 + 5 + '%';
+    sp.style.top              = Math.random() * 90 + 5 + '%';
+    sp.style.animationDuration = (Math.random() * 3 + 2) + 's';
+    sp.style.animationDelay   = (Math.random() * 3) + 's';
+    sp.style.color            = ['#fff', '#fda4af', '#f0d5a0'][Math.floor(Math.random() * 3)];
+    sparkleEl.appendChild(sp);
+  }
+
+  // --- SCENE 3: Quote Rotation (Enhanced) ---
+  const loveQuotes = [
+    "Every moment with you is a petal in the garden of my heart.",
+    "You are my today and all of my tomorrows.",
+    "I love you more than yesterday, less than tomorrow.",
+    "You are the reason I believe in love.",
+    "In your arms I have found my home.",
+    "You make my heart smile every single day.",
+    "With you, every ordinary moment becomes extraordinary.",
+    "You are my favorite hello and my hardest goodbye.",
+  ];
+  let currentQuote = 0;
+  let quoteTyping  = false;
+  const quoteEl         = document.getElementById('loveQuote');
+  const quoteCard       = document.getElementById('quoteCard');
+  const quoteCounter    = document.getElementById('quoteCounter');
+  const roseBtn         = document.getElementById('pickRoseBtn');
+  const petalEmitter    = document.getElementById('petalEmitter');
+  const scene3          = document.getElementById('scene-3');
+  const scene3Ripple    = document.getElementById('scene3Ripple');
+  const scene3BgParts   = document.getElementById('scene3BgParticles');
+
+  // Type a string into an element character by character
+  function typeQuote(el, text, speed, onDone) {
+    el.textContent = '';
+    let i = 0;
+    const iv = setInterval(() => {
+      el.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(iv);
+        if (onDone) onDone();
+      }
+    }, speed);
+  }
+
+  // Spawn flying petals FROM the button (close-up burst)
+  function burstPetals(btn) {
+    const rect = btn.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top  + rect.height / 2;
+    const icons = ['🌸','🌹','💕','✨','🌺','🌷','❤️','💖'];
+    const count = 20;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal-burst';
+      p.textContent = icons[Math.floor(Math.random() * icons.length)];
+      p.style.left     = cx + 'px';
+      p.style.top      = cy + 'px';
+      p.style.fontSize = (Math.random() * 14 + 14) + 'px';
+      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.4;
+      const dist  = Math.random() * 140 + 80;
+      p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+      p.style.animationDuration = (Math.random() * 0.4 + 0.8) + 's';
+      p.style.animationDelay    = (Math.random() * 0.15) + 's';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1300);
+    }
+  }
+
+  // Background ripple circles from center of scene
+  function triggerBgRipple() {
+    const rect  = scene3.getBoundingClientRect();
+    const cx    = rect.width  / 2;
+    const cy    = rect.height / 2;
+    const sizes = [180, 320, 500];
+    sizes.forEach((sz, idx) => {
+      const r = document.createElement('div');
+      r.className = 'ripple-circle';
+      r.style.width  = sz + 'px';
+      r.style.height = sz + 'px';
+      r.style.left   = cx + 'px';
+      r.style.top    = cy + 'px';
+      r.style.animationDelay = (idx * 0.18) + 's';
+      r.style.borderColor    = idx === 0
+        ? 'rgba(244,63,94,0.6)'
+        : idx === 1
+          ? 'rgba(251,113,133,0.4)'
+          : 'rgba(253,164,175,0.25)';
+      scene3Ripple.appendChild(r);
+      setTimeout(() => r.remove(), 1800 + idx * 200);
+    });
+  }
+
+  // Background-wide floating petals (large, drifting up)
+  function spawnBgPetals() {
+    const bgIcons = ['🌸','🌹','🌷','💮','🌺','💐'];
+    const count = 14;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'bg-petal';
+      p.textContent = bgIcons[Math.floor(Math.random() * bgIcons.length)];
+      p.style.left             = (Math.random() * 95 + 2.5) + '%';
+      p.style.bottom           = '-40px';
+      p.style.fontSize         = (Math.random() * 20 + 18) + 'px';
+      p.style.animationDuration = (Math.random() * 2.5 + 2.5) + 's';
+      p.style.animationDelay   = (Math.random() * 0.8) + 's';
+      scene3BgParts.appendChild(p);
+      setTimeout(() => p.remove(), 5500);
+    }
+  }
+
+  // Background gradient pulse
+  function pulseBg() {
+    scene3.classList.add('bg-pulse');
+    setTimeout(() => scene3.classList.remove('bg-pulse'), 700);
+  }
+
+  // Card glow flash
+  function flashCard() {
+    quoteCard.style.transition = 'none';
+    quoteCard.style.boxShadow  = '0 0 0 4px rgba(244,63,94,0.6), 0 0 40px rgba(244,63,94,0.4)';
+    quoteCard.style.transform  = 'scale(1.04)';
+    setTimeout(() => {
+      quoteCard.style.transition = 'all 0.6s ease';
+      quoteCard.style.boxShadow  = '';
+      quoteCard.style.transform  = 'scale(1)';
+    }, 120);
+  }
+
+  // Initial quote typed on scene load
+  function initQuote() {
+    typeQuote(quoteEl, loveQuotes[0], 45);
+  }
+  // Trigger on first visibility
+  const q3Observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && quoteEl.textContent === '') initQuote();
+    });
+  }, { threshold: 0.4 });
+  q3Observer.observe(document.getElementById('scene-3'));
+
+  roseBtn.addEventListener('click', (e) => {
+    if (quoteTyping) return;
+    quoteTyping = true;
+
+    // 1. Heavy petal burst from button
+    burstPetals(roseBtn);
+
+    // 2. Background ripple wave
+    triggerBgRipple();
+
+    // 3. Background petals float up
+    spawnBgPetals();
+
+    // 4. Background gradient pulse
+    pulseBg();
+
+    // 5. Card flash
+    flashCard();
+
+    // 6. Slide old text out
+    quoteEl.style.transition  = 'opacity 0.25s ease, transform 0.25s ease';
+    quoteEl.style.opacity     = '0';
+    quoteEl.style.transform   = 'translateY(-18px)';
+
+
+    setTimeout(() => {
+      // 4. Advance to next quote
+      currentQuote = (currentQuote + 1) % loveQuotes.length;
+
+      // 5. Update counter with bounce
+      quoteCounter.style.transition = 'transform 0.2s ease';
+      quoteCounter.style.transform  = 'scale(1.4)';
+      quoteCounter.textContent      = `${currentQuote + 1} / ${loveQuotes.length}`;
+      setTimeout(() => {
+        quoteCounter.style.transform = 'scale(1)';
+      }, 200);
+
+      // 6. Reset text position for entry
+      quoteEl.style.transition = 'none';
+      quoteEl.style.transform  = 'translateY(18px)';
+      quoteEl.style.opacity    = '0';
+
+      setTimeout(() => {
+        quoteEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        quoteEl.style.opacity    = '1';
+        quoteEl.style.transform  = 'translateY(0)';
+
+        // 7. Typewriter for new quote
+        typeQuote(quoteEl, loveQuotes[currentQuote], 40, () => {
+          quoteTyping = false;
+        });
+      }, 60);
+    }, 280);
+
+    // 8. Spin & scale the rose icon
+    const icon = roseBtn.querySelector('.btn-icon');
+    icon.style.transition = 'transform 0.5s cubic-bezier(.36,.07,.19,.97)';
+    icon.style.transform  = 'rotate(360deg) scale(1.5)';
+    setTimeout(() => {
+      icon.style.transition = '';
+      icon.style.transform  = '';
+    }, 500);
+  });
+
+  // --- Personalization Config ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const config = {
+    recipientName: urlParams.get("recipientName") || urlParams.get("name") || window.recipientName || "My Love",
+    senderName: urlParams.get("senderName") || urlParams.get("sender") || window.senderName || "Forever Yours",
+    message: urlParams.get("message") || urlParams.get("customMessage") || window.customMessage || "There are not enough words in any language to describe what you mean to me. You are the warmth of the morning sun, the calm of a quiet night, and the joy in between. Every day with you feels like a beautiful dream I never want to wake up from. You have changed my world in the most wonderful way, and I am so grateful that our paths crossed. Thank you for being you — for your laughter, your kindness, and your love. I carry you in my heart, always. 💕",
+    photos: (() => {
+      const p = urlParams.get("photos") || urlParams.get("photoUrl") || window.photoUrl;
+      if (p) return p.split(",").map(s => s.trim());
+      return ["./Images/carousel_1.png", "./Images/carousel_2.png", "./Images/carousel_3.png", "./Images/carousel_4.png"];
+    })(),
+    audioUrl: urlParams.get("audioUrl") || window.customAudioUrl || "",
+  };
+
+  // --- SCENE 4: Love Letter ---
+  const envelope    = document.getElementById('envelope');
+  const letterPaper = document.getElementById('letterPaper');
+  const headingEl   = document.getElementById('letterHeading');
+  const bodyEl      = document.getElementById('letterBody');
+  const signEl      = document.getElementById('letterSign');
+
+  function formatLetterHeading(name) {
+    if (!name || name.toLowerCase().includes("love")) {
+      return "To My Love...";
+    }
+    return `To ${name}, My Love...`;
+  }
+
+  let letterHeading = formatLetterHeading(config.recipientName);
+  let letterBody    = config.message;
+  let signatureText = `— Yours, forever & always, ${config.senderName} 💕`;
+
+  function applyConfig() {
+    letterHeading = formatLetterHeading(config.recipientName);
+    letterBody    = config.message;
+    signatureText = `— Yours, forever & always, ${config.senderName} 💕`;
+    if (signEl) {
+      signEl.textContent = `With all my love, ${config.senderName} 💕`;
+    }
+    const defaultCarouselImages = [
+      "./Images/carousel_1.png",
+      "./Images/carousel_2.png",
+      "./Images/carousel_3.png",
+      "./Images/carousel_4.png"
+    ];
+    const cardsList = document.querySelectorAll('.carousel-card');
+    if (cardsList) {
+      cardsList.forEach((card, idx) => {
+        const img = card.querySelector('img');
+        if (img) {
+          if (config.photos && config.photos[idx]) {
+            img.src = config.photos[idx];
+          } else {
+            img.src = defaultCarouselImages[idx] || defaultCarouselImages[0];
+          }
+        }
+      });
+    }
+    if (headingEl && letterOpened) {
+      headingEl.textContent = letterHeading;
+    }
+    if (bodyEl && letterOpened) {
+      bodyEl.textContent = letterBody;
+    }
+    const sigEl = document.getElementById('finaleSignature');
+    if (sigEl && poemStarted) {
+      sigEl.textContent = signatureText;
+    }
+  }
+  applyConfig();
+
+  let letterOpened = false;
+  let letterTyping = false;
+
+  function typeText(el, text, speed, callback) {
+    let i = 0;
+    el.textContent = '';
+    const interval = setInterval(() => {
+      el.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        if (callback) callback();
+      }
+    }, speed);
+  }
+
+  function openLetter() {
+    if (letterOpened || letterTyping) return;
+    letterTyping = true;
+
+    envelope.classList.add('open');
+
+    setTimeout(() => {
+      letterPaper.classList.add('revealed');
+      setTimeout(() => {
+        typeText(headingEl, letterHeading, 60, () => {
+          setTimeout(() => {
+            typeText(bodyEl, letterBody, 25, () => {
+              if (signEl) {
+                signEl.textContent = `With all my love, ${config.senderName} 💕`;
+              }
+              letterPaper.classList.add('sign-visible');
+              letterOpened = true;
+              letterTyping = false;
+            });
+          }, 400);
+        });
+      }, 600);
+    }, 1000);
+  }
+
+  envelope.addEventListener('click', openLetter);
+  envelope.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') openLetter(); });
+
+  // --- SCENE 5: Carousel ---
+  const cards     = document.querySelectorAll('.carousel-card');
+  const dots      = document.querySelectorAll('.carousel-dot');
+  const totalCards = cards.length;
+  let activeIndex = 2; // center card
+
+  const cardPositions = [
+    { tx: -340, rot: -8, scale: 0.85, z: 4 },
+    { tx: -170, rot: -4, scale: 0.92, z: 6 },
+    { tx:    0, rot:  0, scale: 1.05, z: 10 },
+    { tx:  170, rot:  4, scale: 0.92, z: 6 },
+  ];
+
+  function updateCarousel(center) {
+    activeIndex = ((center % totalCards) + totalCards) % totalCards;
+    cards.forEach((card, i) => {
+      card.classList.remove('active');
+      const offset = ((i - activeIndex) + totalCards) % totalCards;
+      // Map offset to position index
+      let posIdx;
+      if      (offset === 0)              posIdx = 2; // center
+      else if (offset === 1)              posIdx = 3; // right 1
+      else if (offset === totalCards - 1) posIdx = 1; // left 1
+      else if (offset === 2)              posIdx = 3; // far right (hidden behind)
+      else                                posIdx = 0; // far left
+
+      const pos = cardPositions[posIdx];
+      card.style.transform = `translateX(${pos.tx}px) rotate(${pos.rot}deg) scale(${pos.scale})`;
+      card.style.zIndex    = pos.z;
+      card.style.opacity   = (offset <= 1 || offset >= totalCards - 1) ? '1' : '0.5';
+    });
+    cards[activeIndex].classList.add('active');
+
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === activeIndex);
+    });
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => updateCarousel(activeIndex - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => updateCarousel(activeIndex + 1));
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => updateCarousel(+dot.dataset.dot));
+  });
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = +card.dataset.index;
+      if (idx !== activeIndex) updateCarousel(idx);
+    });
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  const carouselTrack = document.getElementById('carouselTrack');
+  carouselTrack.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  carouselTrack.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) updateCarousel(diff > 0 ? activeIndex + 1 : activeIndex - 1);
+  });
+
+  // --- SCENE 6: Confetti ---
+  const confettiColors = ['#fb7185','#fda4af','#f43f5e','#d4a574','#fce4ec','#f0d5a0','#e879a2','#fbbf24'];
+  const confettiEl = document.getElementById('confettiContainer');
+
+  // --- SCENE 6: Poem Typewriter ---
+  const poemLines = [
+    "In you, I found a love that feels like home,",
+    "A gentle warmth that I have always known.",
+    "Through every season, through the years ahead,",
+    "I'll love you more with every word unsaid.",
+  ];
+  let poemStarted = false;
+
+  function typeLineSequential(lines, els, speed, lineDelay, onAllDone) {
+    let li = 0;
+    function nextLine() {
+      if (li >= lines.length) { if (onAllDone) onAllDone(); return; }
+      let ci = 0;
+      const el = els[li];
+      el.textContent = '';
+      const iv = setInterval(() => {
+        el.textContent += lines[li][ci];
+        ci++;
+        if (ci >= lines[li].length) {
+          clearInterval(iv);
+          li++;
+          setTimeout(nextLine, lineDelay);
+        }
+      }, speed);
+    }
+    nextLine();
+  }
+
+  function startFinalePoem() {
+    if (poemStarted) return;
+    poemStarted = true;
+
+    const lineEls = [
+      document.getElementById('poemLine1'),
+      document.getElementById('poemLine2'),
+      document.getElementById('poemLine3'),
+      document.getElementById('poemLine4'),
+    ];
+    const sigEl = document.getElementById('finaleSignature');
+
+    // Start typing after poem section fades in (CSS animation delay = 2s)
+    setTimeout(() => {
+      typeLineSequential(poemLines, lineEls, 38, 300, () => {
+        // After poem done, type signature
+        setTimeout(() => {
+          let si = 0;
+          sigEl.textContent = '';
+          const iv = setInterval(() => {
+            sigEl.textContent += signatureText[si];
+            si++;
+            if (si >= signatureText.length) clearInterval(iv);
+          }, 55);
+        }, 600);
+      });
+    }, 2200);
+  }
+
+  // --- SCENE 6: Confetti ---
+  function createConfetti() {
+
+    confettiEl.innerHTML = '';
+    for (let i = 0; i < 32; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.left             = Math.random() * 100 + 'vw';
+      c.style.top              = -20 + 'px';
+      c.style.background       = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+      c.style.width            = (Math.random() * 8 + 6)  + 'px';
+      c.style.height           = (Math.random() * 8 + 6)  + 'px';
+      c.style.borderRadius     = Math.random() > 0.5 ? '50%' : '2px';
+      c.style.animationDuration = (Math.random() * 4 + 4) + 's';
+      c.style.animationDelay   = (Math.random() * 5) + 's';
+      c.style.setProperty('--cx', (Math.random() * 100 - 50) + 'px');
+      confettiEl.appendChild(c);
+    }
+  }
+
+  // --- Restart ---
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // --- Scroll Navigation Dots ---
+  const scenes     = document.querySelectorAll('.scene');
+  const navDots    = document.querySelectorAll('.scroll-dot');
+  const sceneIds   = ['scene-1','scene-2','scene-3','scene-4','scene-5','scene-6'];
+
+  navDots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const sceneIdx = +dot.dataset.scene;
+      document.getElementById(sceneIds[sceneIdx]).scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // IntersectionObserver for scene tracking & reveal animations
+  const sceneObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id    = entry.target.id;
+        const idx   = sceneIds.indexOf(id);
+        navDots.forEach((d, i) => d.classList.toggle('active', i === idx));
+
+        // Scene-specific triggers
+        if (id === 'scene-6') {
+          createConfetti();
+          startFinalePoem();
+        }
+
+        if (id === 'scene-2') {
+          // Trigger star reset on re-entry
+          document.querySelector('.moon').style.animation = 'none';
+          setTimeout(() => document.querySelector('.moon').style.animation = '', 10);
+        }
+      }
+    });
+  }, { threshold: 0.5 });
+
+  scenes.forEach(s => sceneObserver.observe(s));
+
+  // Reveal observer
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // Initial call
+  updateCarousel(2);
+
+  // --- Finish / Celebrate Button & Experience Completion ---
+  const finishBtn = document.getElementById('finishCelebrateBtn');
+  if (finishBtn) {
+    finishBtn.addEventListener('click', () => {
+      createConfetti();
+      try {
+        const fanfareScale = [523.25, 659.25, 783.99, 1046.50];
+        fanfareScale.forEach((f, idx) => {
+          setTimeout(() => playRomanticChime(f, 2.0), idx * 150);
+        });
+      } catch (e) {}
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: "SURPRISE_EXPERIENCE_FINISHED" }, "*");
+      }
+    });
+  }
+
+  // --- Real-Time Studio Live Preview & Mute Message Listeners ---
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "SURPRISE_UPDATE_PROPS") {
+      const p = event.data.payload || {};
+      if (p.recipientName !== undefined) config.recipientName = p.recipientName;
+      if (p.senderName !== undefined) config.senderName = p.senderName;
+      if (p.message !== undefined) config.message = p.message;
+      if (p.photos !== undefined) config.photos = p.photos;
+      applyConfig();
+    }
+    if (event.data?.type === "SURPRISE_TOGGLE_MUTE") {
+      toggleSound();
+    }
+  });
+
+  // --- Ambient Romantic Audio Synthesizer ---
+  let audioCtx = null;
+  let isSoundActive = false;
+  let synthTimer = null;
+  const soundToggleBtn = document.getElementById("soundToggleBtn");
+  const soundIcon = document.getElementById("soundIcon");
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) audioCtx = new AudioCtx();
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  const romanticScale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+
+  function playRomanticChime(freq, duration = 1.6) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.07, ctx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function startAmbientChimes() {
+    if (isSoundActive) return;
+    isSoundActive = true;
+    if (soundIcon) soundIcon.textContent = "🔊";
+
+    let step = 0;
+    const melody = [0, 2, 4, 7, 5, 4, 2, 0, 3, 5, 7, 4];
+    synthTimer = setInterval(() => {
+      if (!isSoundActive) return;
+      const noteIdx = melody[step % melody.length];
+      playRomanticChime(romanticScale[noteIdx], 1.8);
+      step++;
+    }, 750);
+  }
+
+  function stopAmbientChimes() {
+    isSoundActive = false;
+    if (synthTimer) clearInterval(synthTimer);
+    if (soundIcon) soundIcon.textContent = "🔇";
+  }
+
+  function toggleSound() {
+    if (isSoundActive) {
+      stopAmbientChimes();
+    } else {
+      getAudioCtx();
+      startAmbientChimes();
+    }
+  }
+
+  if (soundToggleBtn) {
+    soundToggleBtn.addEventListener("click", toggleSound);
+  }
+
+  const unlockAudioOnGesture = () => {
+    getAudioCtx();
+    startAmbientChimes();
+    window.removeEventListener("pointerdown", unlockAudioOnGesture);
+    window.removeEventListener("keydown", unlockAudioOnGesture);
+  };
+  window.addEventListener("pointerdown", unlockAudioOnGesture, { once: true });
+  window.addEventListener("keydown", unlockAudioOnGesture, { once: true });
+  </script>
+
+</body>
+</html>

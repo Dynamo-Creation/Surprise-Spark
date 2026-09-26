@@ -62,12 +62,17 @@ function CreateStudioContent() {
     replyChoice3: "My heart is beating so fast right now... 💓",
   });
 
-  // Generic Personalization Configuration (Sweet Celebration, Love Animation, etc.)
+  const DEFAULT_WHISPERS_MESSAGE =
+    "There are not enough words in any language to describe what you mean to me. You are the warmth of the morning sun, the calm of a quiet night, and the joy in between. Every day with you feels like a beautiful dream I never want to wake up from. You have changed my world in the most wonderful way, and I am so grateful that our paths crossed. Thank you for being you — for your laughter, your kindness, and your love. I carry you in my heart, always. 💕";
+  const DEFAULT_BIRTHDAY_MESSAGE =
+    "Happy Birthday! You make every ordinary day extraordinary. Let's make this year unforgettable!";
+
+  // Generic Personalization Configuration (Sweet Celebration, Whispers of Love, Love Animation, etc.)
   const [genericConfig, setGenericConfig] = useState<GenericCelebrationConfig>({
     recipientName: "Maya",
     senderName: "Alex",
     specialDate: "2026-09-14",
-    message: "Happy Birthday! You make every ordinary day extraordinary. Let's make this year unforgettable!",
+    message: DEFAULT_BIRTHDAY_MESSAGE,
     photos: [],
   });
 
@@ -133,8 +138,16 @@ function CreateStudioContent() {
   useEffect(() => {
     if (templateSlugParam && !isTemplateDeleted(templateSlugParam)) {
       setSelectedTemplateSlug(templateSlugParam);
+      if (templateSlugParam === "whispers-of-love" && !editId) {
+        setGenericConfig((prev) => {
+          if (!prev.message || prev.message.includes("Happy Birthday")) {
+            return { ...prev, message: DEFAULT_WHISPERS_MESSAGE };
+          }
+          return prev;
+        });
+      }
     }
-  }, [templateSlugParam]);
+  }, [templateSlugParam, editId]);
 
   // Resolve template from registry
   const currentTemplate = useMemo(() => {
@@ -171,7 +184,7 @@ function CreateStudioContent() {
 
     const cleanRecipient = sanitizeText(rawRecipient, 40);
     const cleanSender = sanitizeText(rawSender, 40);
-    const cleanMessage = sanitizeText(rawMessage, 500);
+    const cleanMessage = sanitizeText(rawMessage, 1000);
 
     const draft = saveDraft({
       id: draftId || undefined,
@@ -236,7 +249,7 @@ function CreateStudioContent() {
 
       const cleanRecipient = sanitizeText(rawRecipient, 40);
       const cleanSender = sanitizeText(rawSender, 40);
-      const cleanMessage = sanitizeText(rawMessage, 500);
+      const cleanMessage = sanitizeText(rawMessage, 1000);
 
       // Only store permanent cloud URLs (never ephemeral browser blobs)
       const safeAudioUrl =
@@ -343,13 +356,32 @@ function CreateStudioContent() {
                   ? "💍"
                   : tpl.slug === "love-animation"
                   ? "💖"
+                  : tpl.slug === "whispers-of-love"
+                  ? "🌹"
                   : "💌";
 
               return (
                 <button
                   key={tpl.slug}
                   type="button"
-                  onClick={() => setSelectedTemplateSlug(tpl.slug)}
+                  onClick={() => {
+                    setSelectedTemplateSlug(tpl.slug);
+                    if (tpl.slug === "whispers-of-love") {
+                      setGenericConfig((prev) => {
+                        if (!prev.message || prev.message.includes("Happy Birthday")) {
+                          return { ...prev, message: DEFAULT_WHISPERS_MESSAGE };
+                        }
+                        return prev;
+                      });
+                    } else if (tpl.slug === "sweet-celebration") {
+                      setGenericConfig((prev) => {
+                        if (!prev.message || prev.message === DEFAULT_WHISPERS_MESSAGE) {
+                          return { ...prev, message: DEFAULT_BIRTHDAY_MESSAGE };
+                        }
+                        return prev;
+                      });
+                    }
+                  }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     isSelected
                       ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm ring-1 ring-black/5"

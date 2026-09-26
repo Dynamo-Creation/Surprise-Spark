@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const TEMPLATES_LIST = [
   { slug: "sweet-celebration", name: "Sweet Celebration 💌" },
+  { slug: "whispers-of-love", name: "Whispers of Love 💕" },
   { slug: "love-animation", name: "Love Animation 💖" },
   { slug: "the-golden-proposal", name: "The Golden Proposal 💍" },
 ];
@@ -36,6 +37,8 @@ function PreviewContent() {
       ? "/api/admin/templates/preview?slug=the-golden-proposal"
       : activeTemplate === "sweet-celebration"
       ? "/api/admin/templates/preview?slug=sweet-celebration"
+      : activeTemplate === "whispers-of-love"
+      ? "/api/admin/templates/preview?slug=whispers-of-love"
       : `/s/sample-birthday-123?template=${activeTemplate}`;
 
   return (

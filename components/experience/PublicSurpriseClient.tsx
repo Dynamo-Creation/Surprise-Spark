@@ -283,6 +283,23 @@ export function PublicSurpriseClient({
               title="Sweet Celebration Experience"
               allow="autoplay"
             />
+          ) : template.slug === "whispers-of-love" ? (
+            <iframe
+              src={`/api/admin/templates/preview?slug=whispers-of-love&recipientName=${encodeURIComponent(
+                personalization.recipient_name
+              )}&senderName=${encodeURIComponent(
+                personalization.sender_name
+              )}&message=${encodeURIComponent(
+                personalization.message
+              )}&photos=${encodeURIComponent(
+                (surprise.photos || []).join(",")
+              )}&audioUrl=${encodeURIComponent(
+                audioUrl || ""
+              )}`}
+              className="w-full h-screen border-none"
+              title="Whispers of Love Experience"
+              allow="autoplay"
+            />
           ) : template.slug === "love-animation" ? (
             <iframe
               src={`/api/admin/templates/preview?slug=love-animation&recipientName=${encodeURIComponent(

@@ -10,6 +10,8 @@ import {
   Calendar,
   Gift,
   Check,
+  Camera,
+  PenTool,
 } from "lucide-react";
 import { Input, Textarea } from "@/components/ui/input";
 import { BorderBeam } from "@/components/magicui/border-beam";
@@ -76,8 +78,9 @@ export function TemplatePersonalizeSection({
   const isGoldenProposal = template.slug === "the-golden-proposal";
   const isSweetCelebration = template.slug === "sweet-celebration";
   const isLoveAnimation = template.slug === "love-animation";
+  const isWhispersOfLove = template.slug === "whispers-of-love";
 
-  const templateDuration = isGoldenProposal ? 60 : 120;
+  const templateDuration = isGoldenProposal ? 60 : isWhispersOfLove ? 180 : 120;
 
   return (
     <div className="space-y-6">
@@ -507,6 +510,306 @@ export function TemplatePersonalizeSection({
               <p className="text-[11px] text-pink-600/80 dark:text-pink-400/70 mt-0.5 leading-relaxed">
                 This template creates a fully automated particle animation experience. Your names are woven into the glowing heart centerpiece — no personal message or photos required. Add custom audio below to make it even more special!
               </p>
+            </div>
+          </div>
+        </div>
+      ) : isWhispersOfLove ? (
+        /* ========================================================================= */
+        /* 🌹 TEMPLATE 3: WHISPERS OF LOVE 6-CHAPTER ROMANTIC CUSTOMIZER             */
+        /* ========================================================================= */
+        <div className="space-y-6">
+          {/* Card 1: Couple Names & Romance Heading */}
+          <div className="relative rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-rose-200/80 dark:border-rose-900/40 shadow-xl backdrop-blur-md overflow-hidden space-y-4">
+            <BorderBeam size={220} duration={12} delay={0} colorFrom="#f43f5e" colorTo="#fb7185" />
+
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-md">
+                <Heart className="w-4 h-4 fill-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                  1. Couple Names
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Personalizes the wax envelope greeting, parchment letter signature, and starry finale
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Their Name (Recipient) *
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {genericConfig.recipientName.length}/40
+                  </span>
+                </div>
+                <Input
+                  id="whispers-recipient-name"
+                  value={genericConfig.recipientName}
+                  maxLength={40}
+                  onChange={(e) => onGenericConfigChange({ recipientName: e.target.value })}
+                  placeholder="e.g. Maya"
+                  className="border-rose-300/80 dark:border-rose-800/80 focus:ring-rose-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Appears as: &quot;To {genericConfig.recipientName || "My Love"}, My Love...&quot;
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Your Name (Sender) *
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {genericConfig.senderName.length}/40
+                  </span>
+                </div>
+                <Input
+                  id="whispers-sender-name"
+                  value={genericConfig.senderName}
+                  maxLength={40}
+                  onChange={(e) => onGenericConfigChange({ senderName: e.target.value })}
+                  placeholder="e.g. Alex"
+                  className="border-pink-300/80 dark:border-pink-800/80 focus:ring-pink-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Signed as: &quot;— Yours, forever &amp; always, {genericConfig.senderName || "Alex"} 💕&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Wax-Sealed Vintage Love Letter (Scene 4) */}
+          <div className="relative rounded-3xl p-6 bg-gradient-to-br from-amber-50/70 via-rose-50/40 to-white/90 dark:from-slate-900/90 dark:via-rose-950/20 dark:to-slate-900/90 border border-amber-200/80 dark:border-amber-900/40 shadow-xl backdrop-blur-md overflow-hidden space-y-4">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 to-rose-600 text-white flex items-center justify-center shadow-md text-sm">
+                  💌
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                    <span>2. The Wax-Sealed Love Letter</span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+                      Scene 4
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    When clicked, the wax seal breaks and this letter types out on antique parchment paper
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick romantic letter templates */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onGenericConfigChange({
+                      message:
+                        "There are not enough words in any language to describe what you mean to me. You are the warmth of the morning sun, the calm of a quiet night, and the joy in between. Every day with you feels like a beautiful dream I never want to wake up from. You have changed my world in the most wonderful way, and I am so grateful that our paths crossed. Thank you for being you — for your laughter, your kindness, and your love. I carry you in my heart, always. 💕",
+                    });
+                  }}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 transition-colors border border-rose-200/60 dark:border-rose-800/40 cursor-pointer"
+                >
+                  🌹 Classic Romantic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onGenericConfigChange({
+                      message:
+                        "From the very first moment you walked into my life, everything changed for the better. You are my safe place, my greatest adventure, and my truest best friend. Thank you for loving me as I am and making every single day feel magical. I fall in love with you a little more every day. 💕",
+                    });
+                  }}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 transition-colors border border-amber-200/60 dark:border-amber-800/40 cursor-pointer"
+                >
+                  ✨ Soulmate
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <PenTool className="w-3.5 h-3.5 text-rose-500" />
+                  Parchment Letter Body *
+                </label>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {genericConfig.message.length}/800
+                </span>
+              </div>
+              <Textarea
+                id="whispers-message"
+                rows={5}
+                maxLength={800}
+                value={genericConfig.message}
+                onChange={(e) => onGenericConfigChange({ message: e.target.value })}
+                placeholder="Write your personal love letter here..."
+                className="border-amber-300/80 dark:border-amber-800/80 focus:ring-rose-500 font-serif leading-relaxed text-sm bg-white/70 dark:bg-slate-900/70"
+                required
+              />
+            </div>
+
+            {/* Envelope & Parchment Live Preview Snippet */}
+            <div className="rounded-2xl p-3.5 bg-amber-100/60 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 space-y-1">
+              <div className="text-[11px] font-serif italic text-amber-900 dark:text-amber-300">
+                To {genericConfig.recipientName || "My Love"}, My Love...
+              </div>
+              <p className="text-[11px] font-serif text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                {genericConfig.message || "Your personal letter will be animated here..."}
+              </p>
+              <div className="text-[11px] font-serif italic text-amber-800 dark:text-amber-400 text-right">
+                With all my love, {genericConfig.senderName || "Alex"} 💕
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Our Memories — 3D Polaroid Carousel 📸 (Up to 4 Photos) */}
+          <div className="rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-md space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-600 text-white flex items-center justify-center shadow-md">
+                <Camera className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                  <span>3. Our Memories — 3D Polaroid Carousel 📸</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-pink-500/15 text-pink-700 dark:text-pink-300 border border-pink-500/25">
+                    Scene 5
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Upload up to 4 photos for the swipeable 3D polaroid memory deck with romantic captions
+                </p>
+              </div>
+            </div>
+
+            <PhotoManager
+              photos={genericConfig.photos}
+              onChange={(newPhotos) => onGenericConfigChange({ photos: newPhotos })}
+              maxPhotos={4}
+              templateName="Whispers of Love 💕"
+              supportsPhotos={true}
+            />
+
+            <p className="text-[10px] text-slate-400 italic">
+              💡 If you keep this empty, the template automatically displays 4 aesthetic sunset, rose garden, and candlelight couple memories.
+            </p>
+          </div>
+
+          {/* Card 4: 6-Chapter Interactive Experience Timeline */}
+          <div className="relative rounded-3xl p-6 bg-gradient-to-br from-slate-900/95 via-slate-950/95 to-rose-950/40 border border-rose-500/20 shadow-2xl overflow-hidden space-y-5">
+            {/* Ambient glow effects */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-36 h-36 bg-pink-600/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-lg">
+                <Sparkles className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-white tracking-tight">
+                  The 6-Chapter Romantic Journey
+                </h3>
+                <p className="text-[11px] text-rose-300/70">
+                  What {genericConfig.recipientName || "your recipient"} experiences step-by-step
+                </p>
+              </div>
+            </div>
+
+            {/* Timeline Steps */}
+            <div className="relative space-y-0 pl-5">
+              {/* Vertical timeline line */}
+              <div className="absolute left-[11px] top-3 bottom-3 w-px bg-gradient-to-b from-rose-500/60 via-pink-400/40 to-amber-500/60" />
+
+              {[
+                {
+                  step: "1",
+                  icon: "🌸",
+                  title: "Petal Rain & Typewriter Greeting",
+                  desc: "Soft rose petals drift down as typewriter text introduces your romantic story.",
+                  color: "from-rose-500 to-pink-500",
+                },
+                {
+                  step: "2",
+                  icon: "🌙",
+                  title: "Starry Night & Moon Glow",
+                  desc: "Parallax night sky with glowing crescent moon and interactive mouse-tracking stars.",
+                  color: "from-pink-500 to-purple-500",
+                },
+                {
+                  step: "3",
+                  icon: "🌹",
+                  title: "Garden of Love (Pick a Rose)",
+                  desc: "Interactive button that bursts rose petals & reveals 8 heartfelt love quotes.",
+                  color: "from-purple-500 to-rose-600",
+                },
+                {
+                  step: "4",
+                  icon: "💌",
+                  title: "The Wax-Sealed Letter",
+                  desc: `They click the antique envelope; wax seal breaks and your personal letter to ${
+                    genericConfig.recipientName || "My Love"
+                  } types out smoothly.`,
+                  color: "from-rose-600 to-amber-500",
+                },
+                {
+                  step: "5",
+                  icon: "📸",
+                  title: "3D Polaroid Memory Deck",
+                  desc: "Swipeable 3D rotating cards displaying your favorite captured moments together.",
+                  color: "from-amber-500 to-pink-500",
+                },
+                {
+                  step: "6",
+                  icon: "💖",
+                  title: "Confetti Shower & Finale Poem",
+                  desc: `Colorful confetti rain, a 4-line rhyming poem, signed by "${
+                    genericConfig.senderName || "Alex"
+                  }" with audio fanfare.`,
+                  color: "from-pink-500 to-rose-500",
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="relative flex items-start gap-3.5 pb-4">
+                  {/* Timeline dot */}
+                  <div
+                    className={`relative z-10 flex-shrink-0 w-[22px] h-[22px] rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md shadow-rose-500/30`}
+                  >
+                    <span className="text-[9px] font-black text-white">{item.step}</span>
+                  </div>
+                  <div className="pt-0.5">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-sm">{item.icon}</span>
+                      <span className="text-xs font-bold text-white">{item.title}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Feature badges */}
+            <div className="relative flex flex-wrap gap-2 pt-1">
+              {[
+                "Interactive Rose Picking",
+                "Wax Seal Physics",
+                "3D Polaroid Carousel",
+                "Ambient Chimes Synthesizer",
+                "Falling Petals & Confetti",
+                "Touch & Swipe Support",
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/25 backdrop-blur-sm"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
         </div>

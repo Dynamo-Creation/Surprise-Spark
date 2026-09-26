@@ -74,6 +74,42 @@ export function StudioLiveCanvas({
           params.set("audioUrl", customAudioUrl);
         }
         url = `/api/admin/templates/preview?${params.toString()}`;
+      } else if (template.slug === "whispers-of-love") {
+        const defaultRomanticMessage =
+          "There are not enough words in any language to describe what you mean to me. You are the warmth of the morning sun, the calm of a quiet night, and the joy in between. Every day with you feels like a beautiful dream I never want to wake up from. You have changed my world in the most wonderful way, and I am so grateful that our paths crossed. Thank you for being you — for your laughter, your kindness, and your love. I carry you in my heart, always. 💕";
+        const photosParam = (genericConfig.photos || [])
+          .filter((p) => !p.startsWith("data:"))
+          .join(",");
+        const params = new URLSearchParams({
+          slug: "whispers-of-love",
+          recipientName: genericConfig.recipientName || "Maya",
+          senderName: genericConfig.senderName || "Alex",
+          message: genericConfig.message || defaultRomanticMessage,
+        });
+        if (photosParam) {
+          params.set("photos", photosParam);
+        }
+        if (customAudioUrl) {
+          params.set("audioUrl", customAudioUrl);
+        }
+        url = `/api/admin/templates/preview?${params.toString()}`;
+
+        // Also broadcast directly to iframe for instantaneous live updates
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: "SURPRISE_UPDATE_PROPS",
+              payload: {
+                recipientName: genericConfig.recipientName || "Maya",
+                senderName: genericConfig.senderName || "Alex",
+                message: genericConfig.message || defaultRomanticMessage,
+                photos: genericConfig.photos,
+                audioUrl: customAudioUrl,
+              },
+            },
+            "*"
+          );
+        }
       } else {
         // Sweet Celebration or other engine template
         const photo = genericConfig.photos && genericConfig.photos[0] ? genericConfig.photos[0] : "";
@@ -118,6 +154,7 @@ export function StudioLiveCanvas({
               specialDate: genericConfig.specialDate,
               message: genericConfig.message,
               photoUrl: photo,
+              photos: genericConfig.photos,
               audioUrl: customAudioUrl,
             }
           }, "*");

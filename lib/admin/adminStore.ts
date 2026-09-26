@@ -209,7 +209,9 @@ export function getDeletedTemplateSlugs(): string[] {
         s !== "love-animation" &&
         s !== "tpl-love-animation" &&
         s !== "the-golden-proposal" &&
-        s !== "tpl-the-golden-proposal"
+        s !== "tpl-the-golden-proposal" &&
+        s !== "whispers-of-love" &&
+        s !== "tpl-whispers-of-love"
     );
     return merged;
   } catch {
@@ -224,7 +226,9 @@ export function isTemplateDeleted(slugOrId: string): boolean {
     slugOrId === "love-animation" ||
     slugOrId === "tpl-love-animation" ||
     slugOrId === "the-golden-proposal" ||
-    slugOrId === "tpl-the-golden-proposal"
+    slugOrId === "tpl-the-golden-proposal" ||
+    slugOrId === "whispers-of-love" ||
+    slugOrId === "tpl-whispers-of-love"
   ) {
     return false;
   }
@@ -303,7 +307,9 @@ class AdminStore {
           s !== "love-animation" &&
           s !== "tpl-love-animation" &&
           s !== "the-golden-proposal" &&
-          s !== "tpl-the-golden-proposal"
+          s !== "tpl-the-golden-proposal" &&
+          s !== "whispers-of-love" &&
+          s !== "tpl-whispers-of-love"
       );
       localStorage.setItem(DELETED_TEMPLATES_STORAGE_KEY, JSON.stringify(updatedBlacklist));
 
