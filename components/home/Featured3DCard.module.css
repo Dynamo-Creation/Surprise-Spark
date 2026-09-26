@@ -41,6 +41,11 @@
   box-shadow: rgba(255, 117, 140, 0) 40px 50px 25px -40px, rgba(244, 63, 94, 0.22) 0px 25px 25px -5px;
 }
 
+.gradientWhispers {
+  background: linear-gradient(135deg, #f43f5e 0%, #fb7185 45%, #e11d48 100%);
+  box-shadow: rgba(244, 63, 94, 0) 40px 50px 25px -40px, rgba(225, 29, 72, 0.25) 0px 25px 25px -5px;
+}
+
 .gradientPurple {
   background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
   box-shadow: rgba(168, 85, 247, 0.22) 0px 25px 25px -5px;
@@ -216,6 +221,10 @@
 
 .circleSweet {
   background: rgba(255, 117, 140, 0.26);
+}
+
+.circleWhispers {
+  background: rgba(244, 63, 94, 0.26);
 }
 
 .circlePurple {
