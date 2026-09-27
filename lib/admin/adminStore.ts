@@ -124,22 +124,22 @@ const INITIAL_USERS: AdminUserAccount[] = [
   },
   {
     id: "usr_01h8x9k6t8q",
-    displayName: "Super Admin",
-    email: "admin@surprisespark.app",
+    displayName: "Sonu",
+    email: "sonu25580@gmail.com",
     role: "superadmin",
     status: "verified",
-    registrationDate: "2026-07-01T00:00:00Z",
-    lastActivityAt: "2026-09-14T09:30:00Z",
-    surprisesCount: 5,
-    publishedCount: 5,
-    templateUsage: ["sweet-celebration"],
+    registrationDate: "2026-09-16T05:43:32Z",
+    lastActivityAt: "2026-09-27T14:00:00Z",
+    surprisesCount: 22,
+    publishedCount: 22,
+    templateUsage: ["sweet-celebration", "whispers-of-love"],
   },
 ];
 
 const INITIAL_AUDIT_LOGS: AdminAuditRecord[] = [
   {
     id: "aud_01j982a",
-    actor: { id: "usr_01h8x9k6t8q", name: "Super Admin", role: "superadmin" },
+    actor: { id: "usr_01h8x9k6t8q", name: "Sonu", role: "superadmin" },
     action: "TEMPLATE_PUBLISH",
     targetTable: "templates",
     targetId: "sweet-celebration",
@@ -149,7 +149,7 @@ const INITIAL_AUDIT_LOGS: AdminAuditRecord[] = [
   },
   {
     id: "aud_01j982b",
-    actor: { id: "usr_01h8x9k6t8q", name: "Super Admin", role: "superadmin" },
+    actor: { id: "usr_01h8x9k6t8q", name: "Sonu", role: "superadmin" },
     action: "USER_SUSPEND",
     targetTable: "profiles",
     targetId: "usr_01h8x9k5s7p",
@@ -159,7 +159,7 @@ const INITIAL_AUDIT_LOGS: AdminAuditRecord[] = [
   },
   {
     id: "aud_01j982c",
-    actor: { id: "usr_01h8x9k6t8q", name: "Super Admin", role: "superadmin" },
+    actor: { id: "usr_01h8x9k6t8q", name: "Sonu", role: "superadmin" },
     action: "THEME_CREATE",
     targetTable: "themes",
     targetId: "galaxy",
@@ -398,7 +398,18 @@ class AdminStore {
       const rawUsers = localStorage.getItem(ADMIN_USERS_STORAGE_KEY);
       if (rawUsers) {
         const parsedUsers: AdminUserAccount[] = JSON.parse(rawUsers);
-        parsedUsers.forEach((u) => this.users.set(u.id, u));
+        let hasMigrated = false;
+        parsedUsers.forEach((u) => {
+          if (u.email === "admin@surprisespark.app") {
+            u.email = "sonu25580@gmail.com";
+            u.displayName = "Sonu";
+            hasMigrated = true;
+          }
+          this.users.set(u.id, u);
+        });
+        if (hasMigrated) {
+          localStorage.setItem(ADMIN_USERS_STORAGE_KEY, JSON.stringify(Array.from(this.users.values())));
+        }
       }
 
       const rawAudit = localStorage.getItem(ADMIN_AUDIT_STORAGE_KEY);

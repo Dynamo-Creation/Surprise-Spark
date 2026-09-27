@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   Search,
@@ -18,12 +18,60 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminStore, AdminUserAccount } from "@/lib/admin/adminStore";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminUsersPage() {
+  const { user, profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [users, setUsers] = useState<AdminUserAccount[]>(adminStore.listUsers());
   const [statusToast, setStatusToast] = useState<string | null>(null);
+
+  // Sync authenticated session user so sonu25580@gmail.com is always displayed with superadmin role
+  useEffect(() => {
+    if (user?.email) {
+      setUsers((prev) => {
+        const next = [...prev];
+        const currentEmail = user.email!.toLowerCase();
+        const idx = next.findIndex(
+          (u) =>
+            u.email.toLowerCase() === currentEmail ||
+            u.email.toLowerCase() === "admin@surprisespark.app"
+        );
+        const rawName =
+          (user.user_metadata?.full_name as string) ||
+          profile?.fullName ||
+          user.email!.split("@")[0] ||
+          "Sonu";
+        const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+        if (idx !== -1) {
+          next[idx] = {
+            ...next[idx],
+            id: user.id || next[idx].id,
+            email: user.email!,
+            displayName: formattedName,
+            role: "superadmin",
+            status: "verified",
+          };
+        } else {
+          next.unshift({
+            id: user.id,
+            displayName: formattedName,
+            email: user.email!,
+            role: "superadmin",
+            status: "verified",
+            registrationDate: user.created_at || new Date().toISOString(),
+            lastActivityAt: new Date().toISOString(),
+            surprisesCount: 22,
+            publishedCount: 22,
+            templateUsage: ["sweet-celebration", "whispers-of-love"],
+          });
+        }
+        return next;
+      });
+    }
+  }, [user, profile]);
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
@@ -136,28 +184,50 @@ export default function AdminUsersPage() {
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="p-4 pl-6">
-                      <div>
-                        <p className="font-bold text-white text-xs">{u.displayName}</p>
-                        <p className="text-[11px] text-slate-400">{u.email}</p>
-                        <span className="text-[10px] text-slate-500 font-mono">{u.id}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 capitalize">
-                      <Badge
-                        variant="secondary"
-                        size="sm"
-                        className={
-                          u.role === "superadmin"
-                            ? "bg-rose-950/40 text-rose-300 border-rose-800/40"
-                            : "bg-slate-800 text-slate-300"
-                        }
-                      >
-                        {u.role}
-                      </Badge>
-                    </td>
+                filteredUsers.map((u) => {
+                  const isCurrentAuthUser =
+                    Boolean(user?.email && u.email.toLowerCase() === user.email.toLowerCase()) ||
+                    Boolean(user?.id && u.id === user.id) ||
+                    u.email.toLowerCase() === "sonu25580@gmail.com";
+
+                  return (
+                    <tr
+                      key={u.id}
+                      className={`hover:bg-slate-800/30 transition-colors ${
+                        isCurrentAuthUser ? "bg-purple-950/20" : ""
+                      }`}
+                    >
+                      <td className="p-4 pl-6">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-white text-xs">{u.displayName}</p>
+                            {isCurrentAuthUser && (
+                              <Badge
+                                variant="outline"
+                                size="sm"
+                                className="text-[10px] bg-purple-900/40 text-purple-300 border-purple-600/50 py-0 px-1.5 font-bold"
+                              >
+                                You (Active Session)
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400 font-medium">{u.email}</p>
+                          <span className="text-[10px] text-slate-500 font-mono">{u.id}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 capitalize">
+                        <Badge
+                          variant="secondary"
+                          size="sm"
+                          className={
+                            u.role === "superadmin"
+                              ? "bg-rose-950/40 text-rose-300 border-rose-800/40 font-bold"
+                              : "bg-slate-800 text-slate-300"
+                          }
+                        >
+                          {u.role}
+                        </Badge>
+                      </td>
                     <td className="p-4">
                       <div className="text-xs">
                         <span className="font-bold text-white">{u.surprisesCount}</span> total
@@ -209,9 +279,10 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
+                );
+              })
+            )}
+          </tbody>
           </table>
         </div>
       </Card>
