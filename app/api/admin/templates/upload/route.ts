@@ -1,104 +1,195 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getAdminSessionFromRequest } from "@/lib/admin/adminAuth";
 
 export const runtime = "nodejs";
 
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB per file
+const MAX_TOTAL_SIZE = 60 * 1024 * 1024; // 60 MB total payload
+const MAX_FILE_COUNT = 250;
+
+const ALLOWED_EXTENSIONS = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".mp3",
+  ".wav",
+  ".ogg",
+  ".mp4",
+  ".woff2",
+  ".ttf",
+  ".html",
+  ".css",
+  ".js",
+  ".mjs",
+  ".json",
+  ".glb",
+  ".gltf",
+]);
+
+const PUBLIC_ASSET_EXTENSIONS = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".mp3",
+  ".wav",
+  ".ogg",
+  ".mp4",
+  ".woff2",
+  ".ttf",
+  ".html",
+  ".css",
+  ".js",
+  ".mjs",
+  ".json",
+]);
+
 export async function POST(request: NextRequest) {
   try {
+    // 1. Enforce Server-Side Administrator Authorization
+    const adminSession = getAdminSessionFromRequest(request);
+    if (!adminSession) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Admin privileges required." },
+        { status: 403 }
+      );
+    }
+
     const formData = await request.formData();
 
-    const name = (formData.get("name") as string) || "Custom Template";
-    let slug = (formData.get("slug") as string) || "";
-    const category = (formData.get("category") as string) || "birthday";
-    const description = (formData.get("description") as string) || "";
+    const name = String(formData.get("name") || "Custom Template").slice(0, 100);
+    let rawSlug = String(formData.get("slug") || "").trim();
+    const category = String(formData.get("category") || "birthday").slice(0, 50);
+    const description = String(formData.get("description") || "").slice(0, 500);
     const supportsPhotos = formData.get("supportsPhotos") === "true";
-    const maxPhotos = parseInt((formData.get("maxPhotos") as string) || "1", 10);
-    const audioDuration = parseInt((formData.get("audioDuration") as string) || "30", 10);
+    const maxPhotos = Math.min(Math.max(parseInt(String(formData.get("maxPhotos") || "1"), 10) || 1, 1), 20);
+    const audioDuration = Math.min(Math.max(parseInt(String(formData.get("audioDuration") || "30"), 10) || 30, 5), 300);
 
-    // Sanitize slug
-    slug = slug
+    // 2. Strict Slug Sanitization (Alphanumeric, hyphens, underscores only)
+    let slug = rawSlug
       .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9-_]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 50);
 
-    if (!slug) {
+    if (!slug || !/^[a-z0-9_-]{2,50}$/.test(slug)) {
       slug = `template-${Date.now().toString(36)}`;
     }
 
     const files = formData.getAll("files") as File[];
+    if (files.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "No files provided in template upload package." },
+        { status: 400 }
+      );
+    }
+
+    if (files.length > MAX_FILE_COUNT) {
+      return NextResponse.json(
+        { success: false, error: `Too many files. Limit is ${MAX_FILE_COUNT} files.` },
+        { status: 400 }
+      );
+    }
+
     const pathsJson = formData.get("paths") as string;
     let relativePaths: string[] = [];
 
     if (pathsJson) {
       try {
-        relativePaths = JSON.parse(pathsJson);
+        const parsed = JSON.parse(pathsJson);
+        if (Array.isArray(parsed)) {
+          relativePaths = parsed.map((p) => String(p));
+        }
       } catch {
         relativePaths = [];
       }
     }
 
-    // Prepare directories
+    // 3. Prepare Target Directories with Canonical Path Verification
     const rootDir = process.cwd();
-    const publicDir = path.join(rootDir, "public", "templates", slug);
-    const codeDir = path.join(rootDir, "lib", "engine", "templates", "custom", slug);
+    const publicDir = path.resolve(rootDir, "public", "templates", slug);
+    const codeDir = path.resolve(rootDir, "lib", "engine", "templates", "custom", slug);
 
     await fs.mkdir(publicDir, { recursive: true });
     await fs.mkdir(codeDir, { recursive: true });
 
     let detectedThumbnailUrl = "/templates/sweet-celebration/thumbnail.jpg";
     const savedFilesList: string[] = [];
-
-    // Media file extensions
-    const mediaExtensions = new Set([
-      ".png",
-      ".jpg",
-      ".jpeg",
-      ".gif",
-      ".webp",
-      ".svg",
-      ".mp3",
-      ".wav",
-      ".ogg",
-      ".mp4",
-      ".woff2",
-      ".ttf",
-    ]);
+    let totalBytesUploaded = 0;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (!file || typeof file === "string") continue;
 
-      // Determine subpath inside the folder
-      let relativePath = relativePaths[i] || file.name;
-      // Strip leading folder name if present (e.g. "my-template/index.tsx" -> "index.tsx")
-      const parts = relativePath.split(/[/\\]/);
-      if (parts.length > 1) {
-        relativePath = parts.slice(1).join("/");
+      if (file.size > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { success: false, error: `File "${file.name}" exceeds the 20MB per-file size limit.` },
+          { status: 400 }
+        );
+      }
+
+      totalBytesUploaded += file.size;
+      if (totalBytesUploaded > MAX_TOTAL_SIZE) {
+        return NextResponse.json(
+          { success: false, error: "Total package upload size exceeds 60MB limit." },
+          { status: 400 }
+        );
       }
 
       const ext = path.extname(file.name).toLowerCase();
-      const isPublicAsset = mediaExtensions.has(ext) || ext === ".html" || ext === ".css" || ext === ".js" || ext === ".mjs" || ext === ".json";
+      if (!ALLOWED_EXTENSIONS.has(ext)) {
+        return NextResponse.json(
+          { success: false, error: `File format "${ext}" is not permitted for template assets.` },
+          { status: 400 }
+        );
+      }
+
+      // 4. Robust Path Traversal Prevention
+      let rawRelativePath = relativePaths[i] || file.name;
+      // Normalize slashes and strip leading directory names if full folder was uploaded
+      let normalized = rawRelativePath.replace(/\\/g, "/");
+      const segments = normalized.split("/").filter((s) => s && s !== "." && s !== "..");
+      if (segments.length > 1) {
+        // Strip top-level folder name (e.g., "my-template/index.html" -> "index.html")
+        normalized = segments.slice(1).join("/");
+      } else if (segments.length === 1) {
+        normalized = segments[0];
+      } else {
+        normalized = path.basename(file.name).replace(/[^a-zA-Z0-9._-]/g, "_");
+      }
+
+      // Final canonical path boundary checks
+      const codeDest = path.resolve(codeDir, normalized);
+      const publicDest = path.resolve(publicDir, normalized);
+
+      if (!codeDest.startsWith(codeDir) || !publicDest.startsWith(publicDir)) {
+        // Attempted path traversal out of destination directory
+        continue;
+      }
 
       const buffer = Buffer.from(await file.arrayBuffer());
 
-      // Always save to code directory
-      const codeDest = path.join(codeDir, relativePath);
+      // Save to code directory
       await fs.mkdir(path.dirname(codeDest), { recursive: true });
       await fs.writeFile(codeDest, buffer);
 
-      // Also save to public directory if it's media or web runnable asset
-      if (isPublicAsset) {
-        const publicDest = path.join(publicDir, relativePath);
+      // Save to public directory if it's a web-runnable or media asset
+      if (PUBLIC_ASSET_EXTENSIONS.has(ext)) {
         await fs.mkdir(path.dirname(publicDest), { recursive: true });
         await fs.writeFile(publicDest, buffer);
       }
 
-      savedFilesList.push(relativePath);
+      savedFilesList.push(normalized);
 
-      // Check if this file is a thumbnail
-      const lowerName = path.basename(relativePath).toLowerCase();
+      // Thumbnail detection
+      const lowerName = path.basename(normalized).toLowerCase();
       if (
         lowerName === "thumbnail.jpg" ||
         lowerName === "thumbnail.png" ||
@@ -107,7 +198,7 @@ export async function POST(request: NextRequest) {
         lowerName === "preview.jpg" ||
         lowerName === "preview.png"
       ) {
-        detectedThumbnailUrl = `/templates/${slug}/${relativePath}`;
+        detectedThumbnailUrl = `/templates/${slug}/${normalized}`;
       }
     }
 
@@ -138,16 +229,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Template "${name}" uploaded and registered successfully!`,
+      message: `Template "${name}" uploaded and registered securely!`,
       template: templateManifest,
       savedFilesCount: savedFilesList.length,
     });
   } catch (error: unknown) {
-    console.error("Template upload error:", error);
+    console.error("[Template Upload Security] Error during upload:", error);
     return NextResponse.json(
       {
         success: false,
-        error: (error as Error)?.message || "Failed to upload template folder.",
+        error: "Failed to process template upload safely.",
       },
       { status: 500 }
     );

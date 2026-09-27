@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createClient } from "@/lib/supabase/server";
+import { escapeHtml } from "@/lib/security/sanitizer";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
     const publicId = searchParams.get("publicId");
+
+    // Strict slug validation (prevent path traversal or invalid characters)
+    if (!slug || !/^[a-zA-Z0-9_-]{2,50}$/.test(slug)) {
+      return new NextResponse("Invalid or missing template slug", { status: 400 });
+    }
     let recipientName = searchParams.get("recipientName") || searchParams.get("name") || "";
     let senderName = searchParams.get("senderName") || searchParams.get("sender") || "";
     let message = searchParams.get("message") || "";
@@ -193,9 +199,9 @@ export async function GET(request: NextRequest) {
 <body>
   <div class="badge">Template Live Preview</div>
   <div class="heart">✨ 🎁 ✨</div>
-  <h1>${recipientName}, You've Got A Surprise!</h1>
-  <p>"${message}"</p>
-  <p style="font-weight: bold; color: #f472b6;">— ${senderName}</p>
+  <h1>${escapeHtml(recipientName)}, You've Got A Surprise!</h1>
+  <p>"${escapeHtml(message)}"</p>
+  <p style="font-weight: bold; color: #f472b6;">— ${escapeHtml(senderName)}</p>
   <button class="btn" onclick="alert('Animation Triggered!')">Replay Animation</button>
 </body>
 </html>`;
@@ -221,7 +227,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Dynamically inject personalized recipient/sender text into templates with hardcoded texts
-    const targetEndearment = endearment || "My Everything";
+    const targetEndearment = escapeHtml(endearment || "My Everything");
+    const safeRecipient = escapeHtml(recipientName);
+    const safeSender = escapeHtml(senderName);
+    const safeQuestion = escapeHtml(question);
+    const safeDodge = escapeHtml(dodgeText);
+
     if (recipientName && recipientName !== "Sarah") {
       patchedHtml = patchedHtml.replace(
         "const heartText = 'I Love ❤️ You';",
@@ -229,7 +240,7 @@ export async function GET(request: NextRequest) {
       );
       patchedHtml = patchedHtml.replace(
         /For Someone<br><span>So Special<\/span>/g,
-        `For ${recipientName}<br><span>${targetEndearment}</span>`
+        `For ${safeRecipient}<br><span>${targetEndearment}</span>`
       );
     } else if (endearment) {
       patchedHtml = patchedHtml.replace(
@@ -245,7 +256,7 @@ export async function GET(request: NextRequest) {
       );
       patchedHtml = patchedHtml.replace(
         /See What He Wants To Say/g,
-        `See What ${senderName} Wants To Say`
+        `See What ${safeSender} Wants To Say`
       );
     }
 
@@ -259,26 +270,32 @@ export async function GET(request: NextRequest) {
     if (question) {
       patchedHtml = patchedHtml.replace(
         /Will You Be Mine\?/g,
-        question
+        safeQuestion
       );
     }
 
     if (dodgeText) {
       patchedHtml = patchedHtml.replace(
         /Aise kaise mana kar sakti ho! 😉💖/g,
-        dodgeText
+        safeDodge
       );
     }
 
     if (effectiveSlug === "sweet-celebration") {
       if (recipientName && recipientName !== "Sarah") {
-        patchedHtml = patchedHtml.replace(/Hayati/g, recipientName);
+        patchedHtml = patchedHtml.replace(/Hayati/g, safeRecipient);
       }
       if (specialDate) {
-        patchedHtml = patchedHtml.replace(/23 May 2005/g, specialDate);
+        patchedHtml = patchedHtml.replace(/23 May 2005/g, escapeHtml(specialDate));
       }
       if (photoUrl) {
-        patchedHtml = patchedHtml.replace(/r5\.jpg/g, photoUrl);
+        // Sanitize photoUrl to ensure safe image URL
+        const safePhotoUrl = photoUrl.startsWith("http://") || photoUrl.startsWith("https://") || photoUrl.startsWith("/")
+          ? photoUrl.replace(/["'<>]/g, "")
+          : "";
+        if (safePhotoUrl) {
+          patchedHtml = patchedHtml.replace(/r5\.jpg/g, safePhotoUrl);
+        }
       }
     }
 
@@ -286,7 +303,7 @@ export async function GET(request: NextRequest) {
       if (recipientName && recipientName !== "Sarah") {
         patchedHtml = patchedHtml.replace(
           /<p class="opening-tagline reveal">A Love Story<\/p>/g,
-          `<p class="opening-tagline reveal">A Love Story for ${recipientName} 💕</p>`
+          `<p class="opening-tagline reveal">A Love Story for ${safeRecipient} 💕</p>`
         );
       }
     }
@@ -359,8 +376,9 @@ export async function GET(request: NextRequest) {
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   } catch (err: unknown) {
+    console.error("[Template Preview Security] Error loading template:", err);
     return new NextResponse(
-      `<html><body><h3>Failed to load template preview:</h3><pre>${(err as Error)?.message}</pre></body></html>`,
+      `<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family:sans-serif;background:#0f172a;color:#f8fafc;padding:40px;text-align:center;"><h3>Unable to load template preview</h3><p style="color:#94a3b8;">Please verify the template slug and try again.</p></body></html>`,
       { status: 500, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
   }

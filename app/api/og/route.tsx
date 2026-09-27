@@ -5,8 +5,10 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const name = searchParams.get("name") || "Someone Special";
-  const sender = searchParams.get("sender");
+  const rawName = searchParams.get("name") || "Someone Special";
+  const name = rawName.slice(0, 50).replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim() || "Someone Special";
+  const rawSender = searchParams.get("sender");
+  const sender = rawSender ? rawSender.slice(0, 50).replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim() : null;
 
   return new ImageResponse(
     (

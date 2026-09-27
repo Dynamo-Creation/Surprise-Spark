@@ -1,14 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import crypto from "node:crypto";
 
 export const runtime = "nodejs";
 
+const MAX_SIZE = 15 * 1024 * 1024; // 15MB
+
+const ALLOWED_AUDIO_EXTENSIONS = new Set([
+  "mp3",
+  "wav",
+  "m4a",
+  "aac",
+  "ogg",
+  "flac",
+  "webm",
+  "opus",
+]);
+
 /**
- * POST /api/upload-audio
- * Accepts a multipart form upload with field "file" (audio blob/file).
- * Uploads to Supabase Storage "music" bucket under surprises/ folder.
- * Returns a permanent public URL for embedding in shared surprise links.
+ * Validates audio file binary magic byte signatures to prevent malicious payload uploads
+ * masquerading under audio MIME types or extensions.
  */
+function verifyAudioHeader(buffer: Buffer): boolean {
+  if (buffer.length < 4) return false;
+
+  // 1. MP3 with ID3v2 tag: "ID3" (0x49 0x44 0x33)
+  if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) return true;
+
+  // 2. MP3 raw MPEG sync: starts with 0xFF followed by 0xE0-0xFF frame sync
+  if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return true;
+
+  // 3. WAV: "RIFF" ... "WAVE"
+  if (
+    buffer.length >= 12 &&
+    buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+    buffer[8] === 0x57 && buffer[9] === 0x41 && buffer[10] === 0x56 && buffer[11] === 0x45
+  ) return true;
+
+  // 4. OGG: "OggS" (0x4f 0x67 0x67 0x53)
+  if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) return true;
+
+  // 5. FLAC: "fLaC" (0x66 0x4c 0x61 0x43)
+  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) return true;
+
+  // 6. WebM / Matroska (browser voice recording): 0x1A 0x45 0xDF 0xA3
+  if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) return true;
+
+  // 7. M4A / MP4 Audio: bytes 4..7 are "ftyp" (0x66 0x74 0x79 0x70)
+  if (
+    buffer.length >= 8 &&
+    buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70
+  ) return true;
+
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,97 +64,79 @@ export async function POST(request: NextRequest) {
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
-        { error: "Supabase configuration missing" },
-        { status: 500 }
+        { error: "Audio upload service is temporarily unavailable." },
+        { status: 503 }
+      );
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("file") as File | null;
+
+    if (!file || typeof file === "string") {
+      return NextResponse.json(
+        { error: "No audio file provided. Send a valid 'file' form field." },
+        { status: 400 }
+      );
+    }
+
+    // 1. File Size Verification
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json(
+        { error: "Audio file exceeds 15MB limit. Please upload a smaller track or voice note." },
+        { status: 400 }
+      );
+    }
+
+    if (file.size === 0) {
+      return NextResponse.json(
+        { error: "Audio file is empty (0 bytes)." },
+        { status: 400 }
+      );
+    }
+
+    // 2. Extension Verification
+    const rawExt = file.name.split(".").pop()?.toLowerCase() || "";
+    const safeExt = ALLOWED_AUDIO_EXTENSIONS.has(rawExt) ? rawExt : "mp3";
+
+    // 3. Binary Magic Byte Header Inspection
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    if (!verifyAudioHeader(buffer)) {
+      return NextResponse.json(
+        { error: "Invalid audio file. Header inspection failed to verify valid audio format." },
+        { status: 400 }
       );
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    // 4. Cryptographically Secure Random Storage Path (No Path Traversal or Collisions)
+    const randomId = crypto.randomUUID();
+    const storagePath = `surprises/${randomId}.${safeExt}`;
 
-    if (!file) {
-      return NextResponse.json(
-        { error: "No audio file provided. Send a 'file' field in multipart form data." },
-        { status: 400 }
-      );
-    }
-
-    // Validate file type — accept common audio formats and webm (voice notes)
-    const allowedTypes = [
-      "audio/mpeg",
-      "audio/mp3",
-      "audio/wav",
-      "audio/wave",
-      "audio/x-wav",
-      "audio/mp4",
-      "audio/x-m4a",
-      "audio/m4a",
-      "audio/aac",
-      "audio/ogg",
-      "audio/flac",
-      "audio/webm",
-      "audio/opus",
-      "application/ogg",
-    ];
-
-    const isAudioMime = allowedTypes.includes(file.type) || file.type.startsWith("audio/");
-    const isAudioExt = /\.(mp3|wav|m4a|aac|ogg|flac|opus|wma|weba|webm)$/i.test(file.name);
-
-    if (!isAudioMime && !isAudioExt) {
-      return NextResponse.json(
-        { error: `Unsupported audio format: ${file.type || file.name}. Supported: MP3, WAV, M4A, AAC, OGG, FLAC, WebM.` },
-        { status: 400 }
-      );
-    }
-
-    // Limit file size to 15MB
-    const MAX_SIZE = 15 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: "Audio file too large. Maximum size is 15MB." },
-        { status: 400 }
-      );
-    }
-
-    // Generate a unique, sanitized filename
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "mp3";
-    const sanitizedOriginalName = file.name
-      .replace(/\.[^.]+$/, "")
-      .replace(/[^a-zA-Z0-9_-]/g, "_")
-      .substring(0, 40);
-    const storagePath = `surprises/${sanitizedOriginalName}_${timestamp}_${randomSuffix}.${ext}`;
-
-    // Read file as ArrayBuffer for upload
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Upload to Supabase Storage "music" bucket
+    // 5. Upload to Supabase Storage "music" Bucket
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("music")
       .upload(storagePath, buffer, {
         contentType: file.type || "audio/mpeg",
-        upsert: true,
+        upsert: false,
       });
 
     if (uploadError) {
-      console.error("[Upload Audio] Supabase Storage upload error:", uploadError);
+      console.error("[Upload Audio Security] Storage upload error:", uploadError.message);
       return NextResponse.json(
-        { error: `Storage upload failed: ${uploadError.message}` },
+        { error: "Storage upload failed. Please try again." },
         { status: 500 }
       );
     }
 
-    // Get the permanent public URL
+    // 6. Retrieve Permanent Public URL
     const { data: publicUrlData } = supabase.storage
       .from("music")
       .getPublicUrl(storagePath);
 
     const publicUrl = publicUrlData?.publicUrl;
-
     if (!publicUrl) {
       return NextResponse.json(
         { error: "Failed to generate public URL for uploaded audio." },
@@ -119,13 +147,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       publicUrl,
-      fileName: file.name,
+      fileName: `${randomId}.${safeExt}`,
       storagePath: uploadData?.path || storagePath,
       fileSize: file.size,
     });
   } catch (err: unknown) {
-    const message = (err as Error)?.message || "Unknown error";
-    console.error("[Upload Audio] Server error:", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[Upload Audio Security] Unhandled server error:", err);
+    return NextResponse.json(
+      { error: "Failed to process audio upload safely." },
+      { status: 500 }
+    );
   }
 }

@@ -37,8 +37,49 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // 2. Rate limit on generic API endpoints
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/test/")) {
+  // 2. Protect internal test/diagnostic routes in production
+  if (pathname.startsWith("/api/test/") && process.env.NODE_ENV === "production") {
+    let isTestAdmin = false;
+    const adminCookie = request.cookies.get("admin_user_session");
+    if (adminCookie?.value) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(adminCookie.value));
+        if (isAuthorizedAdmin(parsed)) isTestAdmin = true;
+      } catch {}
+    }
+    if (!isTestAdmin) {
+      return new NextResponse(
+        JSON.stringify({ error: "Not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+  }
+
+  // 3. Strict rate limit on file upload endpoints
+  if (
+    pathname === "/api/upload-audio" ||
+    pathname === "/api/admin/templates/upload"
+  ) {
+    const uploadLimit = rateLimiter.check(`upload_${clientIp}`, 15, 60_000);
+    if (!uploadLimit.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Upload rate limit exceeded. Please wait a minute before uploading again.",
+          retryAfter: uploadLimit.resetSeconds,
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": String(uploadLimit.resetSeconds),
+          },
+        }
+      );
+    }
+  }
+
+  // 3. Rate limit on generic API endpoints
+  if (pathname.startsWith("/api/")) {
     const apiLimit = rateLimiter.check(`api_${clientIp}`, 120, 60_000);
     if (!apiLimit.success) {
       return new NextResponse(
@@ -102,42 +143,43 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Admin Route Protection: /admin and all subroutes require authorized administrator role
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  if (isAdminRoute) {
+  // Admin Route Protection: Both /admin UI pages and /api/admin API routes require authorized administrator
+  const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
+  const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin");
+
+  if (isAdminPage || isAdminApi) {
     let hasAdminAccess = false;
 
-    const adminSessionCookie = request.cookies.get("admin_user_session");
-    if (adminSessionCookie?.value) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(adminSessionCookie.value));
-        if (isAuthorizedAdmin(parsed?.role) || isAuthorizedAdmin(parsed)) {
-          hasAdminAccess = true;
+    // 1. Verify authenticated user directly
+    if (user && isAuthorizedAdmin(user)) {
+      hasAdminAccess = true;
+    } else {
+      // 2. Check admin session cookie, strictly validating the email against known admin list
+      const adminSessionCookie = request.cookies.get("admin_user_session");
+      if (adminSessionCookie?.value) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(adminSessionCookie.value));
+          if (isAuthorizedAdmin(parsed)) {
+            hasAdminAccess = true;
+          }
+        } catch {
+          // Invalid cookie
         }
-      } catch {
-        // Invalid cookie
       }
     }
 
-    if (!hasAdminAccess && user && isAuthorizedAdmin(user)) {
-      hasAdminAccess = true;
-      const rawName = (user.user_metadata?.full_name as string) || (user.email?.split("@")[0] ?? "Administrator");
-      const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-      const adminSession = {
-        id: user.id || "admin-root",
-        email: user.email || "admin@surprisespark.app",
-        displayName,
-        role: "superadmin",
-        lastLoginAt: new Date().toISOString(),
-      };
-      supabaseResponse.cookies.set(
-        "admin_user_session",
-        encodeURIComponent(JSON.stringify(adminSession)),
-        { path: "/", maxAge: 86400, sameSite: "lax" }
-      );
-    }
-
     if (!hasAdminAccess) {
+      // For API routes, return 403 Forbidden JSON instead of HTML redirect
+      if (isAdminApi) {
+        return new NextResponse(
+          JSON.stringify({ error: "Forbidden: Administrator privileges required." }),
+          {
+            status: 403,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
       if (!user) {
         const redirectUrl = request.nextUrl.clone();
         redirectUrl.pathname = "/login";

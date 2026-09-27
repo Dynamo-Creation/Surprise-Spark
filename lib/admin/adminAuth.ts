@@ -25,40 +25,59 @@ export const KNOWN_ADMIN_EMAILS: string[] = [
 ];
 
 /**
+ * Helper to strictly verify admin email against allowed list and server environment variables.
+ * Enforces exact matching only — never substring or wildcard matching.
+ */
+export function isKnownAdminEmail(email: string): boolean {
+  if (!email) return false;
+  const normalized = email.toLowerCase().trim();
+
+  // Exact match against known admin list
+  if (KNOWN_ADMIN_EMAILS.includes(normalized)) return true;
+
+  // Exact match against server environment variable ADMIN_EMAILS (comma-separated)
+  const envAdminEmails = process.env.ADMIN_EMAILS
+    ? process.env.ADMIN_EMAILS.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean)
+    : [];
+
+  return envAdminEmails.includes(normalized);
+}
+
+/**
  * Checks if a user object or role string qualifies as an authorized administrator.
+ * Enforces server-side integrity: user_metadata is untrusted (client-writable),
+ * only verified admin emails or server-assigned app_metadata roles are honored.
  */
 export function isAuthorizedAdmin(roleOrUser?: unknown): boolean {
   if (!roleOrUser) return false;
 
   if (typeof roleOrUser === "string") {
-    return ADMIN_ROLES.includes(roleOrUser.toLowerCase() as AdminRole);
+    const normalizedRole = roleOrUser.toLowerCase().trim();
+    return ADMIN_ROLES.includes(normalizedRole as AdminRole);
   }
 
   if (typeof roleOrUser === "object") {
     const u = roleOrUser as Record<string, unknown>;
-    const directRole = (u.role as string)?.toLowerCase();
-    if (ADMIN_ROLES.includes(directRole as AdminRole)) return true;
+    const email = typeof u.email === "string" ? u.email.toLowerCase().trim() : "";
 
-    // Check user_metadata or app_metadata
+    // 1. Check verified app_metadata (server-only, set by Supabase service-role, never client-writable)
     const appMeta = u.app_metadata as Record<string, unknown> | undefined;
-    const userMeta = u.user_metadata as Record<string, unknown> | undefined;
-    const appRole = (appMeta?.role as string)?.toLowerCase();
-    const userRole = (userMeta?.role as string)?.toLowerCase();
-
+    const appRole = typeof appMeta?.role === "string" ? appMeta.role.toLowerCase().trim() : "";
     if (ADMIN_ROLES.includes(appRole as AdminRole)) return true;
-    if (ADMIN_ROLES.includes(userRole as AdminRole)) return true;
-    if (appMeta?.is_admin === true || userMeta?.is_admin === true) return true;
 
-    // Check known administrator emails or patterns (allows admin accounts in both live and local modes)
-    const email = (u.email as string)?.toLowerCase();
-    if (email) {
-      if (KNOWN_ADMIN_EMAILS.includes(email)) return true;
-      if (email.includes("admin") || email.endsWith("@admin.com")) return true;
+    // 2. Check exact authorized administrator email (exact match only)
+    if (email && isKnownAdminEmail(email)) {
+      return true;
+    }
 
-      const envAdminEmails = process.env.ADMIN_EMAILS
-        ? process.env.ADMIN_EMAILS.split(",").map((e) => e.trim().toLowerCase())
-        : [];
-      if (envAdminEmails.includes(email)) return true;
+    // 3. For database-verified records (e.g. from public.admin_users query result)
+    const directRole = typeof u.role === "string" ? u.role.toLowerCase().trim() : "";
+    if (ADMIN_ROLES.includes(directRole as AdminRole)) {
+      // If an email is also attached, it must be an authorized admin email
+      if (email) {
+        return isKnownAdminEmail(email);
+      }
+      return true;
     }
   }
 
@@ -66,53 +85,33 @@ export function isAuthorizedAdmin(roleOrUser?: unknown): boolean {
 }
 
 /**
- * Parses and verifies admin credentials from incoming request cookies or headers.
+ * Parses and verifies admin credentials from incoming request cookies.
+ * Disallows untrusted client headers and validates email against authorized list.
  */
 export function getAdminSessionFromRequest(
   request: NextRequest
 ): AdminUserSession | null {
-  // 1. Check dedicated admin session cookie
+  // Check dedicated admin session cookie
   const adminCookie = request.cookies.get("admin_user_session");
   if (adminCookie?.value) {
     try {
       const parsed = JSON.parse(decodeURIComponent(adminCookie.value));
-      if (isAuthorizedAdmin(parsed?.role)) {
-        return parsed as AdminUserSession;
-      }
-    } catch {
-      // Invalid cookie payload
-    }
-  }
+      const email = typeof parsed?.email === "string" ? parsed.email.toLowerCase().trim() : "";
+      const role = typeof parsed?.role === "string" ? parsed.role.toLowerCase().trim() : "";
 
-  // 2. Check demo user session if it has an admin role
-  const demoCookie = request.cookies.get("demo_user_session");
-  if (demoCookie?.value) {
-    try {
-      const parsed = JSON.parse(decodeURIComponent(demoCookie.value));
-      if (isAuthorizedAdmin(parsed)) {
+      // Strict validation: Role must be an admin role AND email must be an authorized admin email
+      if (ADMIN_ROLES.includes(role as AdminRole) && isKnownAdminEmail(email)) {
         return {
-          id: parsed.id || "admin-root",
-          email: parsed.email || "admin@surprisespark.app",
-          displayName: parsed.user_metadata?.full_name || parsed.displayName || "Platform Administrator",
-          role: (parsed.role as AdminRole) || "superadmin",
-          lastLoginAt: new Date().toISOString(),
+          id: String(parsed.id || "admin-root"),
+          email,
+          displayName: String(parsed.displayName || "Platform Administrator"),
+          role: role as AdminRole,
+          lastLoginAt: String(parsed.lastLoginAt || new Date().toISOString()),
         };
       }
     } catch {
       // Invalid cookie payload
     }
-  }
-
-  // 3. Check authorization header for test/service runner
-  const authHeader = request.headers.get("x-admin-role");
-  if (authHeader && isAuthorizedAdmin(authHeader)) {
-    return {
-      id: "header-admin-user",
-      email: "admin-service@surprisespark.app",
-      displayName: "System Administrator",
-      role: authHeader.toLowerCase() as AdminRole,
-      lastLoginAt: new Date().toISOString(),
-    };
   }
 
   return null;

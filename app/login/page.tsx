@@ -62,30 +62,6 @@ function LoginForm() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  const handleElevateAdmin = () => {
-    const adminEmail = user?.email || email || "admin@surprisespark.app";
-    const rawName = (user?.user_metadata?.full_name as string) || adminEmail.split("@")[0] || "Administrator";
-    const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-    const adminSession = {
-      id: user?.id || "admin-root",
-      email: adminEmail,
-      displayName,
-      role: "superadmin",
-      lastLoginAt: new Date().toISOString(),
-    };
-    localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
-    document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
-    const demoUser = {
-      id: user?.id || "admin-root",
-      email: adminEmail,
-      user_metadata: { full_name: displayName, role: "superadmin" },
-      role: "authenticated",
-    };
-    document.cookie = `demo_user_session=${encodeURIComponent(JSON.stringify(demoUser))}; path=/; max-age=86400; SameSite=Lax`;
-    const redirectTarget = searchParams.get("redirect") || "/admin";
-    window.location.href = redirectTarget;
-  };
-
   // Traditional password login
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,25 +230,14 @@ function LoginForm() {
       {/* Login Card */}
       <Card glass className="p-6 sm:p-8 space-y-5 border-slate-200 dark:border-slate-800">
         {redirect?.startsWith("/admin") && (
-          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-850 flex flex-col gap-2.5 text-xs text-purple-700 dark:text-purple-300 animate-in fade-in duration-200">
-            <div className="flex items-start gap-2.5">
-              <Shield className="w-4 h-4 shrink-0 mt-0.5 text-purple-500" />
-              <div>
-                <p className="font-bold">Admin Console Access</p>
-                <p className="text-[11px] text-purple-600/90 dark:text-purple-300/80 mt-0.5">
-                  Sign in with admin credentials or click below to enter the Executive CMS directly.
-                </p>
-              </div>
+          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-850 flex items-start gap-2.5 text-xs text-purple-700 dark:text-purple-300 animate-in fade-in duration-200">
+            <Shield className="w-4 h-4 shrink-0 mt-0.5 text-purple-500" />
+            <div>
+              <p className="font-bold">Admin Console Access</p>
+              <p className="text-[11px] text-purple-600/90 dark:text-purple-300/80 mt-0.5">
+                Please sign in with your authorized administrator account to enter the Executive CMS.
+              </p>
             </div>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleElevateAdmin}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white font-bold text-xs shadow-sm cursor-pointer"
-              leftIcon={<Shield className="w-3.5 h-3.5" />}
-            >
-              Enter Admin Console as Superadmin 🛡️
-            </Button>
           </div>
         )}
 
@@ -316,30 +281,6 @@ function LoginForm() {
           <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-start gap-2.5 text-xs text-red-600 dark:text-red-400 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
-          </div>
-        )}
-
-        {errorParam === "forbidden_not_admin" && (
-          <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs space-y-3 animate-in fade-in">
-            <div className="flex items-start gap-2 text-purple-600 dark:text-purple-300">
-              <Shield className="w-4 h-4 shrink-0 mt-0.5 text-purple-500" />
-              <div>
-                <p className="font-bold text-slate-900 dark:text-purple-200">Grant Superadmin Access?</p>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                  Logged in as <strong>{user?.email || "Current Account"}</strong>. Click below to activate Superadmin privileges for this session and access the CMS directly.
-                </p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={handleElevateAdmin}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xs shadow-md whitespace-nowrap"
-              leftIcon={<Shield className="w-3.5 h-3.5 shrink-0" />}
-            >
-              Activate Superadmin & Open CMS
-            </Button>
           </div>
         )}
 

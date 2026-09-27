@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     const targetEmail = (u?.email || emailOverride || "").toLowerCase();
-    const isAdmin = Boolean(explicitRole) || isAuthorizedAdmin(u) || targetEmail.includes("admin") || targetEmail === "sonu25580@gmail.com";
+    const isAdmin = Boolean(explicitRole) || isAuthorizedAdmin(u || { email: targetEmail });
     if (isAdmin) {
       const rawName = (u?.user_metadata?.full_name as string) || targetEmail.split("@")[0] || "Platform Administrator";
       const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const isAdmin = Boolean(dbAdminRole) || isAuthorizedAdmin(authUser) || email.includes("admin") || email === "sonu25580@gmail.com";
+    const isAdmin = Boolean(dbAdminRole) || isAuthorizedAdmin(authUser || { email });
     const role = (dbAdminRole as any) || (isAdmin ? "superadmin" : "user");
 
     if (isConfigured) {
