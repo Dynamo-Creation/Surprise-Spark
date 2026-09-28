@@ -5,7 +5,6 @@ import { CelebrationMarqueeSection } from "@/components/home/CelebrationMarqueeS
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
 import { InteractivePreviewSection } from "@/components/home/InteractivePreviewSection";
 import { WhyDifferentSection } from "@/components/home/WhyDifferentSection";
-import { PopularTemplatesSection } from "@/components/home/PopularTemplatesSection";
 import { FinalCtaSection } from "@/components/home/FinalCtaSection";
 
 export default function HomePage() {
@@ -29,10 +28,7 @@ export default function HomePage() {
       {/* 5. Why It's Different */}
       <WhyDifferentSection />
 
-      {/* 6. Popular Templates */}
-      <PopularTemplatesSection />
-
-      {/* 7. Final CTA */}
+      {/* 6. Final CTA */}
       <FinalCtaSection />
     </div>
   );

@@ -26,8 +26,7 @@ graph TD
     Home --> S4[4. HowItWorksSection]
     Home --> S5[5. InteractivePreviewSection]
     Home --> S6[6. WhyDifferentSection]
-    Home --> S7[7. PopularTemplatesSection]
-    Home --> S8[8. FinalCtaSection]
+    Home --> S7[7. FinalCtaSection]
 
     Creator --> Engine[3D Engine & Template Registry]
     Recipient --> Engine
@@ -97,14 +96,7 @@ All landing page sections are rendered sequentially inside [`app/page.tsx`](file
 - **How to Edit**:
   - Checkmarks & 'X' comparison items: Lines 39–105.
 
-### 🎨 Section 7: Popular Templates Gallery
-- **File**: [`components/home/PopularTemplatesSection.tsx`](file:///f:/Interactive%20Surprise%20Platform/components/home/PopularTemplatesSection.tsx)
-- **Visuals**: Category filter bar (`All`, `Birthday 🎂`, `Love & Romance 💖`, `Anniversary 🥂`, `Best Friend 🤝`) with direct "Customize" and "Live Demo" links.
-- **How to Edit**:
-  - `categories` array (lines 15–21).
-  - Template catalog items in `lib/constants.ts`.
-
-### 🚀 Section 8: Final Call to Action (CTA)
+### 🚀 Section 7: Final Call to Action (CTA)
 - **File**: [`components/home/FinalCtaSection.tsx`](file:///f:/Interactive%20Surprise%20Platform/components/home/FinalCtaSection.tsx)
 - **Visuals**: 3D glossy SVG hearts, `AnimatedBeam` connections, high-conversion gradient CTA button.
 - **How to Edit**:
