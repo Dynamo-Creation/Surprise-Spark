@@ -1,0 +1,293 @@
+/* Rotary Wheel Component - Inspired by byllzz on Uiverse.io, enhanced for SurpriseSpark */
+
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.consoleWrapper {
+  position: relative;
+  border-radius: 32px;
+  background: radial-gradient(circle at 10% 20%, rgba(244, 63, 94, 0.08) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+              rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+:global(.light) .consoleWrapper {
+  background: radial-gradient(circle at 10% 20%, rgba(244, 63, 94, 0.06) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 40%),
+              rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 25px 50px -12px rgba(244, 63, 94, 0.08), 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+/* Mechanical Wheel Housing */
+.wheelHousing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  background: rgba(10, 15, 29, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+:global(.light) .wheelHousing {
+  background: rgba(248, 250, 252, 0.7);
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+@media (max-width: 1023px) {
+  .wheelHousing {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 2rem 1rem;
+  }
+  :global(.light) .wheelHousing {
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  }
+}
+
+.wheelSelector {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hintPop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: #ec4899;
+  text-transform: uppercase;
+  background: rgba(236, 72, 153, 0.12);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  animation: pulseHint 2.4s infinite ease-in-out;
+  box-shadow: 0 0 14px rgba(236, 72, 153, 0.25);
+}
+
+@keyframes pulseHint {
+  0%, 100% {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* Mechanical Drum Dial */
+.radioInput {
+  position: relative;
+  height: 240px;
+  width: 210px;
+  background: #0f1422;
+  border: 2px solid #232b3e;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 16px rgba(0, 0, 0, 0.9);
+  transition: all 0.3s ease;
+}
+
+:global(.light) .radioInput {
+  background: #1e293b;
+  border: 2px solid #cbd5e1;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), inset 0 0 16px rgba(0, 0, 0, 0.8);
+}
+
+.radioInput:hover {
+  border-color: rgba(236, 72, 153, 0.5);
+  box-shadow: 0 20px 50px rgba(236, 72, 153, 0.15), inset 0 0 16px rgba(0, 0, 0, 0.9);
+}
+
+/* Conic Mechanical Radial Grooves */
+.radioInput::after {
+  content: "";
+  position: absolute;
+  right: -150px;
+  width: 300px;
+  height: 300px;
+  background: repeating-conic-gradient(
+    from 0deg,
+    #131a2c 0deg 10deg,
+    #182035 10deg 20deg
+  );
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* LED Indicator Dot */
+.ledDot {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  z-index: 30;
+  pointer-events: none;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.ledPink {
+  background: #ec4899;
+  box-shadow: 0 0 12px #ec4899, 0 0 24px #ec4899;
+}
+
+.ledPurple {
+  background: #a855f7;
+  box-shadow: 0 0 12px #a855f7, 0 0 24px #a855f7;
+}
+
+.ledAmber {
+  background: #f59e0b;
+  box-shadow: 0 0 12px #f59e0b, 0 0 24px #f59e0b;
+}
+
+.glassOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  z-index: 25;
+  pointer-events: none;
+}
+
+/* Rotating Wheel Label */
+.wheelLabel {
+  position: absolute;
+  left: 42px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+  transform-origin: 280px center;
+  filter: blur(2.5px);
+  opacity: 0.12;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.wheelLabel .num {
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  margin-bottom: -4px;
+  transition: color 0.4s ease;
+}
+
+.wheelLabel .label {
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 2.3rem;
+  color: #fff;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  transition: text-shadow 0.4s ease;
+}
+
+/* Active State */
+.activeLabel {
+  opacity: 1;
+  filter: blur(0);
+  transform: rotate(0deg) translateX(12px) !important;
+  z-index: 10;
+}
+
+.activeLabel .label {
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.35);
+}
+
+/* Step-specific num colors */
+.numPink {
+  color: #ec4899;
+}
+
+.numPurple {
+  color: #a855f7;
+}
+
+.numAmber {
+  color: #f59e0b;
+}
+
+/* Quick Dial Direct Buttons below wheel */
+.dialTicks {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.dialTickBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+:global(.light) .dialTickBtn {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.dialTickBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+:global(.light) .dialTickBtn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #000;
+}
+
+.dialTickActive {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(168, 85, 247, 0.25)) !important;
+  border-color: rgba(236, 72, 153, 0.5) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.25);
+}
+
+:global(.light) .dialTickActive {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15)) !important;
+  border-color: #ec4899 !important;
+  color: #db2777 !important;
+}
