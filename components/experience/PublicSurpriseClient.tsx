@@ -65,6 +65,8 @@ export function PublicSurpriseClient({
   const [question, setQuestion] = useState(initialQuestion || "Will You Be Mine?");
   const [dodgeText, setDodgeText] = useState(initialDodgeText || "");
   const [audioUrl, setAudioUrl] = useState(initialAudioUrl || "");
+  const [audioStartTime, setAudioStartTime] = useState(initialAudioStartTime ?? 0);
+  const [audioDuration, setAudioDuration] = useState(initialAudioDuration);
 
   // UX Stages: Opening Screen -> 3D Experience -> Final Screen
   const [hasEntered, setHasEntered] = useState(false);
@@ -152,8 +154,14 @@ export function PublicSurpriseClient({
         if (draft.endearment) setEndearment(draft.endearment);
         if (draft.question) setQuestion(draft.question);
         if (draft.dodgeText) setDodgeText(draft.dodgeText);
-        if (draft.audioUrl && draft.audioUrl.startsWith("http")) {
+        if (draft.audioUrl && (draft.audioUrl.startsWith("http") || draft.audioUrl.startsWith("/"))) {
           setAudioUrl(draft.audioUrl);
+        }
+        if (typeof draft.audioStartTime === "number") {
+          setAudioStartTime(draft.audioStartTime);
+        }
+        if (typeof draft.audioDuration === "number") {
+          setAudioDuration(draft.audioDuration);
         }
 
         if (draft.themeId && THEMES[draft.themeId]) {
@@ -253,8 +261,8 @@ export function PublicSurpriseClient({
           templateSlug={template.slug}
           musicPreset={template.slug === "the-golden-proposal" ? "romantic" : musicPreset}
           audioUrl={audioUrl}
-          audioStartTime={initialAudioStartTime}
-          audioDuration={initialAudioDuration}
+          audioStartTime={audioStartTime}
+          audioDuration={audioDuration}
           onOpen={() => {
             setHasEntered(true);
             trackSurpriseEvent("open", { surpriseId: publicId, templateId: template.id });
@@ -374,18 +382,16 @@ export function PublicSurpriseClient({
             <iframe
               src={`/api/admin/templates/preview?slug=birthday-gift&publicId=${encodeURIComponent(
                 publicId
-              )}&recipientName=${encodeURIComponent(
+              )}&parentAudio=1&recipientName=${encodeURIComponent(
                 personalization.recipient_name
               )}&senderName=${encodeURIComponent(
                 personalization.sender_name
               )}&message=${encodeURIComponent(
                 personalization.message
-              )}&audioUrl=${encodeURIComponent(
-                audioUrl || ""
               )}`}
               className="w-full h-screen border-none"
               title="Birthday Blossom Archery Experience"
-              allow="autoplay"
+              allow="autoplay; fullscreen"
               onLoad={(e) => {
                 const iframe = e.currentTarget;
                 if (iframe?.contentWindow) {
@@ -396,7 +402,6 @@ export function PublicSurpriseClient({
                         recipientName: personalization.recipient_name,
                         senderName: personalization.sender_name,
                         message: personalization.message,
-                        audioUrl: audioUrl || "",
                       },
                     },
                     "*"

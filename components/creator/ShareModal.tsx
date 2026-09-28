@@ -87,8 +87,11 @@ export function ShareModal({
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://surprisespark.app";
 
-  // Clean, short, private URL that keeps the surprise hidden until opened
-  const publicUrl = `${origin}/s/${publicId}`;
+  // Clean, private URL that also includes audioUrl fallback so audio plays reliably across devices
+  const publicUrl =
+    audioUrl && (audioUrl.startsWith("http") || audioUrl.startsWith("/"))
+      ? `${origin}/s/${publicId}?audioUrl=${encodeURIComponent(audioUrl)}`
+      : `${origin}/s/${publicId}`;
 
   const isProposal = templateSlug === "the-golden-proposal";
 

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     let question = searchParams.get("question") || "";
     let dodgeText = searchParams.get("dodgeText") || "";
     let audioUrl = searchParams.get("audioUrl") || "";
+    let parentAudio = searchParams.get("parentAudio") === "1" || searchParams.get("parentAudio") === "true";
     let specialDate = searchParams.get("specialDate") || searchParams.get("date") || "";
     let photoUrl = searchParams.get("photoUrl") || searchParams.get("photo") || "";
     let introEyebrow = searchParams.get("eyebrow") || searchParams.get("introEyebrow") || "";
@@ -68,6 +69,11 @@ export async function GET(request: NextRequest) {
       } catch (err) {
         console.warn("[Preview Route] Cloud fetch note:", err);
       }
+    }
+
+    // If parent frame handles audio playback, suppress iframe internal audioUrl
+    if (parentAudio) {
+      audioUrl = "";
     }
 
     if (!recipientName) recipientName = "Sarah";
@@ -359,7 +365,8 @@ export async function GET(request: NextRequest) {
         window.photos = ${JSON.stringify(photos)};
         window.proposalQuestion = ${JSON.stringify(question)};
         window.dodgeTooltipText = ${JSON.stringify(dodgeText)};
-        window.customAudioUrl = ${JSON.stringify(audioUrl)};
+        window.isParentAudio = ${JSON.stringify(parentAudio)};
+        window.customAudioUrl = ${JSON.stringify(parentAudio ? "" : audioUrl)};
         window.introEyebrow = ${JSON.stringify(introEyebrow)};
         window.introHint = ${JSON.stringify(introHint)};
         window.line1 = ${JSON.stringify(line1)};
@@ -416,7 +423,10 @@ export async function GET(request: NextRequest) {
     }
 
     return new NextResponse(patchedHtml, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
     });
   } catch (err: unknown) {
     console.error("[Template Preview Security] Error loading template:", err);

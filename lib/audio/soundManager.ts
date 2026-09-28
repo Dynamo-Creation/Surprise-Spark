@@ -338,7 +338,6 @@ class SoundManager {
 
     try {
       const audio = new Audio(url);
-      audio.crossOrigin = "anonymous";
       audio.volume = options?.volume ?? 0.75;
       audio.muted = this.isMuted;
       audio.preload = "auto";
@@ -349,10 +348,24 @@ class SoundManager {
       const trimDuration = options?.duration;
       const hasTrim = trimStart > 0 || (trimDuration !== undefined && trimDuration > 0);
 
+      // Safe seek helper that never throws InvalidStateError when audio is not yet loaded
+      const seekToTrimStart = () => {
+        try {
+          if (trimStart > 0 && Math.abs(audio.currentTime - trimStart) > 0.3) {
+            audio.currentTime = trimStart;
+          }
+        } catch (_) {}
+      };
+
       // If we have trim data, use manual timeupdate loop instead of native loop
       if (hasTrim && trimDuration && trimDuration > 0) {
         audio.loop = false; // We handle looping manually for trimmed audio
-        audio.currentTime = trimStart;
+        if (audio.readyState >= 1) {
+          seekToTrimStart();
+        } else {
+          audio.addEventListener("loadedmetadata", seekToTrimStart, { once: true });
+          audio.addEventListener("canplay", seekToTrimStart, { once: true });
+        }
 
         // Timeupdate-based trim enforcement
         audio.addEventListener("timeupdate", () => {
@@ -360,7 +373,7 @@ class SoundManager {
           if (audio.currentTime >= trimEnd) {
             if (options?.loop !== false) {
               // Loop back to trim start
-              audio.currentTime = trimStart;
+              seekToTrimStart();
             } else {
               audio.pause();
               this.isCustomAudioActive = false;
@@ -371,7 +384,7 @@ class SoundManager {
         // If audio reaches natural end before trimEnd, loop back
         audio.addEventListener("ended", () => {
           if (options?.loop !== false) {
-            audio.currentTime = trimStart;
+            seekToTrimStart();
             audio.play().catch(() => {});
           } else {
             this.isCustomAudioActive = false;
@@ -401,18 +414,20 @@ class SoundManager {
       // Attempt immediate playback (relies on prior user gesture from curtain tap)
       const playPromise = audio.play();
       if (playPromise) {
-        playPromise.catch(() => {
-          // Browser blocked autoplay — set up a one-time gesture listener to retry
+        playPromise.catch((err) => {
+          console.warn("[SoundManager] Autoplay prevented by browser, waiting for user interaction:", err);
           const unlockHandler = () => {
             if (hasTrim && trimDuration) {
-              audio.currentTime = trimStart;
+              seekToTrimStart();
             }
             audio.play().catch(() => {});
-            document.removeEventListener("click", unlockHandler);
-            document.removeEventListener("touchstart", unlockHandler);
+            ["click", "touchstart", "pointerdown", "keydown"].forEach((evt) => {
+              document.removeEventListener(evt, unlockHandler);
+            });
           };
-          document.addEventListener("click", unlockHandler, { once: true });
-          document.addEventListener("touchstart", unlockHandler, { once: true });
+          ["click", "touchstart", "pointerdown", "keydown"].forEach((evt) => {
+            document.addEventListener(evt, unlockHandler, { once: true, passive: true });
+          });
         });
       }
     } catch (err) {

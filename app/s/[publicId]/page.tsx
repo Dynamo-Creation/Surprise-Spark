@@ -112,6 +112,8 @@ export default async function RecipientSurprisePage({
     question?: string;
     dodgeText?: string;
     audioUrl?: string;
+    audioStartTime?: string;
+    audioDuration?: string;
   }>;
 }) {
   const { publicId } = await params;
@@ -197,10 +199,20 @@ export default async function RecipientSurprisePage({
     cloudRecord?.audio_url ||
     "";
 
-  // 3b. Resolve audio trim data from metadata
+  // 3b. Resolve audio trim data from metadata or query parameters
   const metadataObj = cloudRecord?.metadata || {};
-  const audioStartTime: number = typeof metadataObj.audioStartTime === "number" ? metadataObj.audioStartTime : 0;
-  const audioDuration: number | undefined = typeof metadataObj.audioDuration === "number" ? metadataObj.audioDuration : undefined;
+  const audioStartTime: number =
+    query.audioStartTime !== undefined
+      ? parseFloat(query.audioStartTime) || 0
+      : typeof metadataObj.audioStartTime === "number"
+      ? metadataObj.audioStartTime
+      : 0;
+  const audioDuration: number | undefined =
+    query.audioDuration !== undefined
+      ? parseFloat(query.audioDuration) || undefined
+      : typeof metadataObj.audioDuration === "number"
+      ? metadataObj.audioDuration
+      : undefined;
 
   // 4. Handle Photos
   let photosList: string[] = [];

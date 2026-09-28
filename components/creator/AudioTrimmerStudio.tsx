@@ -84,32 +84,40 @@ export function AudioTrimmerStudio({
 
   const clipDuration = Math.max(0, trimEnd - trimStart);
 
-  // When audio duration is known, initialize trim end correctly
-  useEffect(() => {
-    if (audioDuration > 0) {
-      const maxEnd = Math.min(audioDuration, trimStart + maxDurationSec);
-      if (initialDuration && initialStartTime + initialDuration <= audioDuration) {
-        setTrimEnd(initialStartTime + initialDuration);
-      } else if (trimEnd > audioDuration || trimEnd > maxEnd) {
-        setTrimEnd(maxEnd);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioDuration]);
-
-  // Fire onAudioChange when trim changes (debounced via effect)
-  const notifyTrimChange = useCallback(() => {
-    if (onAudioChange && audioUrl) {
+  // Fire onAudioChange when trim changes or new audio is loaded
+  const notifyTrimChange = useCallback((urlOverride?: string, startOverride?: number, endOverride?: number) => {
+    const activeUrl = urlOverride ?? audioUrl;
+    if (onAudioChange && activeUrl) {
+      const s = startOverride ?? trimStart;
+      const e = endOverride ?? trimEnd;
       onAudioChange({
-        url: audioUrl,
+        url: activeUrl,
         blob: audioFile || undefined,
-        startTime: trimStart,
-        duration: Math.max(0, trimEnd - trimStart),
+        startTime: s,
+        duration: Math.max(0, e - s),
         name: audioFile?.name || "Personal Audio",
         type: activeTab === "record" ? "voice_note" : "custom_music",
       });
     }
   }, [onAudioChange, audioUrl, audioFile, trimStart, trimEnd, activeTab]);
+
+  // When audio duration is known, initialize trim end correctly and notify parent
+  useEffect(() => {
+    if (audioDuration > 0) {
+      const maxEnd = Math.min(audioDuration, trimStart + maxDurationSec);
+      let calculatedEnd = trimEnd;
+      if (initialDuration && initialStartTime + initialDuration <= audioDuration) {
+        calculatedEnd = initialStartTime + initialDuration;
+      } else if (trimEnd > audioDuration || trimEnd > maxEnd || trimEnd === 0) {
+        calculatedEnd = maxEnd;
+      }
+      setTrimEnd(calculatedEnd);
+      if (audioUrl) {
+        notifyTrimChange(audioUrl, trimStart, calculatedEnd);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioDuration, audioUrl]);
 
   // Decode audio to generate waveform
   const decodeAudio = useCallback(async (blobOrFile: Blob) => {
@@ -239,6 +247,7 @@ export function AudioTrimmerStudio({
     setAudioUrl(localUrl);
     setTrimStart(0);
     setIsPlaying(false);
+    notifyTrimChange(localUrl, 0, maxDurationSec);
 
     await decodeAudio(file);
 
@@ -246,6 +255,7 @@ export function AudioTrimmerStudio({
     const finalUrl = permanentUrl || localUrl;
     if (permanentUrl) {
       setAudioUrl(permanentUrl);
+      notifyTrimChange(permanentUrl, trimStart, trimEnd);
       if (localUrl.startsWith("blob:")) URL.revokeObjectURL(localUrl);
     }
 
@@ -272,6 +282,7 @@ export function AudioTrimmerStudio({
         setAudioFile(new File([audioBlob], "Voice_Note.webm", { type: "audio/webm" }));
         setIsPlaying(false);
         setTrimStart(0);
+        notifyTrimChange(localUrl, 0, maxDurationSec);
 
         await decodeAudio(audioBlob);
 
@@ -279,10 +290,10 @@ export function AudioTrimmerStudio({
         const finalUrl = permanentUrl || localUrl;
         if (permanentUrl) {
           setAudioUrl(permanentUrl);
+          notifyTrimChange(permanentUrl, trimStart, trimEnd);
           if (localUrl.startsWith("blob:")) URL.revokeObjectURL(localUrl);
         }
 
-        // Will notify via useEffect once trimEnd is properly set
         stream.getTracks().forEach((track) => track.stop());
       };
 

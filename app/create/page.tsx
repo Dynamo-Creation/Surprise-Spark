@@ -276,7 +276,7 @@ function CreateStudioContent() {
 
       // Only store permanent cloud URLs (never ephemeral browser blobs)
       const safeAudioUrl =
-        customAudioUrl && customAudioUrl.startsWith("http")
+        customAudioUrl && (customAudioUrl.startsWith("http") || customAudioUrl.startsWith("/"))
           ? customAudioUrl
           : undefined;
 
@@ -299,6 +299,13 @@ function CreateStudioContent() {
         audioStartTime: customAudioStartTime,
         audioDuration: customAudioDuration,
         goldenConfig: isGolden ? goldenConfig : undefined,
+        introEyebrow: genericConfig.introEyebrow,
+        introHint: genericConfig.introHint,
+        line1: genericConfig.line1,
+        line2: genericConfig.line2,
+        kineticSub: genericConfig.kineticSub,
+        wishEyebrow: genericConfig.wishEyebrow,
+        theme: genericConfig.theme,
       });
 
       // Synchronize published surprise to Supabase cloud published_surprises
@@ -319,6 +326,13 @@ function CreateStudioContent() {
             photos: genericConfig.photos,
             metadata: {
               ...(isGolden ? { goldenConfig } : {}),
+              introEyebrow: genericConfig.introEyebrow,
+              introHint: genericConfig.introHint,
+              line1: genericConfig.line1,
+              line2: genericConfig.line2,
+              kineticSub: genericConfig.kineticSub,
+              wishEyebrow: genericConfig.wishEyebrow,
+              theme: genericConfig.theme,
               audioStartTime: customAudioStartTime,
               audioDuration: customAudioDuration,
             },

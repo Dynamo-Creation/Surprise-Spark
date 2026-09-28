@@ -37,7 +37,7 @@ export function RecipientOpeningCurtain({
       soundManager.playSoundEffect("sparkle");
 
       // If creator set a custom audio URL, play it as background audio
-      if (audioUrl && audioUrl.startsWith("http")) {
+      if (audioUrl && (audioUrl.startsWith("http") || audioUrl.startsWith("/"))) {
         soundManager.playBackgroundAudio(audioUrl, {
           loop: true,
           volume: 0.75,

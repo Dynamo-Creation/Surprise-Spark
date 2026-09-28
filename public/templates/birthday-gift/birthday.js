@@ -1000,8 +1000,21 @@ function playHeartHitChime() {
   });
 }
 
+const isInIframe = (function() {
+  try {
+    return window.self !== window.top || (window.parent && window.parent !== window);
+  } catch (_) {
+    return true;
+  }
+})();
+
 function startAmbientSound() {
   getAudioContext();
+  // When embedded in public surprise experience, parent window SoundManager already plays audio from the curtain opening
+  if (isInIframe || templateConfig.parentAudio) {
+    return;
+  }
+
   if (templateConfig.audioUrl) {
     if (!customAudioEl) {
       customAudioEl = new Audio(templateConfig.audioUrl);
@@ -1010,7 +1023,7 @@ function startAmbientSound() {
     }
     customAudioEl.play().catch(() => {});
   } else {
-    // Play warm opening arpeggio
+    // Standalone preview procedural chimes arpeggio
     [523.25, 659.25, 783.99, 1046.50].forEach((note, i) => {
       setTimeout(() => playChime(note, 2.0), i * 150);
     });
@@ -1031,6 +1044,11 @@ function toggleSound() {
   if (btn) btn.classList.toggle('is-muted', isMuted);
   if (customAudioEl) {
     customAudioEl.muted = isMuted;
+  }
+  if (isInIframe) {
+    try {
+      window.parent.postMessage({ type: 'SURPRISE_TOGGLE_MUTE' }, '*');
+    } catch (_) {}
   }
 }
 
@@ -1077,7 +1095,8 @@ function readInitialConfig() {
   templateConfig.wishHero = p.get('wHero') || (rec ? `Happy Birthday ${rec}` : 'Happy Birthday');
   templateConfig.wishMessage = p.get('message') || p.get('wSub') || 'here’s to us and a love that blooms';
   templateConfig.theme = p.get('theme') || 'sakura';
-  templateConfig.audioUrl = p.get('audioUrl') || window.customAudioUrl || '';
+  templateConfig.parentAudio = p.get('parentAudio') === '1' || p.get('parentAudio') === 'true' || window.isParentAudio === true;
+  templateConfig.audioUrl = (templateConfig.parentAudio || isInIframe) ? '' : (p.get('audioUrl') || window.customAudioUrl || '');
 }
 
 function applyTemplateCustomization() {
@@ -1168,16 +1187,33 @@ window.addEventListener('message', (event) => {
     if (p.wishHero !== undefined) templateConfig.wishHero = p.wishHero;
     if (p.theme !== undefined) templateConfig.theme = p.theme;
     if (p.audioUrl !== undefined) {
-      templateConfig.audioUrl = p.audioUrl;
-      if (customAudioEl && !isMuted) {
-        customAudioEl.src = p.audioUrl;
-        customAudioEl.play().catch(() => {});
+      if (!isInIframe && !templateConfig.parentAudio) {
+        templateConfig.audioUrl = p.audioUrl;
+        if (customAudioEl && !isMuted) {
+          customAudioEl.src = p.audioUrl;
+          customAudioEl.play().catch(() => {});
+        }
       }
     }
     applyTemplateCustomization();
   }
   if (event.data?.type === 'SURPRISE_TOGGLE_MUTE') {
-    toggleSound();
+    isMuted = !isMuted;
+    const btn = $('soundToggleBtn');
+    if (btn) btn.classList.toggle('is-muted', isMuted);
+    if (customAudioEl) customAudioEl.muted = isMuted;
+  }
+  if (event.data?.type === 'SURPRISE_MUTE_AUDIO') {
+    isMuted = true;
+    const btn = $('soundToggleBtn');
+    if (btn) btn.classList.add('is-muted');
+    if (customAudioEl) customAudioEl.muted = true;
+  }
+  if (event.data?.type === 'SURPRISE_UNMUTE_AUDIO') {
+    isMuted = false;
+    const btn = $('soundToggleBtn');
+    if (btn) btn.classList.remove('is-muted');
+    if (customAudioEl) customAudioEl.muted = false;
   }
 });
 
