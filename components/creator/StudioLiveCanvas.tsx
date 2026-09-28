@@ -110,6 +110,50 @@ export function StudioLiveCanvas({
             "*"
           );
         }
+      } else if (template.slug === "birthday-gift") {
+        const defaultWishMessage =
+          "here’s to us and a love that blooms. Wishing you a year filled with laughter, wonder, and endless love.";
+        const params = new URLSearchParams({
+          slug: "birthday-gift",
+          recipientName: genericConfig.recipientName || "Sophia",
+          senderName: genericConfig.senderName || "Alex",
+          message: genericConfig.message || defaultWishMessage,
+          eyebrow: genericConfig.introEyebrow || "a little something, for my love",
+          hint: genericConfig.introHint || "pull & release to strike the heart 🏹",
+          line1: genericConfig.line1 || "Happy Birthday",
+          line2: genericConfig.line2 || genericConfig.recipientName || "My Love",
+          kSub: genericConfig.kineticSub || "to the sweetest soul in the world",
+          wEyebrow: genericConfig.wishEyebrow || "and… forever & always",
+          theme: genericConfig.theme || "sakura",
+        });
+        if (customAudioUrl) {
+          params.set("audioUrl", customAudioUrl);
+        }
+        url = `/api/admin/templates/preview?${params.toString()}`;
+
+        // Real-time direct postMessage update to preview canvas
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: "SURPRISE_UPDATE_PROPS",
+              payload: {
+                recipientName: genericConfig.recipientName || "Sophia",
+                senderName: genericConfig.senderName || "Alex",
+                message: genericConfig.message || defaultWishMessage,
+                introEyebrow: genericConfig.introEyebrow || "a little something, for my love",
+                introHint: genericConfig.introHint || "pull & release to strike the heart 🏹",
+                line1: genericConfig.line1 || "Happy Birthday",
+                line2: genericConfig.line2 || genericConfig.recipientName || "My Love",
+                kineticSub: genericConfig.kineticSub || "to the sweetest soul in the world",
+                wishEyebrow: genericConfig.wishEyebrow || "and… forever & always",
+                wishHero: genericConfig.recipientName ? `Happy Birthday ${genericConfig.recipientName}` : "Happy Birthday",
+                theme: genericConfig.theme || "sakura",
+                audioUrl: customAudioUrl,
+              },
+            },
+            "*"
+          );
+        }
       } else {
         // Sweet Celebration or other engine template
         const photo = genericConfig.photos && genericConfig.photos[0] ? genericConfig.photos[0] : "";

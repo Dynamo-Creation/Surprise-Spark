@@ -7,6 +7,7 @@ import { Smartphone, Monitor, ArrowLeft, ExternalLink, RotateCcw, Sparkles } fro
 import { Button } from "@/components/ui/button";
 
 const TEMPLATES_LIST = [
+  { slug: "birthday-gift", name: "Birthday Blossom Archery 🏹🌸" },
   { slug: "sweet-celebration", name: "Sweet Celebration 💌" },
   { slug: "whispers-of-love", name: "Whispers of Love 💕" },
   { slug: "love-animation", name: "Love Animation 💖" },
@@ -15,7 +16,7 @@ const TEMPLATES_LIST = [
 
 function PreviewContent() {
   const searchParams = useSearchParams();
-  const initialTemplate = searchParams.get("template") || "sweet-celebration";
+  const initialTemplate = searchParams.get("template") || "birthday-gift";
 
   const [activeTemplate, setActiveTemplate] = useState<string>(initialTemplate);
   const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile");
@@ -31,7 +32,9 @@ function PreviewContent() {
   }, [searchParams, activeTemplate]);
 
   const previewUrl =
-    activeTemplate === "love-animation"
+    activeTemplate === "birthday-gift"
+      ? "/api/admin/templates/preview?slug=birthday-gift"
+      : activeTemplate === "love-animation"
       ? "/api/admin/templates/preview?slug=love-animation"
       : activeTemplate === "the-golden-proposal"
       ? "/api/admin/templates/preview?slug=the-golden-proposal"

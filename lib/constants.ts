@@ -99,7 +99,9 @@ export function getVisibleTemplates(templates: Template[] = MOCK_TEMPLATES): Tem
         s !== "the-golden-proposal" &&
         s !== "tpl-the-golden-proposal" &&
         s !== "whispers-of-love" &&
-        s !== "tpl-whispers-of-love"
+        s !== "tpl-whispers-of-love" &&
+        s !== "birthday-gift" &&
+        s !== "tpl-birthday-gift"
     );
     return templates.filter((t) => !cleanDeleted.includes(t.slug) && !cleanDeleted.includes(t.id));
   } catch {
@@ -108,6 +110,26 @@ export function getVisibleTemplates(templates: Template[] = MOCK_TEMPLATES): Tem
 }
 
 export const MOCK_TEMPLATES: Template[] = [
+  {
+    id: "tpl-birthday-gift",
+    slug: "birthday-gift",
+    name: "Birthday Blossom Archery 🏹🌸",
+    category: "birthday",
+    description: "A cinematic, interactive archery birthday surprise. Draw Cupid's golden bow, release the arrow into a glowing crystal heart, and watch a procedural heart blossom tree bloom with falling petals and kinetic typography.",
+    tagline: "Draw the golden bow, strike the heart, and watch eternal love blossom.",
+    tags: ["Interactive Archery", "Cupid Bow", "Sakura Blossom", "Kinetic Typography", "Heart Tree", "Audio Synth"],
+    thumbnailUrl: "/templates/birthday-gift/thumbnail.jpg",
+    coverGradient: "from-rose-500 via-pink-400 to-amber-300",
+    sceneCount: 4,
+    estimatedDuration: "2 mins",
+    isFeatured: true,
+    isNew: true,
+    isPremium: false,
+    supportsPhotos: false,
+    maxPhotos: 0,
+    supportsMusic: true,
+    defaultScenes: [],
+  },
   {
     id: "tpl-sweet-celebration",
     slug: "sweet-celebration",

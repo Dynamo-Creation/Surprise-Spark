@@ -25,6 +25,13 @@ export async function GET(request: NextRequest) {
     let audioUrl = searchParams.get("audioUrl") || "";
     let specialDate = searchParams.get("specialDate") || searchParams.get("date") || "";
     let photoUrl = searchParams.get("photoUrl") || searchParams.get("photo") || "";
+    let introEyebrow = searchParams.get("eyebrow") || searchParams.get("introEyebrow") || "";
+    let introHint = searchParams.get("hint") || searchParams.get("introHint") || "";
+    let line1 = searchParams.get("line1") || "";
+    let line2 = searchParams.get("line2") || "";
+    let kineticSub = searchParams.get("kSub") || "";
+    let wishEyebrow = searchParams.get("wEyebrow") || "";
+    let theme = searchParams.get("theme") || "";
     let photos: string[] = [];
 
     // Parse photos param safely (avoiding huge base64 query strings)
@@ -308,6 +315,35 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (effectiveSlug === "birthday-gift") {
+      if (recipientName && recipientName !== "Sarah") {
+        patchedHtml = patchedHtml.replace(
+          /<span class="hl__word" id="wLine2">My Love<\/span>/g,
+          `<span class="hl__word" id="wLine2">${safeRecipient}</span>`
+        );
+        patchedHtml = patchedHtml.replace(
+          /<span class="wish__heroName" id="wHeroName">.*?<\/span>/g,
+          `<span class="wish__heroName" id="wHeroName">${safeRecipient}</span>`
+        );
+        patchedHtml = patchedHtml.replace(
+          /<h1 class="wish__hero" id="wHero">Happy Birthday<\/h1>/g,
+          `<h1 class="wish__hero" id="wHero"><span class="wish__heroTitle" id="wHeroTitle">Happy Birthday</span><span class="wish__heroName" id="wHeroName">${safeRecipient}</span></h1>`
+        );
+      }
+      if (senderName && senderName !== "Alex") {
+        patchedHtml = patchedHtml.replace(
+          /<p class="wish__sender" id="wSender"><\/p>/g,
+          `<p class="wish__sender" id="wSender">— Forever yours, ${safeSender} 💕</p>`
+        );
+      }
+      if (message && !message.startsWith("Wishing you the happiest") && !message.startsWith("here’s to us and a love")) {
+        patchedHtml = patchedHtml.replace(
+          /<p class="wish__sub" id="wSub">here&rsquo;s to us and a love that blooms<\/p>/g,
+          `<p class="wish__sub" id="wSub">${escapeHtml(message)}</p>`
+        );
+      }
+    }
+
     // Automatically trigger preview interactions
     const autoTriggerScript = `
     <script>
@@ -324,6 +360,13 @@ export async function GET(request: NextRequest) {
         window.proposalQuestion = ${JSON.stringify(question)};
         window.dodgeTooltipText = ${JSON.stringify(dodgeText)};
         window.customAudioUrl = ${JSON.stringify(audioUrl)};
+        window.introEyebrow = ${JSON.stringify(introEyebrow)};
+        window.introHint = ${JSON.stringify(introHint)};
+        window.line1 = ${JSON.stringify(line1)};
+        window.line2 = ${JSON.stringify(line2)};
+        window.kineticSub = ${JSON.stringify(kineticSub)};
+        window.wishEyebrow = ${JSON.stringify(wishEyebrow)};
+        window.theme = ${JSON.stringify(theme)};
 
         function autoLaunch() {
           var rootEl = document.getElementById("root");

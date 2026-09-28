@@ -1,0 +1,27 @@
+{
+  "name": "interactive-birthday-gift",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An interactive, cinematic birthday card featuring kinetic typography and canvas animations.",
+  "author": "saklincodes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saklincodes/Birthday-Gift.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saklincodes/Birthday-Gift/issues"
+  },
+  "homepage": "https://github.com/saklincodes/Birthday-Gift#readme",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

@@ -144,8 +144,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Admin Route Protection: Both /admin UI pages and /api/admin API routes require authorized administrator
+  // Note: /api/admin/templates/preview is an iframe HTML preview renderer accessible to creators and previewers
   const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
-  const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin");
+  const isTemplatePreviewApi = request.nextUrl.pathname.startsWith("/api/admin/templates/preview");
+  const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin") && !isTemplatePreviewApi;
 
   if (isAdminPage || isAdminApi) {
     let hasAdminAccess = false;

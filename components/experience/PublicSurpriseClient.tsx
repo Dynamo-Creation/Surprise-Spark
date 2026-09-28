@@ -370,6 +370,40 @@ export function PublicSurpriseClient({
               title="The Golden Proposal Experience"
               allow="autoplay"
             />
+          ) : template.slug === "birthday-gift" ? (
+            <iframe
+              src={`/api/admin/templates/preview?slug=birthday-gift&publicId=${encodeURIComponent(
+                publicId
+              )}&recipientName=${encodeURIComponent(
+                personalization.recipient_name
+              )}&senderName=${encodeURIComponent(
+                personalization.sender_name
+              )}&message=${encodeURIComponent(
+                personalization.message
+              )}&audioUrl=${encodeURIComponent(
+                audioUrl || ""
+              )}`}
+              className="w-full h-screen border-none"
+              title="Birthday Blossom Archery Experience"
+              allow="autoplay"
+              onLoad={(e) => {
+                const iframe = e.currentTarget;
+                if (iframe?.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "SURPRISE_UPDATE_PROPS",
+                      payload: {
+                        recipientName: personalization.recipient_name,
+                        senderName: personalization.sender_name,
+                        message: personalization.message,
+                        audioUrl: audioUrl || "",
+                      },
+                    },
+                    "*"
+                  );
+                }
+              }}
+            />
           ) : isWebGLSupported ? (
             <ExperiencePlayer
               key={playerKey}

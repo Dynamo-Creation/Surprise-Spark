@@ -38,7 +38,9 @@ function checkIsDeleted(slugOrId: string): boolean {
     slugOrId === "the-golden-proposal" ||
     slugOrId === "tpl-the-golden-proposal" ||
     slugOrId === "whispers-of-love" ||
-    slugOrId === "tpl-whispers-of-love"
+    slugOrId === "tpl-whispers-of-love" ||
+    slugOrId === "birthday-gift" ||
+    slugOrId === "tpl-birthday-gift"
   ) {
     return false;
   }
@@ -60,7 +62,9 @@ function checkIsDeleted(slugOrId: string): boolean {
             s !== "the-golden-proposal" &&
             s !== "tpl-the-golden-proposal" &&
             s !== "whispers-of-love" &&
-            s !== "tpl-whispers-of-love"
+            s !== "tpl-whispers-of-love" &&
+            s !== "birthday-gift" &&
+            s !== "tpl-birthday-gift"
         )
         .includes(slugOrId)
     );

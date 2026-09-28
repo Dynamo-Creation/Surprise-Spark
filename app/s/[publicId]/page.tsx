@@ -40,7 +40,9 @@ export async function generateMetadata({
   const templateSlug =
     cloudRecord?.template_slug ||
     query.template ||
-    (publicId.startsWith("whispers-") || publicId.includes("whispers")
+    (publicId.startsWith("bloom-") || publicId.includes("bloom") || publicId.includes("archery")
+      ? "birthday-gift"
+      : publicId.startsWith("whispers-") || publicId.includes("whispers")
       ? "whispers-of-love"
       : publicId.includes("golden") || publicId.includes("proposal") || publicId.startsWith("love-")
       ? "the-golden-proposal"
@@ -136,7 +138,9 @@ export default async function RecipientSurprisePage({
   const templateSlug =
     cloudRecord?.template_slug ||
     query.template ||
-    (publicId.startsWith("whispers-") || publicId.includes("whispers")
+    (publicId.startsWith("bloom-") || publicId.includes("bloom") || publicId.includes("archery")
+      ? "birthday-gift"
+      : publicId.startsWith("whispers-") || publicId.includes("whispers")
       ? "whispers-of-love"
       : publicId.includes("golden") || publicId.includes("proposal") || publicId.startsWith("love-")
       ? "the-golden-proposal"

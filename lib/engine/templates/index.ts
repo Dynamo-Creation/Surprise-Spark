@@ -10,6 +10,7 @@ export * from "./sweetCelebrationTemplate";
 export * from "./loveAnimationTemplate";
 export * from "./goldenProposalTemplate";
 export * from "./whispersOfLoveTemplate";
+export * from "./birthdayGiftTemplate";
 
 import { TemplateModel } from "../types";
 import { MAGIC_GIFT_TEMPLATE } from "./magicGiftTemplate";
@@ -24,8 +25,10 @@ import { SWEET_CELEBRATION_TEMPLATE } from "./sweetCelebrationTemplate";
 import { LOVE_ANIMATION_TEMPLATE } from "./loveAnimationTemplate";
 import { GOLDEN_PROPOSAL_TEMPLATE } from "./goldenProposalTemplate";
 import { WHISPERS_OF_LOVE_TEMPLATE } from "./whispersOfLoveTemplate";
+import { BIRTHDAY_GIFT_TEMPLATE } from "./birthdayGiftTemplate";
 
 export const ALL_BIRTHDAY_TEMPLATES: TemplateModel[] = [
+  BIRTHDAY_GIFT_TEMPLATE,
   SWEET_CELEBRATION_TEMPLATE,
   LOVE_ANIMATION_TEMPLATE,
   GOLDEN_PROPOSAL_TEMPLATE,

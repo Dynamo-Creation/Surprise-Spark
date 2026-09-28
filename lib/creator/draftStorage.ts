@@ -32,6 +32,14 @@ export interface DraftSurprise {
   audioStartTime?: number;
   audioDuration?: number;
   goldenConfig?: Record<string, any>;
+  introEyebrow?: string;
+  introHint?: string;
+  line1?: string;
+  line2?: string;
+  kineticSub?: string;
+  wishEyebrow?: string;
+  wishHero?: string;
+  theme?: string;
 }
 
 const LOCAL_STORAGE_KEY = "surprisespark_drafts_v1";
@@ -39,7 +47,9 @@ const LOCAL_STORAGE_KEY = "surprisespark_drafts_v1";
 export function generatePublicId(templateSlug?: string): string {
   const chars = "abcdefghjkmnpqrstuvwxyz23456789";
   let prefix = "spark-";
-  if (templateSlug === "whispers-of-love") {
+  if (templateSlug === "birthday-gift") {
+    prefix = "bloom-";
+  } else if (templateSlug === "whispers-of-love") {
     prefix = "whispers-";
   } else if (templateSlug === "the-golden-proposal" || templateSlug === "love-animation") {
     prefix = "love-";

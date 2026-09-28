@@ -76,6 +76,22 @@ const TEMPLATE_META: Record<
       { icon: Sparkles, color: "text-pink-500", title: "Confetti Shower" },
     ],
   },
+  "birthday-gift": {
+    gradientClass: styles.gradientSweet,
+    circleClass: styles.circleSweet,
+    emoji: "🏹",
+    shimmerColor: "#fb7185",
+    buttonGradient: "linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #f59e0b 100%)",
+    demoBorderHover: "hover:border-rose-400 hover:text-rose-600 dark:hover:text-rose-300 hover:shadow-[0_0_14px_rgba(244,63,94,0.35)]",
+    demoGlow: "bg-rose-50/80 dark:bg-rose-950/40",
+    demoIconColor: "text-rose-500",
+    accentColor: "text-rose-600 dark:text-rose-400",
+    microActions: [
+      { icon: Heart, color: "text-rose-500", title: "Interactive Archery" },
+      { icon: Sparkles, color: "text-amber-500", title: "Heart Blossom Tree" },
+      { icon: Music, color: "text-pink-500", title: "Chime Synthesizer" },
+    ],
+  },
   "sweet-celebration": {
     gradientClass: styles.gradientSweet,
     circleClass: styles.circleSweet,
@@ -171,9 +187,15 @@ export function FeaturedSection() {
     [router]
   );
 
-  // Spotlight signature featured templates: Whispers of Love, Sweet Celebration, The Golden Proposal & Love Animation
+  // Spotlight signature featured templates: Birthday Blossom Archery, Whispers of Love, Sweet Celebration, The Golden Proposal & Love Animation
   const FEATURED_SLUGS = useMemo(
-    () => ["whispers-of-love", "sweet-celebration", "the-golden-proposal", "love-animation"],
+    () => [
+      "birthday-gift",
+      "whispers-of-love",
+      "sweet-celebration",
+      "the-golden-proposal",
+      "love-animation",
+    ],
     []
   );
 

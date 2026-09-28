@@ -1,0 +1,26 @@
+{
+  "id": "tpl-birthday-gift",
+  "slug": "birthday-gift",
+  "name": "Birthday Blossom Archery 🏹🌸",
+  "categoryId": "birthday",
+  "description": "A cinematic, interactive archery birthday surprise. Draw Cupid's golden bow, release the arrow into a glowing crystal heart, and watch a procedural heart blossom tree bloom with falling petals and kinetic typography.",
+  "tagline": "Draw the golden bow, strike the heart, and watch eternal love blossom.",
+  "thumbnailUrl": "/templates/birthday-gift/thumbnail.jpg",
+  "previewUrl": "/api/admin/templates/preview?slug=birthday-gift",
+  "supportsPhotos": false,
+  "maxPhotos": 0,
+  "supportsMusic": true,
+  "audioDuration": 120,
+  "status": "active",
+  "createdAt": "2026-09-28T12:00:00.000Z",
+  "updatedAt": "2026-09-28T12:00:00.000Z",
+  "files": [
+    "index.html",
+    "birthday.css",
+    "birthday.js",
+    "template.json",
+    "thumbnail.jpg",
+    "favicon.png",
+    "textures/grain.png"
+  ]
+}

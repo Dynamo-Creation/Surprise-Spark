@@ -66,14 +66,23 @@ function CreateStudioContent() {
     "There are not enough words in any language to describe what you mean to me. You are the warmth of the morning sun, the calm of a quiet night, and the joy in between. Every day with you feels like a beautiful dream I never want to wake up from. You have changed my world in the most wonderful way, and I am so grateful that our paths crossed. Thank you for being you — for your laughter, your kindness, and your love. I carry you in my heart, always. 💕";
   const DEFAULT_BIRTHDAY_MESSAGE =
     "Happy Birthday! You make every ordinary day extraordinary. Let's make this year unforgettable!";
+  const DEFAULT_BIRTHDAY_GIFT_MESSAGE =
+    "here’s to us and a love that blooms. Wishing you a year filled with laughter, wonder, and endless love.";
 
-  // Generic Personalization Configuration (Sweet Celebration, Whispers of Love, Love Animation, etc.)
+  // Generic Personalization Configuration (Birthday Gift, Sweet Celebration, Whispers of Love, Love Animation, etc.)
   const [genericConfig, setGenericConfig] = useState<GenericCelebrationConfig>({
-    recipientName: "Maya",
+    recipientName: "Sophia",
     senderName: "Alex",
     specialDate: "2026-09-14",
-    message: DEFAULT_BIRTHDAY_MESSAGE,
+    message: DEFAULT_BIRTHDAY_GIFT_MESSAGE,
     photos: [],
+    introEyebrow: "a little something, for my love",
+    introHint: "pull & release to strike the heart 🏹",
+    line1: "Happy Birthday",
+    line2: "Sophia",
+    kineticSub: "to the sweetest soul in the world",
+    wishEyebrow: "and… forever & always",
+    theme: "sakura",
   });
 
   // Audio / Voice Note Configuration
@@ -107,11 +116,18 @@ function CreateStudioContent() {
         } else {
           setGenericConfig((prev) => ({
             ...prev,
-            recipientName: existing.recipientName || "Maya",
+            recipientName: existing.recipientName || "Sophia",
             senderName: existing.senderName || "",
             message: existing.message || "",
             specialDate: existing.specialDate || "",
             photos: existing.photos || [],
+            introEyebrow: existing.introEyebrow || prev.introEyebrow,
+            introHint: existing.introHint || prev.introHint,
+            line1: existing.line1 || prev.line1,
+            line2: existing.line2 || prev.line2,
+            kineticSub: existing.kineticSub || prev.kineticSub,
+            wishEyebrow: existing.wishEyebrow || prev.wishEyebrow,
+            theme: existing.theme || prev.theme,
           }));
         }
         if (existing.status === "published") {
@@ -202,6 +218,13 @@ function CreateStudioContent() {
       dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
       audioUrl: customAudioUrl || undefined,
       goldenConfig: isGolden ? goldenConfig : undefined,
+      introEyebrow: genericConfig.introEyebrow,
+      introHint: genericConfig.introHint,
+      line1: genericConfig.line1,
+      line2: genericConfig.line2,
+      kineticSub: genericConfig.kineticSub,
+      wishEyebrow: genericConfig.wishEyebrow,
+      theme: genericConfig.theme,
     });
 
     setDraftId(draft.id);
@@ -352,7 +375,9 @@ function CreateStudioContent() {
             {availableTemplates.map((tpl) => {
               const isSelected = selectedTemplateSlug === tpl.slug;
               const emoji =
-                tpl.slug === "the-golden-proposal"
+                tpl.slug === "birthday-gift"
+                  ? "🏹"
+                  : tpl.slug === "the-golden-proposal"
                   ? "💍"
                   : tpl.slug === "love-animation"
                   ? "💖"
@@ -366,7 +391,24 @@ function CreateStudioContent() {
                   type="button"
                   onClick={() => {
                     setSelectedTemplateSlug(tpl.slug);
-                    if (tpl.slug === "whispers-of-love") {
+                    if (tpl.slug === "birthday-gift") {
+                      setGenericConfig((prev) => ({
+                        ...prev,
+                        message:
+                          prev.message &&
+                          prev.message !== DEFAULT_WHISPERS_MESSAGE &&
+                          prev.message !== DEFAULT_BIRTHDAY_MESSAGE
+                            ? prev.message
+                            : DEFAULT_BIRTHDAY_GIFT_MESSAGE,
+                        introEyebrow: prev.introEyebrow || "a little something, for my love",
+                        introHint: prev.introHint || "pull & release to strike the heart 🏹",
+                        line1: prev.line1 || "Happy Birthday",
+                        line2: prev.line2 || prev.recipientName || "Sophia",
+                        kineticSub: prev.kineticSub || "to the sweetest soul in the world",
+                        wishEyebrow: prev.wishEyebrow || "and… forever & always",
+                        theme: prev.theme || "sakura",
+                      }));
+                    } else if (tpl.slug === "whispers-of-love") {
                       setGenericConfig((prev) => {
                         if (!prev.message || prev.message.includes("Happy Birthday")) {
                           return { ...prev, message: DEFAULT_WHISPERS_MESSAGE };

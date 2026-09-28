@@ -12,6 +12,10 @@ import {
   Check,
   Camera,
   PenTool,
+  Target,
+  Palette,
+  Type,
+  Layers,
 } from "lucide-react";
 import { Input, Textarea } from "@/components/ui/input";
 import { BorderBeam } from "@/components/magicui/border-beam";
@@ -41,6 +45,13 @@ export interface GenericCelebrationConfig {
   specialDate: string;
   message: string;
   photos: string[];
+  introEyebrow?: string;
+  introHint?: string;
+  line1?: string;
+  line2?: string;
+  kineticSub?: string;
+  wishEyebrow?: string;
+  theme?: string;
 }
 
 interface TemplatePersonalizeSectionProps {
@@ -79,6 +90,7 @@ export function TemplatePersonalizeSection({
   const isSweetCelebration = template.slug === "sweet-celebration";
   const isLoveAnimation = template.slug === "love-animation";
   const isWhispersOfLove = template.slug === "whispers-of-love";
+  const isBirthdayGift = template.slug === "birthday-gift";
 
   const templateDuration = isGoldenProposal ? 60 : isWhispersOfLove ? 180 : 120;
 
@@ -806,6 +818,329 @@ export function TemplatePersonalizeSection({
                 <span
                   key={tag}
                   className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/25 backdrop-blur-sm"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : isBirthdayGift ? (
+        /* ========================================================================= */
+        /* 🏹 TEMPLATE: BIRTHDAY BLOSSOM ARCHERY ADAPTIVE CUSTOMIZER                 */
+        /* ========================================================================= */
+        <div className="space-y-6">
+          {/* Card 1: Celebrant & Sender Names */}
+          <div className="relative rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-rose-200/80 dark:border-rose-900/40 shadow-xl backdrop-blur-md overflow-hidden space-y-4">
+            <BorderBeam size={220} duration={12} delay={0} colorFrom="#f43f5e" colorTo="#fb7185" />
+
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 text-white flex items-center justify-center shadow-md">
+                <Target className="w-4 h-4 fill-white/20" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <span>1. Archery Celebrant &amp; Sender</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/25">
+                    Stage 1 &amp; 4
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Customizes the kinetic typography headline and the blooming wish card signature
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Celebrant&apos;s Name (Recipient) *
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {(genericConfig.recipientName || "").length}/40
+                  </span>
+                </div>
+                <Input
+                  id="bdaygift-recipient-name"
+                  value={genericConfig.recipientName}
+                  maxLength={40}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    onGenericConfigChange({
+                      recipientName: val,
+                      line2: genericConfig.line2 && genericConfig.line2 !== genericConfig.recipientName ? genericConfig.line2 : val,
+                    });
+                  }}
+                  placeholder="e.g. Sophia"
+                  className="border-rose-300/80 dark:border-rose-800/80 focus:ring-rose-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Appears in 3D kinetic line 2 and &quot;Happy Birthday {genericConfig.recipientName || "Sophia"}&quot;
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Your Name (Sender Signature) *
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {(genericConfig.senderName || "").length}/40
+                  </span>
+                </div>
+                <Input
+                  id="bdaygift-sender-name"
+                  value={genericConfig.senderName}
+                  maxLength={40}
+                  onChange={(e) => onGenericConfigChange({ senderName: e.target.value })}
+                  placeholder="e.g. Alex"
+                  className="border-amber-300/80 dark:border-amber-800/80 focus:ring-amber-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Signed on wish card: &quot;— Forever yours, {genericConfig.senderName || "Alex"} 💕&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Kinetic 3D Typography (Stage 2 — Arrow Strike Impact) */}
+          <div className="relative rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xl backdrop-blur-md space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-600 text-white flex items-center justify-center shadow-md">
+                <Type className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <span>2. Kinetic 3D Typography</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-pink-500/15 text-pink-700 dark:text-pink-300 border border-pink-500/25">
+                    Stage 2 Impact
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  When the arrow strikes the heart, letters tumble into 3D space with an animated golden underline
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Headline Line 1
+                </label>
+                <Input
+                  id="bdaygift-line1"
+                  value={genericConfig.line1 ?? "Happy Birthday"}
+                  maxLength={30}
+                  onChange={(e) => onGenericConfigChange({ line1: e.target.value })}
+                  placeholder="e.g. Happy Birthday"
+                  className="border-slate-300 dark:border-slate-700 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Headline Line 2 (Highlighted)
+                </label>
+                <Input
+                  id="bdaygift-line2"
+                  value={genericConfig.line2 ?? (genericConfig.recipientName || "My Love")}
+                  maxLength={30}
+                  onChange={(e) => onGenericConfigChange({ line2: e.target.value })}
+                  placeholder="e.g. Sophia or My Love"
+                  className="border-slate-300 dark:border-slate-700 focus:ring-rose-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Hero Intro Eyebrow (Stage 1)
+                </label>
+                <Input
+                  id="bdaygift-intro-eyebrow"
+                  value={genericConfig.introEyebrow ?? "a little something, for my love"}
+                  maxLength={50}
+                  onChange={(e) => onGenericConfigChange({ introEyebrow: e.target.value })}
+                  placeholder="e.g. a little something, for my love"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Kinetic Subtitle (Stage 2)
+                </label>
+                <Input
+                  id="bdaygift-kinetic-sub"
+                  value={genericConfig.kineticSub ?? "to the sweetest soul in the world"}
+                  maxLength={60}
+                  onChange={(e) => onGenericConfigChange({ kineticSub: e.target.value })}
+                  placeholder="e.g. to the sweetest soul in the world"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Heartfelt Blossom Finale (Stage 4 — Blooming Tree Card) */}
+          <div className="relative rounded-3xl p-6 bg-gradient-to-br from-rose-50/70 via-pink-50/40 to-white/90 dark:from-slate-900/90 dark:via-rose-950/20 dark:to-slate-900/90 border border-rose-200/80 dark:border-rose-900/40 shadow-xl backdrop-blur-md overflow-hidden space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-md">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <span>3. Blossom Finale &amp; Birthday Wish</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+                    Stage 4 Finale
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Appears over the heart blossom tree as petals gracefully flutter across the screen
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                Finale Intro Eyebrow
+              </label>
+              <Input
+                id="bdaygift-wish-eyebrow"
+                value={genericConfig.wishEyebrow ?? "and… forever & always"}
+                maxLength={50}
+                onChange={(e) => onGenericConfigChange({ wishEyebrow: e.target.value })}
+                placeholder="e.g. and… forever & always"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Heartfelt Personal Message *
+                </label>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {(genericConfig.message || "").length}/400
+                </span>
+              </div>
+              <Textarea
+                id="bdaygift-wish-message"
+                rows={3}
+                maxLength={400}
+                value={genericConfig.message}
+                onChange={(e) => onGenericConfigChange({ message: e.target.value })}
+                placeholder="here’s to us and a love that blooms. Wishing you a year filled with laughter, wonder, and endless love."
+                className="border-rose-300/80 dark:border-rose-800/80 focus:ring-rose-500"
+              />
+            </div>
+          </div>
+
+          {/* Card 4: Sakura Tree Blossom Color Palette */}
+          <div className="relative rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xl backdrop-blur-md space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center shadow-md">
+                <Palette className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <span>4. Blossom Tree Color Palette</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/25">
+                    Canvas Theme
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Select the floral color aesthetic for the blooming heart tree and falling petal shower
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {[
+                {
+                  id: "sakura",
+                  name: "Sakura Blossom 🌸",
+                  desc: "Romantic pastel pink & soft cherry rose",
+                  colors: ["#ffe1ec", "#ff80aa", "#f4577f", "#e23b67"],
+                },
+                {
+                  id: "golden",
+                  name: "Golden Twilight 🌅",
+                  desc: "Warm sunrise gold, peach & radiant amber",
+                  colors: ["#fff3d1", "#f59e0b", "#fb923c", "#d97706"],
+                },
+                {
+                  id: "lavender",
+                  name: "Lavender Romance 💜",
+                  desc: "Mystic orchid, lilac dream & violet glow",
+                  colors: ["#f3e8ff", "#c084fc", "#e879f9", "#a855f7"],
+                },
+                {
+                  id: "ruby",
+                  name: "Ruby Passion 🌹",
+                  desc: "Deep scarlet crimson, wine & velvety rose",
+                  colors: ["#ffe4e6", "#fb7185", "#f43f5e", "#be123c"],
+                },
+              ].map((themeOpt) => {
+                const isSelected = (genericConfig.theme || "sakura") === themeOpt.id;
+                return (
+                  <button
+                    key={themeOpt.id}
+                    type="button"
+                    onClick={() => onGenericConfigChange({ theme: themeOpt.id })}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                      isSelected
+                        ? "border-rose-500 dark:border-rose-400 bg-rose-50/60 dark:bg-rose-950/30 ring-2 ring-rose-500/30 shadow-md"
+                        : "border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {themeOpt.name}
+                      </span>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px]">
+                          ✓
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-2.5">
+                      {themeOpt.desc}
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      {themeOpt.colors.map((c, i) => (
+                        <span
+                          key={i}
+                          className="w-5 h-5 rounded-full shadow-xs border border-white/40"
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Feature Highlights Badge Strip */}
+          <div className="rounded-2xl p-4 bg-slate-900 text-white border border-slate-800 space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-rose-300">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Interactive Archery Experience Highlights</span>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {[
+                "Cupid Bow Drag & Release",
+                "Tap Heart to Shoot (Mobile)",
+                "Kinetic 3D Typography",
+                "Procedural Blossom Heart Tree",
+                "Ambient Chimes Synthesizer",
+                "Falling Blossom Petals",
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/25 backdrop-blur-xs"
                 >
                   {tag}
                 </span>
