@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Default or mock profile
     setProfile({
       id: userId,
-      email: userEmail || "creator@surprisespark.app",
+      email: userEmail || "creator@partnerincrime.app",
       fullName: userName || "Surprise Creator",
       avatarUrl: undefined,
       createdAt: new Date().toISOString(),
@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   const demoData = JSON.parse(savedDemo);
                   const mockUser = {
                     id: demoData.id || "demo-user-1",
-                    email: demoData.email || "creator@surprisespark.app",
+                    email: demoData.email || "creator@partnerincrime.app",
                     user_metadata: { full_name: demoData.fullName || "Alex Parker" },
                     app_metadata: {},
                     aud: "authenticated",
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const demoData = JSON.parse(savedDemo);
               const mockUser = {
                 id: demoData.id || "demo-user-1",
-                email: demoData.email || "creator@surprisespark.app",
+                email: demoData.email || "creator@partnerincrime.app",
                 user_metadata: { full_name: demoData.fullName || "Alex Parker" },
                 app_metadata: {},
                 aud: "authenticated",

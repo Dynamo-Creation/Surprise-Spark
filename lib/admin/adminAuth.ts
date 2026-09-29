@@ -19,8 +19,10 @@ export const ADMIN_ROLES: AdminRole[] = [
 ];
 
 export const KNOWN_ADMIN_EMAILS: string[] = [
+  "admin@partnerincrime.app",
   "admin@surprisespark.app",
   "sonu25580@gmail.com",
+  "dynamo@partnerincrime.app",
   "dynamo@surprisespark.app",
 ];
 

@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
           {sender ? (
             <span>Created with love by {sender} ✨</span>
           ) : (
-            <span>Open your interactive celebration surprise ✨</span>
+            <span>Tap to open your personalized interactive surprise ✨</span>
           )}
         </div>
 
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
             color: "#f472b6",
           }}
         >
-          <span>SurpriseSpark • Don’t Just Send A Wish. Send A Surprise.</span>
+          <span>Partner in Crime • Don’t Just Send A Wish. Send A Surprise.</span>
         </div>
       </div>
     ),

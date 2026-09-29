@@ -80,7 +80,7 @@ export function ExperienceErrorState({ type, onRetry }: ExperienceErrorStateProp
 
         <div className="pt-4 border-t border-white/10 text-[11px] text-slate-500">
           <Link href="/" className="hover:text-pink-400 transition-colors">
-            SurpriseSpark — Don’t Just Send A Wish. Send A Surprise.
+            Partner in Crime — Don’t Just Send A Wish. Send A Surprise.
           </Link>
         </div>
       </div>

@@ -58,15 +58,18 @@ export function RecipientShareModal({
 
   if (!isOpen) return null;
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://surprisespark.app";
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || "https://partnerincrime.app";
   const publicUrl = `${origin}/s/${publicId}`;
 
-  const shareTitle = `A special celebration surprise for ${recipientName}! 🎁`;
-  const shareText = `Look at this incredible interactive celebration surprise! Open it when you're ready 😉`;
+  const shareTitle = `A special surprise for ${recipientName}! 🎁`;
+  const shareText = `Look at this incredible surprise! Open it when you're ready 😉`;
 
   // WhatsApp
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-    `${shareText} ${publicUrl}`
+    `${shareText}\n\n${publicUrl}`
   )}`;
 
   // Facebook Web Share

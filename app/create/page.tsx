@@ -579,7 +579,7 @@ function CreateStudioContent() {
                   try {
                     localStorage.setItem("demo_user_session", JSON.stringify({
                       id: guestId,
-                      email: "guest@surprisespark.app",
+                      email: "guest@partnerincrime.app",
                       fullName: "Guest Creator",
                       role: "user"
                     }));

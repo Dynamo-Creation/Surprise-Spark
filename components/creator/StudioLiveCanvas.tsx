@@ -367,7 +367,7 @@ export function StudioLiveCanvas({
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
               <span className="text-[10px] text-slate-400 font-mono ml-2">
-                preview.surprisespark.app/{template.slug}
+                partnerincrime.app/preview/{template.slug}
               </span>
             </div>
 

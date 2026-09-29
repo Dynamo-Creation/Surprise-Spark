@@ -85,20 +85,18 @@ export function ShareModal({
 
   if (!isOpen) return null;
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://surprisespark.app";
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || "https://partnerincrime.app";
 
-  // Clean, private URL that also includes audioUrl fallback so audio plays reliably across devices
-  const publicUrl =
-    audioUrl && (audioUrl.startsWith("http") || audioUrl.startsWith("/"))
-      ? `${origin}/s/${publicId}?audioUrl=${encodeURIComponent(audioUrl)}`
-      : `${origin}/s/${publicId}`;
+  // Clean, private URL that does not expose media URLs or template internals
+  const publicUrl = `${origin}/s/${publicId}`;
 
   const isProposal = templateSlug === "the-golden-proposal";
 
-  // WhatsApp text per specification:
-  const whatsappMessageText = isProposal
-    ? `I made something special from my heart for you 🌹 Open it when you're ready 💕\n\n${publicUrl}`
-    : `I made something special for you 🎁 Open it when you're ready 😉\n\n${publicUrl}`;
+  // Universal mystery-preserving sharing text
+  const whatsappMessageText = `I made something special for you 🎁 Open it when you're ready 😉\n\n${publicUrl}`;
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMessageText)}`;
 
   // Facebook Share URL
@@ -120,12 +118,8 @@ export function ShareModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: isProposal
-            ? `A Heartfelt Proposal Surprise for ${recipientName}! 💍`
-            : `A Special Surprise for ${recipientName}! 🎁`,
-          text: isProposal
-            ? `I made something special from my heart for you 🌹 Open it when you're ready 💕`
-            : `I made something special for you 🎁 Open it when you're ready 😉`,
+          title: recipientName ? `A Special Surprise for ${recipientName}! 🎁` : `A Special Surprise for you! 🎁`,
+          text: `I made something special for you 🎁 Open it when you're ready 😉`,
           url: publicUrl,
         });
         logShare();

@@ -51,30 +51,32 @@ export async function generateMetadata({
   const recipientName =
     cloudRecord?.recipient_name ||
     query.name ||
-    (isSample ? SAMPLE_SURPRISE.recipient.name : "Someone Special");
+    (isSample ? SAMPLE_SURPRISE.recipient.name : "");
 
   const senderName =
     cloudRecord?.sender_name ||
     query.sender ||
     (isSample ? SAMPLE_SURPRISE.sender.name : "");
 
-  const isProposal = templateSlug === "the-golden-proposal";
-
-  const title = isProposal
-    ? "💍 Someone has a special question for you..."
+  // Mysterious, delightful title and description that never spoil the template
+  const title = recipientName && recipientName !== "Someone Special"
+    ? `🎁 A special surprise for ${recipientName}!`
     : "🎁 Someone has a surprise for you!";
 
-  const description = isProposal
-    ? `Open your romantic proposal surprise ${senderName ? `from ${senderName}` : ""} 💕`
-    : "Open your special celebration surprise ✨";
+  const description =
+    "Someone created an unforgettable interactive surprise for you. Open it to reveal what's inside! ✨";
 
-  const ogImageUrl = `/api/og?name=${encodeURIComponent(recipientName)}${
+  const ogImageUrl = `/api/og?name=${encodeURIComponent(recipientName || "Someone Special")}${
     senderName ? `&sender=${encodeURIComponent(senderName)}` : ""
   }`;
 
   return {
     title,
     description,
+    robots: {
+      index: false,
+      follow: false,
+    },
     openGraph: {
       title,
       description,
@@ -84,7 +86,7 @@ export async function generateMetadata({
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `Special Surprise for ${recipientName}`,
+          alt: "A Special Surprise",
         },
       ],
     },

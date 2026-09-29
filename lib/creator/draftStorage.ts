@@ -44,20 +44,10 @@ export interface DraftSurprise {
 
 const LOCAL_STORAGE_KEY = "surprisespark_drafts_v1";
 
-export function generatePublicId(templateSlug?: string): string {
+export function generatePublicId(_templateSlug?: string): string {
   const chars = "abcdefghjkmnpqrstuvwxyz23456789";
-  let prefix = "spark-";
-  if (templateSlug === "birthday-gift") {
-    prefix = "bloom-";
-  } else if (templateSlug === "whispers-of-love") {
-    prefix = "whispers-";
-  } else if (templateSlug === "the-golden-proposal" || templateSlug === "love-animation") {
-    prefix = "love-";
-  } else if (templateSlug === "sweet-celebration" || templateSlug?.includes("bday") || templateSlug?.includes("birthday")) {
-    prefix = "bday-";
-  }
-  let result = prefix;
-  for (let i = 0; i < 6; i++) {
+  let result = "spark-";
+  for (let i = 0; i < 7; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;

@@ -83,7 +83,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
-                SurpriseSpark Command Center
+                Partner in Crime Command Center
               </span>
               <span className="text-slate-600">•</span>
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">

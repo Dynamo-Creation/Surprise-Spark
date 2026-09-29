@@ -57,7 +57,7 @@ export default function PrivacyCenterPage() {
             href="/"
             className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors mb-6"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to SurpriseSpark
+            <ArrowLeft className="w-4 h-4" /> Back to Partner in Crime
           </Link>
 
           <div className="flex items-center gap-2 mb-2">
@@ -73,7 +73,7 @@ export default function PrivacyCenterPage() {
             Privacy Center & Consent Controls
           </h1>
           <p className="text-sm sm:text-base text-slate-400 mt-2 leading-relaxed">
-            At SurpriseSpark, personal memories belong exclusively to you and your loved ones. We never collect names, personal messages, uploaded photos, or IP addresses for product analytics.
+            At Partner in Crime, personal memories belong exclusively to you and your loved ones. We never collect names, personal messages, uploaded photos, or IP addresses for product analytics.
           </p>
         </div>
 
@@ -251,7 +251,7 @@ export default function PrivacyCenterPage() {
 
         {/* Footer Note */}
         <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-          <span>SurpriseSpark Privacy Framework • Compliance Ready (GDPR & CCPA Aligned)</span>
+          <span>Partner in Crime Privacy Framework • Compliance Ready (GDPR & CCPA Aligned)</span>
           <Link href="/admin/analytics" className="text-slate-400 hover:text-purple-400 transition-colors">
             Admin Analytics Telemetry →
           </Link>

@@ -100,9 +100,14 @@ export function ExperiencePlayer({
 
   // Share handler
   const handleShare = useCallback(() => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    const title = `A Special Birthday Surprise for ${personalization.recipient_name}! 🎁`;
-    const text = `I made an interactive 3D birthday surprise for ${personalization.recipient_name}. Open it here:`;
+    const url =
+      typeof window !== "undefined"
+        ? window.location.origin + window.location.pathname
+        : "";
+    const title = personalization.recipient_name
+      ? `A Special Surprise for ${personalization.recipient_name}! 🎁`
+      : "A Special Surprise! 🎁";
+    const text = "I made a special interactive surprise for you. Open it here:";
 
     if (typeof navigator !== "undefined" && navigator.share) {
       navigator.share({ title, text, url }).catch(() => {});
@@ -456,7 +461,7 @@ export function ExperiencePlayer({
       <footer className="relative z-30 w-full px-5 py-3.5 border-t border-white/10 bg-slate-950/60 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
         <p className="flex items-center gap-1.5">
           <Heart className="w-3.5 h-3.5 text-pink-500 fill-pink-500" />
-          <span>Crafted with SurpriseSpark</span>
+          <span>Crafted with Partner in Crime</span>
         </p>
 
         <Link

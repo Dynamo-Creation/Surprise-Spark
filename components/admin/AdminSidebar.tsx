@@ -102,7 +102,7 @@ export function AdminSidebar({
             {!collapsed && (
               <div className="min-w-0">
                 <span className="font-black text-sm text-white tracking-tight block truncate">
-                  SurpriseSpark
+                  Partner in Crime
                 </span>
                 <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">
                   Executive CMS

@@ -41,7 +41,7 @@ export function RecipientExperienceView({
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-semibold text-slate-300">
-            For {surprise.recipient.name} 🎂
+            For {surprise.recipient.name} ✨
           </span>
         </div>
 
@@ -210,7 +210,7 @@ export function RecipientExperienceView({
       <footer className="relative z-20 w-full px-5 py-4 border-t border-white/10 bg-slate-950/60 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
         <p className="flex items-center gap-1.5">
           <Heart className="w-3.5 h-3.5 text-pink-500 fill-pink-500" />
-          <span>Made with SurpriseSpark</span>
+          <span>Made with Partner in Crime</span>
         </p>
 
         <Link href="/create" className="text-pink-400 hover:text-pink-300 font-semibold flex items-center gap-1">

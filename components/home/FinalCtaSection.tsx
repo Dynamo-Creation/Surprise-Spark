@@ -208,7 +208,7 @@ export function FinalCtaSection() {
             </span>
           </div>
 
-          {/* Node 2: SurpriseSpark Magic Engine 🎁 */}
+          {/* Node 2: Partner in Crime Magic Engine 🎁 */}
           <div className="flex flex-col items-center z-20">
             <div
               ref={engineRef}
