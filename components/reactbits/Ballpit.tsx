@@ -91,6 +91,7 @@ class X {
     this.#initRenderer();
     this.resize();
     this.#initObservers();
+    this.#startAnimation();
   }
 
   #initCamera() {
@@ -685,8 +686,11 @@ class Z extends InstancedMesh {
     const roomEnv = new RoomEnvironment();
     const pmrem = new PMREMGenerator(renderer);
     const envTexture = pmrem.fromScene(roomEnv).texture;
-    const geometry = new SphereGeometry();
-    const material = new Y({ envMap: envTexture, ...config.materialParams });
+    const geometry = new SphereGeometry(1, 32, 24);
+    const material = new MeshPhysicalMaterial({
+      envMap: envTexture,
+      ...config.materialParams,
+    });
     material.envMapRotation.x = -Math.PI / 2;
     super(geometry, material, config.count);
     this.config = config;
@@ -696,9 +700,10 @@ class Z extends InstancedMesh {
   }
 
   #setupLights() {
-    this.ambientLight = new AmbientLight(this.config.ambientColor, this.config.ambientIntensity);
+    this.ambientLight = new AmbientLight(0xffffff, 2.5);
     this.add(this.ambientLight);
-    this.light = new PointLight(this.config.colors[0], this.config.lightIntensity);
+    this.light = new PointLight(0xffffff, 250, 60);
+    this.light.position.set(0, 5, 12);
     this.add(this.light);
   }
 
@@ -779,11 +784,20 @@ function createBallpit(canvas: HTMLCanvasElement, config: any = {}): CreateBallp
   });
   let spheres: Z;
   threeInstance.renderer.toneMapping = ACESFilmicToneMapping;
-  threeInstance.camera.position.set(0, 0, 20);
+  threeInstance.camera.position.set(0, 0, 18);
   threeInstance.camera.lookAt(0, 0, 0);
   threeInstance.cameraMaxAspect = 1.5;
+
+  threeInstance.onAfterResize = (size) => {
+    if (spheres) {
+      spheres.config.maxX = Math.max(size.wWidth / 2, 6);
+      spheres.config.maxY = Math.max(size.wHeight / 2, 5);
+    }
+  };
+
   threeInstance.resize();
   initialize(config);
+
   const raycaster = new Raycaster();
   const plane = new Plane(new Vector3(0, 0, 1), 0);
   const intersectionPoint = new Vector3();
@@ -799,13 +813,18 @@ function createBallpit(canvas: HTMLCanvasElement, config: any = {}): CreateBallp
       raycaster.setFromCamera(pointerData.nPosition, threeInstance.camera);
       threeInstance.camera.getWorldDirection(plane.normal);
       raycaster.ray.intersectPlane(plane, intersectionPoint);
-      spheres.physics.center.copy(intersectionPoint);
-      spheres.config.controlSphere0 = true;
+      if (spheres && spheres.physics) {
+        spheres.physics.center.copy(intersectionPoint);
+        spheres.config.controlSphere0 = true;
+      }
     },
     onLeave() {
-      spheres.config.controlSphere0 = false;
+      if (spheres && spheres.config) {
+        spheres.config.controlSphere0 = false;
+      }
     },
   });
+
   function initialize(cfg: any) {
     if (spheres) {
       threeInstance.clear();
@@ -813,13 +832,13 @@ function createBallpit(canvas: HTMLCanvasElement, config: any = {}): CreateBallp
     }
     spheres = new Z(threeInstance.renderer, cfg);
     threeInstance.scene.add(spheres);
+    spheres.config.maxX = Math.max(threeInstance.size.wWidth / 2 || 12, 6);
+    spheres.config.maxY = Math.max(threeInstance.size.wHeight / 2 || 8, 5);
+    spheres.update({ delta: 0.016 });
   }
+
   threeInstance.onBeforeRender = (deltaInfo) => {
-    if (!isPaused) spheres.update(deltaInfo);
-  };
-  threeInstance.onAfterResize = (size) => {
-    spheres.config.maxX = size.wWidth / 2;
-    spheres.config.maxY = size.wHeight / 2;
+    if (!isPaused && spheres) spheres.update(deltaInfo);
   };
   return {
     three: threeInstance,

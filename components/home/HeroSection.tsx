@@ -29,22 +29,20 @@ export function HeroSection() {
       {/* 1. React Bits Ballpit: Physics-Powered 3D Interactive Spheres for ALL Devices */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-auto">
         <Ballpit
-          count={90}
-          gravity={0.5}
+          count={80}
+          gravity={0.15}
           friction={0.9975}
-          wallBounce={0.92}
+          wallBounce={0.95}
           followCursor={true}
-          minSize={0.55}
-          maxSize={1.15}
+          minSize={0.65}
+          maxSize={1.25}
           colors={[0xec4899, 0xa855f7, 0x3b82f6, 0xf43f5e, 0xfbbf24, 0x06b6d4]}
           className="w-full h-full"
         />
       </div>
 
-      {/* 2. Ambient Atmosphere Vignette & Gradient Overlays (Subtle, leaves balls fully visible) */}
-      <div className="absolute inset-0 bg-radial from-transparent via-background/40 to-background/80 pointer-events-none z-1" />
-      <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-background via-background/60 to-transparent pointer-events-none z-1" />
-      <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none z-1" />
+      {/* 2. Subtle ambient glow behind canvas */}
+      <div className="absolute inset-0 bg-gradient-to-b from-pink-500/5 via-purple-500/5 to-transparent pointer-events-none -z-10" />
 
       {/* 3. Hero Content Container: Pointer-events-none on wrapper so cursor & touch interact with Ballpit */}
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center pointer-events-none">
