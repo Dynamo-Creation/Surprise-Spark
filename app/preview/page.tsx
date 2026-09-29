@@ -116,7 +116,7 @@ function PreviewContent() {
         </div>
 
         {/* 8-Template Quick Switcher Pill Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-slate-100 dark:border-slate-850 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-slate-100 dark:border-slate-800 scrollbar-none">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap mr-1">
             Templates:
           </span>

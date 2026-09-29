@@ -52,7 +52,7 @@ export default function TemplatesPage() {
             placeholder="Search templates by theme, keywords, or features..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900 text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
+            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
           />
         </div>
 
@@ -62,7 +62,7 @@ export default function TemplatesPage() {
             className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               selectedCategory === "all"
                 ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
-                : "bg-white dark:bg-slate-850 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
             }`}
           >
             All Categories ({visibleTemplates.length})
@@ -76,7 +76,7 @@ export default function TemplatesPage() {
                 className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   isSelected
                     ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
-                    : "bg-white dark:bg-slate-850 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
                 }`}
               >
                 {cat.name}

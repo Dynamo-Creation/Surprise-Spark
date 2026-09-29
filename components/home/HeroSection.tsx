@@ -25,7 +25,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative overflow-hidden min-h-[620px] sm:min-h-[680px] lg:min-h-[740px] flex items-center justify-center pt-10 pb-16 md:pt-16 md:pb-24">
+    <section className="relative overflow-hidden min-h-[620px] sm:min-h-[680px] lg:min-h-[740px] flex items-center justify-center pt-10 pb-16 md:pt-16 md:pb-24 bg-slate-50/20 dark:bg-slate-950">
       {/* 1. React Bits Ballpit: Physics-Powered 3D Interactive Spheres for ALL Devices */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-auto">
         <Ballpit
@@ -42,7 +42,7 @@ export function HeroSection() {
       </div>
 
       {/* 2. Subtle ambient glow behind canvas */}
-      <div className="absolute inset-0 bg-gradient-to-b from-pink-500/5 via-purple-500/5 to-transparent pointer-events-none -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-pink-500/5 via-purple-500/5 dark:from-pink-500/10 dark:via-purple-500/10 to-transparent pointer-events-none -z-10" />
 
       {/* 3. Hero Content Container: Pointer-events-none on wrapper so cursor & touch interact with Ballpit */}
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center pointer-events-none">

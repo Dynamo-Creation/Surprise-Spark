@@ -2,7 +2,7 @@
 
 import { gsap } from "gsap";
 import { Observer } from "gsap/Observer";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ACESFilmicToneMapping,
   AmbientLight,
@@ -782,6 +782,7 @@ function createBallpit(canvas: HTMLCanvasElement, config: any = {}): CreateBallp
     size: "parent",
     rendererOptions: { antialias: true, alpha: true },
   });
+  threeInstance.renderer.setClearColor(0x000000, 0);
   let spheres: Z;
   threeInstance.renderer.toneMapping = ACESFilmicToneMapping;
   threeInstance.camera.position.set(0, 0, 18);
@@ -884,19 +885,45 @@ export interface BallpitProps {
   [key: string]: any;
 }
 
+function isWebGLAvailable() {
+  try {
+    if (typeof window === "undefined") return false;
+    const canvas = document.createElement("canvas");
+    const gl = (canvas.getContext("webgl2") || canvas.getContext("webgl")) as WebGLRenderingContext | null;
+    if (!gl) return false;
+    const precision = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
+    return precision !== null && precision.precision > 0;
+  } catch {
+    return false;
+  }
+}
+
 export function Ballpit({ className = "", followCursor = true, ...props }: BallpitProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spheresInstanceRef = useRef<CreateBallpitReturn | null>(null);
   const isFirstRender = useRef(true);
+  const [webGLSupported, setWebGLSupported] = useState<boolean | null>(null);
 
   useEffect(() => {
+    const supported = isWebGLAvailable();
+    if (!supported) {
+      setWebGLSupported(false);
+      return;
+    }
+    setWebGLSupported(true);
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    spheresInstanceRef.current = createBallpit(canvas, {
-      followCursor,
-      ...props,
-    });
+    try {
+      spheresInstanceRef.current = createBallpit(canvas, {
+        followCursor,
+        ...props,
+      });
+    } catch (err) {
+      console.warn("Ballpit WebGL initialization skipped:", err);
+      setWebGLSupported(false);
+    }
 
     return () => {
       if (spheresInstanceRef.current) {
@@ -917,7 +944,17 @@ export function Ballpit({ className = "", followCursor = true, ...props }: Ballp
     }
   }, [props, followCursor]);
 
-  return <canvas className={`${className} w-full h-full`} ref={canvasRef} />;
+  if (webGLSupported === false) {
+    return null;
+  }
+
+  return (
+    <canvas
+      className={`${className} w-full h-full`}
+      ref={canvasRef}
+      style={{ background: "transparent" }}
+    />
+  );
 }
 
 export default Ballpit;

@@ -43,12 +43,7 @@
   font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #090d16;
-    --foreground: #f8fafc;
-  }
-}
+/* The active theme classes (.light or .dark) are managed by ThemeProvider (next-themes) */
 
 /* Magic UI View Transitions for Animated Theme Toggler */
 ::view-transition-old(root),
@@ -107,11 +102,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass-panel {
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Magic UI Keyframes & Utilities */

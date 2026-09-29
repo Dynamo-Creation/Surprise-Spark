@@ -20,21 +20,21 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 text-center">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-6 text-center">
       <div className="max-w-md mx-auto space-y-6">
         {/* Playful Floating Visual */}
-        <div className="w-20 h-20 mx-auto rounded-3xl bg-purple-950/60 border border-purple-800/50 flex items-center justify-center text-pink-400 shadow-xl shadow-purple-500/10 animate-bounce">
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/50 flex items-center justify-center text-pink-500 dark:text-pink-400 shadow-xl shadow-purple-500/10 animate-bounce">
           <Sparkles className="w-10 h-10" />
         </div>
 
         <div className="space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-pink-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400">
             A Momentary Glitch
           </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Oops! Something went sideways 🎈
           </h1>
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
             The celebration hit an unexpected bump in the road. Don&apos;t worry—your memories and surprises are safe and sound.
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function GlobalError({
           <Link href="/" className="w-full sm:w-auto">
             <Button
               variant="outline"
-              className="w-full sm:w-auto border-slate-800 text-slate-300 hover:text-white"
+              className="w-full sm:w-auto font-bold"
               leftIcon={<Home className="w-4 h-4" />}
             >
               Return Home
@@ -61,7 +61,7 @@ export default function GlobalError({
 
         {/* Error Code Safe Digest */}
         {error.digest && (
-          <p className="text-[10px] text-slate-600 font-mono">
+          <p className="text-[10px] text-slate-400 dark:text-slate-600 font-mono">
             Reference ID: {error.digest}
           </p>
         )}

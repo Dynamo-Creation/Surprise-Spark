@@ -230,7 +230,7 @@ function LoginForm() {
       {/* Login Card */}
       <Card glass className="p-6 sm:p-8 space-y-5 border-slate-200 dark:border-slate-800">
         {redirect?.startsWith("/admin") && (
-          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-850 flex items-start gap-2.5 text-xs text-purple-700 dark:text-purple-300 animate-in fade-in duration-200">
+          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 flex items-start gap-2.5 text-xs text-purple-700 dark:text-purple-300 animate-in fade-in duration-200">
             <Shield className="w-4 h-4 shrink-0 mt-0.5 text-purple-500" />
             <div>
               <p className="font-bold">Admin Console Access</p>

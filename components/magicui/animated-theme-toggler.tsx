@@ -232,8 +232,14 @@ export const AnimatedThemeToggler = ({
 
     const applyTheme = () => {
       const newTheme = !isDark;
-      // Synchronously toggle class so View Transitions snapshots the new theme
-      document.documentElement.classList.toggle("dark");
+      // Synchronously set both classes so View Transitions cleanly snapshots the new theme
+      if (newTheme) {
+        document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
+      } else {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+      }
       if (isControlled) {
         onThemeChange?.(newTheme ? "dark" : "light");
       } else {
