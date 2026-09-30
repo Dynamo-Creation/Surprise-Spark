@@ -207,7 +207,7 @@ export function FeaturedSection() {
   }, [FEATURED_SLUGS]);
 
   return (
-    <section className="py-16 md:py-24 bg-slate-50/60 dark:bg-slate-900/30 border-y border-slate-100 dark:border-slate-800/80 relative overflow-hidden">
+    <section id="featured-templates" className="py-16 md:py-24 bg-slate-50/60 dark:bg-slate-900/30 border-y border-slate-100 dark:border-slate-800/80 relative overflow-hidden scroll-mt-16">
       {/* Ambient background glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-pink-500/5 dark:bg-pink-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 

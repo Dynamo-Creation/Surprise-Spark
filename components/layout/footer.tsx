@@ -28,31 +28,21 @@ export function Footer() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
               Celebrations
             </h4>
-            <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
-              <li>
-                <Link href="/birthday" className="hover:text-pink-600 transition-colors">
-                  Birthday Surprises
-                </Link>
+            <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
+              <li className="cursor-default select-none text-slate-600 dark:text-slate-400">
+                Birthday Surprises
               </li>
-              <li>
-                <Link href="/templates?category=anniversary" className="hover:text-pink-600 transition-colors">
-                  Anniversary Milestones
-                </Link>
+              <li className="cursor-default select-none text-slate-600 dark:text-slate-400">
+                Anniversary Milestones
               </li>
-              <li>
-                <Link href="/templates?category=love" className="hover:text-pink-600 transition-colors">
-                  Love & Romance
-                </Link>
+              <li className="cursor-default select-none text-slate-600 dark:text-slate-400">
+                Love & Romance
               </li>
-              <li>
-                <Link href="/templates?category=friendship" className="hover:text-pink-600 transition-colors">
-                  Best Friend Roasts & Toasts
-                </Link>
+              <li className="cursor-default select-none text-slate-600 dark:text-slate-400">
+                Best Friend Roasts & Toasts
               </li>
-              <li>
-                <Link href="/templates?category=festivals" className="hover:text-pink-600 transition-colors">
-                  Festivals & Holidays
-                </Link>
+              <li className="cursor-default select-none text-slate-600 dark:text-slate-400">
+                Festivals & Holidays
               </li>
             </ul>
           </div>
@@ -69,7 +59,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/templates" className="hover:text-pink-600 transition-colors">
+                <Link href="/#featured-templates" className="hover:text-pink-600 transition-colors">
                   Browse All Templates
                 </Link>
               </li>
