@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, PartyPopper, Heart, ShieldCheck, Zap, Smartphone } from "lucide-react";
+import { Sparkles, PartyPopper, Heart, ShieldCheck, Zap, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SparklesText } from "@/components/magicui/sparkles-text";
@@ -96,17 +96,6 @@ export function HeroSection() {
               <PartyPopper className="w-5 h-5 text-amber-200 shrink-0" />
               <span>Create a Birthday Surprise</span>
             </ShimmerButton>
-          </Link>
-          
-          <Link href="/templates" className="w-full sm:w-auto">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto whitespace-nowrap backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-slate-300 dark:border-slate-700 font-bold hover:bg-white dark:hover:bg-slate-800 shadow-md active:scale-95 transition-transform"
-              rightIcon={<ArrowRight className="w-4 h-4 shrink-0" />}
-            >
-              Explore Experiences
-            </Button>
           </Link>
 
           <Link href="/preview" className="w-full sm:w-auto">

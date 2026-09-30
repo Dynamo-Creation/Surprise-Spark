@@ -97,7 +97,18 @@ export function getAdminSessionFromRequest(
   const adminCookie = request.cookies.get("admin_user_session");
   if (adminCookie?.value) {
     try {
-      const parsed = JSON.parse(decodeURIComponent(adminCookie.value));
+      // Expected format: base64url(payload).base64url(signature)
+      const [payloadB64, signatureB64] = adminCookie.value.split('.');
+      if (!payloadB64 || !signatureB64) return null;
+      const payload = Buffer.from(payloadB64, 'base64url').toString('utf-8');
+      const expectedSig = require('crypto').createHmac('sha256', process.env.ADMIN_COOKIE_SECRET || 'fallback-secret')
+        .update(payload)
+        .digest('base64url');
+      if (!require('crypto').timingSafeEqual(Buffer.from(signatureB64), Buffer.from(expectedSig))) {
+        // Signature mismatch – possible tampering
+        return null;
+      }
+      const parsed = JSON.parse(payload);
       const email = typeof parsed?.email === "string" ? parsed.email.toLowerCase().trim() : "";
       const role = typeof parsed?.role === "string" ? parsed.role.toLowerCase().trim() : "";
 
@@ -112,7 +123,7 @@ export function getAdminSessionFromRequest(
         };
       }
     } catch {
-      // Invalid cookie payload
+      // Invalid cookie payload or verification failure
     }
   }
 

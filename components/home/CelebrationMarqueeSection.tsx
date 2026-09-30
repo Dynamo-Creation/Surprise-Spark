@@ -11,75 +11,84 @@ interface Testimonial {
   gender: "male" | "female";
   content: string;
   tag: string;
+  badgeClass?: string;
 }
 
 const TESTIMONIALS_ROW_1: Testimonial[] = [
   {
     name: "Lucas M.",
-    role: "Surprised his partner Sarah",
+    role: "Surprised his fiancé Maya",
     avatarUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80",
     gender: "male",
-    content: "The interactive letterbox and typewriter notes brought tears of joy on FaceTime! Truly unforgettable.",
-    tag: "Sweet Celebration 💌",
+    content: "She tried tapping the dodging 'No' button and was laughing hysterically! When the golden ring box opened with the orchestral chords, she burst into happy tears.",
+    tag: "The Golden Proposal 💍",
+    badgeClass: "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200/60 dark:border-amber-900/60",
   },
   {
     name: "Elena R.",
     role: "Sent to best friend in Tokyo",
     avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&auto=format&fit=crop&q=80",
     gender: "female",
-    content: "Zero app download needed. Sent the link on WhatsApp and it played seamlessly on Safari instantly!",
-    tag: "Sweet Celebration 💖",
+    content: "Drawing Cupid's golden bow and releasing the arrow to bloom the heart tree was magical. Everyone on our FaceTime call was cheering!",
+    tag: "Birthday Blossom Archery 🏹🌸",
+    badgeClass: "text-pink-600 dark:text-pink-300 bg-pink-50 dark:bg-pink-950/60 border-pink-200/60 dark:border-pink-900/60",
   },
   {
     name: "Devon K.",
-    role: "Created for Mom's 60th",
+    role: "1st Anniversary surprise",
     avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
     gender: "male",
-    content: "Dynamic celebratory bunting, background melody, and polaroid frame brought our whole family together.",
-    tag: "Sweet Memories 📸",
+    content: "The 6-chapter journey with falling rose petals, wax-sealed love letter, and our memory carousel felt like a private cinematic love story.",
+    tag: "Whispers of Love 💕",
+    badgeClass: "text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200/60 dark:border-rose-900/60",
   },
   {
     name: "Priya N.",
-    role: "Surprised her boyfriend",
+    role: "Surprised her boyfriend for his 24th",
     avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
     gender: "female",
-    content: "He spent 20 minutes tapping the letterbox and reading all the sweet personal notes. Pure magic!",
-    tag: "Sweet Birthday 🎈",
+    content: "He spent 15 minutes tapping the typewriter letterbox and exploring our polaroid photo. Zero app download needed, loaded smoothly on WhatsApp!",
+    tag: "Sweet Celebration 💌",
+    badgeClass: "text-fuchsia-600 dark:text-fuchsia-300 bg-fuchsia-50 dark:bg-fuchsia-950/60 border-fuchsia-200/60 dark:border-fuchsia-900/60",
   },
 ];
 
 const TESTIMONIALS_ROW_2: Testimonial[] = [
   {
     name: "Marcus T.",
-    role: "Anniversary surprise",
+    role: "Valentine's surprise for his partner",
     avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80",
     gender: "male",
-    content: "Way more meaningful than a paper card or text. Felt like handing her a personalized interactive celebration world.",
-    tag: "Letterbox Magic 💌",
+    content: "Breaking the wax seal to unveil the cybernetic love rain and pulsing particle heart gave us actual goosebumps. The synth chords sounded so dreamy.",
+    tag: "Love Animation 💖",
+    badgeClass: "text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border-purple-200/60 dark:border-purple-900/60",
   },
   {
     name: "Chloe D.",
-    role: "Sister's graduation",
+    role: "Mom's 60th milestone birthday",
     avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80",
     gender: "female",
-    content: "The 3D unboxing animation gave everyone in the room genuine goosebumps. Everyone asked for the link!",
-    tag: "Sweet Celebration 🎊",
+    content: "Mom was in awe watching the crystal heart bloom into a cherry blossom tree when she struck the arrow. She kept replaying it all night for the family!",
+    tag: "Birthday Blossom Archery 🏹🌸",
+    badgeClass: "text-pink-600 dark:text-pink-300 bg-pink-50 dark:bg-pink-950/60 border-pink-200/60 dark:border-pink-900/60",
   },
   {
-    name: "Aiden W.",
-    role: "Long-distance relationship",
+    name: "Julian S.",
+    role: "Candlelight proposal in Rome",
     avatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=160&auto=format&fit=crop&q=80",
     gender: "male",
-    content: "Being 5,000 miles away is hard, but opening this together made us feel like we were in the same room.",
-    tag: "Origami Sanctuary 🕊️",
+    content: "Handed her my phone over dinner. The widescreen landscape auto-rotation and interactive dialogue cutscenes were breathtaking. She said YES instantly!",
+    tag: "The Golden Proposal 💍",
+    badgeClass: "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200/60 dark:border-amber-900/60",
   },
   {
     name: "Sophia L.",
-    role: "Best friend's 25th",
+    role: "Sister's birthday celebration",
     avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&auto=format&fit=crop&q=80",
     gender: "female",
-    content: "The heart cursor trail and typewriter message sequence is so heartwarming. 10/10 recommendation!",
-    tag: "Sweet Celebration 🎂",
+    content: "The bunting flags, custom background audio, and heartwarming message sequence made her feel like a princess. 10/10 way better than an ordinary card!",
+    tag: "Sweet Celebration 💌",
+    badgeClass: "text-fuchsia-600 dark:text-fuchsia-300 bg-fuchsia-50 dark:bg-fuchsia-950/60 border-fuchsia-200/60 dark:border-fuchsia-900/60",
   },
 ];
 
@@ -102,7 +111,12 @@ function TestimonialCard({ item }: { item: Testimonial }) {
             <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{item.role}</p>
           </div>
         </div>
-        <span className="text-[10px] font-semibold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2.5 py-0.5 rounded-full border border-pink-200/50 dark:border-pink-900/50 whitespace-nowrap shrink-0">
+        <span
+          className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border whitespace-nowrap shrink-0 ${
+            item.badgeClass ||
+            "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 border-pink-200/50 dark:border-pink-900/50"
+          }`}
+        >
           {item.tag}
         </span>
       </div>
@@ -136,7 +150,7 @@ export function CelebrationMarqueeSection() {
           Celebrations That Left People Speechless
         </h3>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-lg mx-auto">
-          Real stories from creators who surprised friends, partners, and family around the globe.
+          Real stories from creators who surprised friends, partners, and family with our signature interactive wonders.
         </p>
       </div>
 

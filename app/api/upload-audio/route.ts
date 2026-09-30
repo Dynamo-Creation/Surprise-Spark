@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import crypto from "node:crypto";
 
 export const runtime = "nodejs";
@@ -66,6 +68,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Audio upload service is temporarily unavailable." },
         { status: 503 }
+      );
+    }
+
+    // 1. Authentication Check (Prevent Unauthenticated File Uploads & Storage Abuse)
+    let user: { id?: string; email?: string } | null = null;
+
+    // Check Bearer token in Authorization header
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.toLowerCase().startsWith("bearer ")) {
+      const token = authHeader.substring(7).trim();
+      if (token) {
+        try {
+          const adminSupabase = createClient(supabaseUrl, supabaseKey);
+          const { data, error } = await adminSupabase.auth.getUser(token);
+          if (!error && data?.user) {
+            user = data.user;
+          }
+        } catch {
+          // Token verification fallback
+        }
+      }
+    }
+
+    // Check cookie-based session via Supabase SSR
+    if (!user) {
+      try {
+        const serverSupabase = await createServerClient();
+        const { data, error } = await serverSupabase.auth.getUser();
+        if (!error && data?.user) {
+          user = data.user;
+        }
+      } catch (authErr) {
+        console.warn("[Upload Audio Security] Session check warning:", authErr);
+      }
+    }
+
+    // Fallback for local development demo session if Supabase is unconfigured
+    if (!user && !isSupabaseConfigured()) {
+      const demoCookie = request.cookies.get("demo_user_session");
+      if (demoCookie?.value) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(demoCookie.value));
+          if (parsed && (parsed.id || parsed.email)) {
+            user = parsed;
+          }
+        } catch {}
+      }
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required. Please sign in to upload audio files." },
+        { status: 401 }
       );
     }
 

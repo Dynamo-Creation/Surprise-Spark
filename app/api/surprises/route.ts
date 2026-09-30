@@ -70,18 +70,18 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // 3. User Authentication & Ownership Verification (IDOR Defense)
-    let currentUserId: string | null = null;
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      currentUserId = user?.id || null;
-    } catch {
-      currentUserId = null;
-    }
-
-    // Check if the surprise record already exists
+// 3. User Authentication & Ownership Verification (IDOR Defense)
+let currentUserId: string | null = null;
+try {
+  const { data: { user } } = await supabase.auth.getUser();
+  currentUserId = user?.id || null;
+} catch {
+  currentUserId = null;
+}
+// Enforce authentication for creating/updating a surprise
+if (!currentUserId) {
+  return NextResponse.json({ error: "Authentication required to create or modify a surprise." }, { status: 401 });
+}
     const { data: existingRecord } = await supabase
       .from("published_surprises")
       .select("user_id, public_id")

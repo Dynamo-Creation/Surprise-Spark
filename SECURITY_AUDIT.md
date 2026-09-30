@@ -120,11 +120,12 @@ All identified vulnerabilities have been proactively remediated directly within 
 - **Potential Attack Scenario:** Malicious actors upload scripts or non-audio assets, or trigger massive repeated uploads that deplete Supabase storage quotas.
 - **Impact:** Storage exhaustion, hosting of unauthorized content, financial/quota denial of service.
 - **Fix:**
-  - Implemented binary magic byte inspection (`verifyAudioHeader`): inspects file headers for valid MP3 (ID3v2 or MPEG sync frame `0xFF 0xFB`), WAV (`RIFF...WAVE`), OGG (`OggS`), FLAC (`fLaC`), WebM/Matroska (`0x1A 0x45 0xDF 0xA3`), and M4A/MP4 (`ftyp`).
+    - Implemented binary magic byte inspection (`verifyAudioHeader`): inspects file headers for valid MP3 (ID3v2 or MPEG sync frame `0xFF 0xFB`), WAV (`RIFF...WAVE`), OGG (`OggS`), FLAC (`fLaC`), WebM/Matroska (`0x1A 0x45 0xDF 0xA3`), and M4A/MP4 (`ftyp`).
+  - Added strict authentication check (verifying Supabase session cookies, Bearer tokens, and demo fallback) returning HTTP 401 Unauthorized before any form data is processed or storage touched.
   - Replaced user-controllable filenames with cryptographically random UUIDs (`crypto.randomUUID()`).
   - Added dedicated sliding-window rate limiting in middleware (15 uploads per minute per IP).
   - Masked internal Supabase storage error details in HTTP responses.
-- **Verification Method:** Tested upload with non-audio files renamed to `.mp3`; verified header rejection with HTTP 400.
+- **Verification Method:** Tested upload with non-audio files renamed to `.mp3` (rejection with 400); unauthenticated upload verification (rejection with 401); TypeScript typecheck compilation clean (exit code 0).
 - **Status:** **FIXED**
 
 ---
