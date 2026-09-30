@@ -10,6 +10,7 @@ import { useMobileNav } from "@/hooks/useMobileNav";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
 
 const FEATURED_NAV_TEMPLATES = [
   {
@@ -100,10 +101,10 @@ export function Navbar() {
   };
 
   const isAdmin = Boolean(
-    profile?.isAdmin ||
-    profile?.role === "superadmin" ||
-    profile?.role === "admin" ||
-    user?.email?.toLowerCase().includes("admin")
+    user && (
+      isAuthorizedAdmin(user) ||
+      (profile && isAuthorizedAdmin(profile))
+    )
   );
 
   const handleLogoClick = (e: React.MouseEvent) => {

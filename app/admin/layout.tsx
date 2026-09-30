@@ -1,21 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
 import { AdminNotificationsDrawer } from "@/components/admin/AdminNotificationsDrawer";
 import { AdminMetricsMode, adminStore } from "@/lib/admin/adminStore";
+import { useAuth } from "@/hooks/useAuth";
+import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
+import { Loader2 } from "lucide-react";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const { user, profile, isLoading } = useAuth();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [metricsMode, setMetricsMode] = useState<AdminMetricsMode>("live");
+
+  const authorized = Boolean(
+    user && (isAuthorizedAdmin(user) || (profile && isAuthorizedAdmin(profile)))
+  );
+
+  // Strict Client-Side Admin Guard: If not an authorized administrator, redirect immediately
+  useEffect(() => {
+    if (!isLoading && !authorized) {
+      router.replace("/login?error=forbidden_not_admin");
+    }
+  }, [authorized, isLoading, router]);
 
   // Load metrics mode from localStorage
   useEffect(() => {
@@ -49,6 +67,21 @@ export default function AdminLayout({
       window.dispatchEvent(new Event("surprisespark_mode_changed"));
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#070911] flex flex-col items-center justify-center text-slate-400">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-3" />
+        <p className="text-xs font-semibold tracking-wider uppercase text-slate-400">
+          Verifying Admin Authorization...
+        </p>
+      </div>
+    );
+  }
+
+  if (!authorized) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#070911] text-slate-100 flex flex-col lg:flex-row relative selection:bg-purple-600 selection:text-white">

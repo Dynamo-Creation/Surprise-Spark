@@ -52,6 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
       document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
+    } else {
+      // User is authenticated but NOT an administrator -> PURGE any stale admin session cookie immediately!
+      localStorage.removeItem("admin_user_session");
+      document.cookie = "admin_user_session=; path=/; max-age=0; SameSite=Lax";
     }
   }, []);
 
@@ -153,8 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     fullName: demoData.fullName || "Alex Parker",
                     avatarUrl: undefined,
                     createdAt: new Date().toISOString(),
-                    role: demoData.role || "user",
-                    isAdmin: demoData.role === "superadmin" || demoData.email?.includes("admin"),
+                    role: isAuthorizedAdmin({ email: demoData.email }) ? "superadmin" : "user",
+                    isAdmin: isAuthorizedAdmin({ email: demoData.email }),
                   });
                   syncAdminSession(mockUser, demoData.email);
                 } catch {
@@ -191,8 +195,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 fullName: demoData.fullName || "Alex Parker",
                 avatarUrl: undefined,
                 createdAt: new Date().toISOString(),
-                role: demoData.role || "user",
-                isAdmin: demoData.role === "superadmin" || demoData.email?.includes("admin"),
+                role: isAuthorizedAdmin({ email: demoData.email }) ? "superadmin" : "user",
+                isAdmin: isAuthorizedAdmin({ email: demoData.email }),
               });
               syncAdminSession(mockUser, demoData.email);
             } catch {
@@ -308,7 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const displayName = email.split("@")[0].replace(/[._]/g, " ");
     const formattedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
     const mockId = "demo-user-1";
-    const isAdmin = email.toLowerCase().includes("admin");
+    const isAdmin = isAuthorizedAdmin({ email });
     const role = isAdmin ? "superadmin" : "user";
     const demoPayload = { id: mockId, email, fullName: formattedName, role };
     localStorage.setItem("demo_user_session", JSON.stringify(demoPayload));

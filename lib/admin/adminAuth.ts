@@ -53,33 +53,29 @@ export function isKnownAdminEmail(email: string): boolean {
 export function isAuthorizedAdmin(roleOrUser?: unknown): boolean {
   if (!roleOrUser) return false;
 
+  // If passed an email string directly, verify it against known admins
   if (typeof roleOrUser === "string") {
-    const normalizedRole = roleOrUser.toLowerCase().trim();
-    return ADMIN_ROLES.includes(normalizedRole as AdminRole);
+    return isKnownAdminEmail(roleOrUser);
   }
 
   if (typeof roleOrUser === "object") {
     const u = roleOrUser as Record<string, unknown>;
     const email = typeof u.email === "string" ? u.email.toLowerCase().trim() : "";
 
-    // 1. Check verified app_metadata (server-only, set by Supabase service-role, never client-writable)
-    const appMeta = u.app_metadata as Record<string, unknown> | undefined;
-    const appRole = typeof appMeta?.role === "string" ? appMeta.role.toLowerCase().trim() : "";
-    if (ADMIN_ROLES.includes(appRole as AdminRole)) return true;
-
-    // 2. Check exact authorized administrator email (exact match only)
+    // 1. Exact match against known administrator email list (highest priority)
     if (email && isKnownAdminEmail(email)) {
       return true;
     }
 
-    // 3. For database-verified records (e.g. from public.admin_users query result)
-    const directRole = typeof u.role === "string" ? u.role.toLowerCase().trim() : "";
-    if (ADMIN_ROLES.includes(directRole as AdminRole)) {
-      // If an email is also attached, it must be an authorized admin email
+    // 2. Check verified app_metadata (server-only, set by Supabase service-role, never client-writable)
+    const appMeta = u.app_metadata as Record<string, unknown> | undefined;
+    const appRole = typeof appMeta?.role === "string" ? appMeta.role.toLowerCase().trim() : "";
+    if (ADMIN_ROLES.includes(appRole as AdminRole)) {
+      // Must also have an email on file or explicitly verified
       if (email) {
         return isKnownAdminEmail(email);
       }
-      return true;
+      return false;
     }
   }
 

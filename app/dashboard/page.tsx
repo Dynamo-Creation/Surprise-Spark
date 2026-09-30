@@ -32,6 +32,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
 import {
   listDrafts,
   saveDraft,
@@ -67,75 +68,100 @@ export default function DashboardPage() {
   const [allowSoundDefault, setAllowSoundDefault] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
 
-  // Load drafts on mount
-  useEffect(() => {
-    const loaded = listDrafts();
-    if (loaded.length === 0) {
-      // Seed rich default surprises if storage is completely empty
-      const defaultSurprises: DraftSurprise[] = [
-        {
-          id: "draft-demo-1",
-          publicId: "maya-24-magic",
-          userId: user?.id,
-          templateSlug: "sweet-celebration",
-          recipientName: "Maya",
-          senderName: profile?.fullName || "Alex",
-          message: "Happy Birthday Maya! Wishing you another year of crazy adventures and endless laughter!",
-          photos: ["https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop"],
-          themeId: "candy",
-          musicTrackId: "track-happy-sunshine",
-          status: "published",
-          viewCount: 14,
-          shareCount: 5,
-          currentStep: 7,
-          createdAt: "2026-09-10T14:30:00Z",
-          updatedAt: "2026-09-10T14:30:00Z",
-          publishedAt: "2026-09-10T14:30:00Z",
-        },
-        {
-          id: "draft-demo-2",
-          publicId: "sam-cake-reveal",
-          userId: user?.id,
-          templateSlug: "birthday-cake-reveal",
-          recipientName: "Sam",
-          senderName: profile?.fullName || "Alex",
-          message: "Blow out the candles and make the biggest wish! So proud of you!",
-          photos: [],
-          themeId: "party",
-          musicTrackId: "track-party-confetti",
-          status: "published",
-          viewCount: 38,
-          shareCount: 11,
-          currentStep: 7,
-          createdAt: "2026-09-12T09:15:00Z",
-          updatedAt: "2026-09-12T09:15:00Z",
-          publishedAt: "2026-09-12T09:15:00Z",
-        },
-        {
-          id: "draft-demo-3",
-          publicId: "mom-memory-draft",
-          userId: user?.id,
-          templateSlug: "memory-journey",
-          recipientName: "Mom",
-          senderName: profile?.fullName || "Alex",
-          message: "Looking through all these memories made me smile so much. Happy Birthday Mom!",
-          photos: ["https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&auto=format&fit=crop"],
-          themeId: "magical",
-          musicTrackId: "track-magical-starlight",
-          status: "draft",
-          viewCount: 0,
-          shareCount: 0,
-          currentStep: 3,
-          createdAt: "2026-09-13T16:45:00Z",
-          updatedAt: "2026-09-13T16:45:00Z",
-        },
-      ];
-      defaultSurprises.forEach((s) => saveDraft(s));
-      setSurprises(defaultSurprises);
-    } else {
-      setSurprises(loaded);
+  // Strictly user-isolated surprises loader
+  const loadUserSurprises = React.useCallback(async () => {
+    if (!user) {
+      setSurprises([]);
+      return;
     }
-  }, [user, profile]);
+
+    // 1. Purge legacy fake seed drafts from client storage immediately
+    try {
+      const raw = localStorage.getItem("surprisespark_drafts_v1");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(
+            (d) =>
+              d.id !== "draft-demo-1" &&
+              d.id !== "draft-demo-2" &&
+              d.id !== "draft-demo-3" &&
+              d.userId === user.id
+          );
+          localStorage.setItem("surprisespark_drafts_v1", JSON.stringify(cleaned));
+        }
+      }
+    } catch {}
+
+    // 2. Load user's local drafts strictly matching current user ID
+    const localDrafts = listDrafts().filter(
+      (d) =>
+        d.id !== "draft-demo-1" &&
+        d.id !== "draft-demo-2" &&
+        d.id !== "draft-demo-3" &&
+        d.userId === user.id
+    );
+
+    // 3. Fetch user's published surprises from Supabase cloud database
+    let cloudSurprises: DraftSurprise[] = [];
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("published_surprises")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        cloudSurprises = data.map((item: any) => ({
+          id: `cloud-${item.public_id}`,
+          publicId: item.public_id,
+          userId: item.user_id,
+          templateSlug: item.template_slug || "sweet-celebration",
+          recipientName: item.recipient_name || "Someone Special",
+          senderName: item.sender_name || "",
+          message: item.custom_message || "",
+          photos: Array.isArray(item.photos) ? item.photos : [],
+          themeId: item.metadata?.themeId || "candy",
+          musicTrackId: item.metadata?.musicTrackId || "",
+          status: "published" as const,
+          viewCount: item.metadata?.viewCount || 0,
+          shareCount: item.metadata?.shareCount || 0,
+          currentStep: 7,
+          createdAt: item.created_at || new Date().toISOString(),
+          updatedAt: item.updated_at || item.created_at || new Date().toISOString(),
+          publishedAt: item.created_at || new Date().toISOString(),
+        }));
+      }
+    } catch (cloudErr) {
+      console.warn("[Dashboard] Cloud surprises fetch fallback:", cloudErr);
+    }
+
+    // Merge cloud surprises and local drafts, avoiding duplicates by publicId
+    const seenPublicIds = new Set<string>();
+    const merged: DraftSurprise[] = [];
+
+    for (const cs of cloudSurprises) {
+      if (!seenPublicIds.has(cs.publicId)) {
+        seenPublicIds.add(cs.publicId);
+        merged.push(cs);
+      }
+    }
+
+    for (const ld of localDrafts) {
+      if (!seenPublicIds.has(ld.publicId)) {
+        seenPublicIds.add(ld.publicId);
+        merged.push(ld);
+      }
+    }
+
+    setSurprises(merged);
+  }, [user]);
+
+  // Load user surprises on mount and when user session changes
+  useEffect(() => {
+    loadUserSurprises();
+  }, [loadUserSurprises]);
 
   useEffect(() => {
     if (profile?.fullName) {
@@ -156,7 +182,7 @@ export default function DashboardPage() {
   };
 
   const refreshSurprises = () => {
-    setSurprises(listDrafts());
+    loadUserSurprises();
   };
 
   // Helper to get friendly template name and gradient
