@@ -7,8 +7,7 @@ export const BRAND_SUBTITLE = "Create a tiny interactive experience for someoneâ
 export const BRAND_SUPPORTING_LINE = "A message takes seconds to read. A surprise becomes a memory.";
 
 export const NAV_LINKS = [
-  { label: "Birthday", href: "/birthday" },
-  { label: "Explore", href: "/templates" },
+  { label: "Templates", href: "/templates" },
   { label: "How It Works", href: "/#how-it-works" },
 ] as const;
 
