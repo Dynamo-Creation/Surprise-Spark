@@ -1,74 +1,17 @@
 /**
- * Email Security and Disposable/Temporary Email Filtering
- * Prevents disposable email providers, bots, and invalid email domains.
+ * Email Security — Gmail-Only Enforcement
+ *
+ * Only Google Mail (@gmail.com) addresses are permitted for account creation
+ * and authentication. Users must either:
+ *   1. Use "Continue with Google" (OAuth — the recommended primary path), or
+ *   2. Enter a valid @gmail.com address to receive a verification code (OTP).
+ *
+ * All other email providers (including corporate, education, and disposable
+ * domains) are explicitly blocked.
  */
 
-// Popular disposable and temporary email domains
-const DISPOSABLE_EMAIL_DOMAINS = new Set([
-  // Popular services
-  "mailinator.com",
-  "10minutemail.com",
-  "10minutemail.net",
-  "tempmail.com",
-  "temp-mail.org",
-  "temp-mail.io",
-  "guerrillamail.com",
-  "guerrillamailblock.com",
-  "guerrillamail.net",
-  "guerrillamail.biz",
-  "guerrillamail.org",
-  "sharklasers.com",
-  "grr.la",
-  "yopmail.com",
-  "yopmail.fr",
-  "yopmail.net",
-  "dispostable.com",
-  "throwawaymail.com",
-  "trashmail.com",
-  "trashmail.net",
-  "trashmail.me",
-  "getairmail.com",
-  "fakeinbox.com",
-  "generator.email",
-  "mytemp.email",
-  "tempinbox.com",
-  "getnada.com",
-  "crazymailing.com",
-  "mohmal.com",
-  "emailondeck.com",
-  "inboxkitten.com",
-  "maildrop.cc",
-  "nada.ltd",
-  "abcvg.com",
-  "burnermail.io",
-  "dropmail.me",
-  "harakirimail.com",
-  "minuteinbox.com",
-  "mohmal.in",
-  "mytempemail.com",
-  "nowmymail.com",
-  "spambog.com",
-  "tmailor.com",
-  "trash-mail.com",
-  "fakemailgenerator.com",
-  "armyspy.com",
-  "cuvox.de",
-  "dayrep.com",
-  "fleckens.hu",
-  "gustr.com",
-  "jourrapide.com",
-  "rhyta.com",
-  "superrito.com",
-  "teleworm.us",
-  "einrot.com",
-  "chacuo.net",
-  "discard.email",
-  "spambox.us",
-  "tempemail.co",
-  "tempr.email",
-  "trashmail.org",
-  "mytempemail.com",
-]);
+/** The only email domain permitted for direct email entry. */
+const ALLOWED_DOMAIN = "gmail.com";
 
 export interface EmailValidationResult {
   isValid: boolean;
@@ -77,7 +20,9 @@ export interface EmailValidationResult {
 }
 
 /**
- * Validates email format and screens against temporary/disposable email services.
+ * Validates that an email address is a well-formed @gmail.com address.
+ *
+ * @returns `{ isValid: true }` only when the domain is exactly `gmail.com`.
  */
 export function validateEmailSecurity(rawEmail: string): EmailValidationResult {
   const email = (rawEmail || "").trim().toLowerCase();
@@ -85,12 +30,13 @@ export function validateEmailSecurity(rawEmail: string): EmailValidationResult {
   if (!email) {
     return {
       isValid: false,
-      error: "Please enter your email address.",
+      error: "Please enter your Gmail address.",
     };
   }
 
   // Standard RFC 5322 regex check
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  const emailRegex =
+    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
   if (!emailRegex.test(email)) {
     return {
       isValid: false,
@@ -108,25 +54,16 @@ export function validateEmailSecurity(rawEmail: string): EmailValidationResult {
 
   const domain = parts[1];
 
-  // Check against known disposable domain list
-  if (DISPOSABLE_EMAIL_DOMAINS.has(domain)) {
+  // ──────────────────────────────────────────────
+  //  STRICT WHITELIST — only @gmail.com is allowed
+  // ──────────────────────────────────────────────
+  if (domain !== ALLOWED_DOMAIN) {
     return {
       isValid: false,
       domain,
-      error: "Temporary and disposable email addresses are not permitted. Please use your personal or work email.",
+      error:
+        "Only Google Mail (@gmail.com) accounts are supported. Please use your Gmail address or sign in with \"Continue with Google\".",
     };
-  }
-
-  // Check for common disposable keywords in domain
-  const disposablePatterns = ["tempmail", "disposable", "fakeinbox", "trashmail", "throwaway", "10minute", "guerrilla"];
-  for (const pattern of disposablePatterns) {
-    if (domain.includes(pattern)) {
-      return {
-        isValid: false,
-        domain,
-        error: "Disposable email providers are blocked. Please provide a permanent email address.",
-      };
-    }
   }
 
   return {

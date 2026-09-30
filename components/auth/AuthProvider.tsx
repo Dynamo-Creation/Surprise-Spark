@@ -5,6 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { UserProfile } from "@/types/user";
 import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
+import { validateEmailSecurity } from "@/lib/security/email-security";
 
 interface AuthContextType {
   user: User | null;
@@ -244,8 +245,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isConfigured, fetchProfile, supabase]);
 
-  // Sign Up
+  // Sign Up — Gmail-only enforcement
   const signUp = async (email: string, password: string, displayName: string) => {
+    const gmailCheck = validateEmailSecurity(email);
+    if (!gmailCheck.isValid) {
+      return { error: gmailCheck.error || "Only @gmail.com accounts are supported." };
+    }
+
     if (isConfigured) {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -291,8 +297,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
-  // Sign In
+  // Sign In — Gmail-only enforcement
   const signIn = async (email: string, password: string) => {
+    const gmailCheck = validateEmailSecurity(email);
+    if (!gmailCheck.isValid) {
+      return { error: gmailCheck.error || "Only @gmail.com accounts are supported." };
+    }
+
     if (isConfigured) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -453,8 +464,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: "Google OAuth requires Supabase project configuration in .env.local" };
   };
 
-  // Send Email OTP
+  // Send Email OTP — Gmail-only enforcement
   const sendEmailOtp = async (email: string, displayName?: string) => {
+    const gmailCheck = validateEmailSecurity(email);
+    if (!gmailCheck.isValid) {
+      return { error: gmailCheck.error || "Only @gmail.com accounts are supported." };
+    }
+
     if (isConfigured) {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
