@@ -49,17 +49,25 @@ export function AdminActivityFeed() {
         const res = await fetch("/api/admin/surprises");
         const json = await res.json();
         if (json.success && Array.isArray(json.surprises)) {
-          const items: ActivityItem[] = json.surprises.slice(0, 6).map((s: any) => ({
-            id: `act-${s.publicId}`,
-            type: "published",
-            title: `Celebration for "${s.recipientName}"`,
-            subtitle: `Template: ${s.templateSlug} • By ${s.senderName || "Creator"}`,
-            timeAgo: formatRelativeTime(s.createdAt),
-            icon: Gift,
-            color: "from-purple-500 to-pink-500",
-            badgeText: "PUBLISHED",
-            link: `/s/${s.publicId}`,
-          }));
+          const items: ActivityItem[] = json.surprises.slice(0, 6).map((s: any) => {
+            const publicId = s.public_id || s.publicId || "celebration";
+            const recipientName = s.recipient_name || s.recipientName || "Friend";
+            const senderName = s.sender_name || s.senderName || "Creator";
+            const templateSlug = s.template_slug || s.templateSlug || "sweet-celebration";
+            const createdAt = s.created_at || s.createdAt || new Date().toISOString();
+
+            return {
+              id: `act-${publicId}`,
+              type: "published",
+              title: `Celebration for "${recipientName}"`,
+              subtitle: `Template: ${templateSlug} • By ${senderName}`,
+              timeAgo: formatRelativeTime(createdAt),
+              icon: Gift,
+              color: "from-purple-500 to-pink-500",
+              badgeText: "PUBLISHED",
+              link: `/s/${publicId}`,
+            };
+          });
           setActivities(items);
         }
       } catch (err) {
