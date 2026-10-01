@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PandaMascot, MascotReaction } from "@/components/mascot/PandaMascot";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { validateEmailSecurity } from "@/lib/security/email-security";
+import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
 
 function LoginForm() {
   const router = useRouter();
@@ -42,9 +43,10 @@ function LoginForm() {
       : null
   );
 
-  // Auto-redirect if user is already authenticated and has no active admin authorization error
+  // Auto-redirect if user is already authenticated and has no active error
+  // (Prevents infinite redirect loop between middleware and login page)
   React.useEffect(() => {
-    if (user && errorParam !== "forbidden_not_admin") {
+    if (user && !errorParam) {
       window.location.href = targetDestination;
     }
   }, [user, errorParam, targetDestination]);
@@ -111,6 +113,17 @@ function LoginForm() {
         );
         setIsLoading(false);
       } else {
+        if (isAuthorizedAdmin(email)) {
+          const adminSession = {
+            id: "admin-root",
+            email: email.trim().toLowerCase(),
+            displayName: "Administrator",
+            role: "superadmin",
+            lastLoginAt: new Date().toISOString(),
+          };
+          localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
+          document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
+        }
         setIsRedirecting(true);
         router.refresh();
         window.location.href = targetDestination;
@@ -126,7 +139,7 @@ function LoginForm() {
     setError(null);
     setIsGoogleLoading(true);
     try {
-      const { error: googleError } = await signInWithGoogle();
+      const { error: googleError } = await signInWithGoogle(targetDestination);
       if (googleError) {
         setError(googleError);
       }
@@ -204,6 +217,39 @@ function LoginForm() {
           <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-start gap-2.5 text-xs text-red-600 dark:text-red-400 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* ── VERIFIED ADMIN DIRECT ACTION ── */}
+        {user && isAuthorizedAdmin(user) && (
+          <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 via-purple-900/30 to-slate-900 border border-purple-500/40 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 text-purple-300 font-semibold text-xs">
+              <Shield className="w-4 h-4 text-purple-400 shrink-0" />
+              <span>Signed in as Administrator: {user.email}</span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Your administrator privileges are active. Click below to enter the Executive Console directly.
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-md shadow-purple-600/30 cursor-pointer"
+              onClick={() => {
+                const adminSession = {
+                  id: user.id || "admin-root",
+                  email: user.email,
+                  displayName: user.user_metadata?.full_name || "Administrator",
+                  role: "superadmin",
+                  lastLoginAt: new Date().toISOString(),
+                };
+                localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
+                document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
+                window.location.href = "/admin";
+              }}
+            >
+              Enter Admin Console →
+            </Button>
           </div>
         )}
 

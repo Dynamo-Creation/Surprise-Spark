@@ -100,11 +100,28 @@ export function Navbar() {
     }, 200);
   };
 
+  const [hasLocalAdminSession, setHasLocalAdminSession] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("admin_user_session");
+        if (raw) {
+          const p = JSON.parse(raw);
+          if (p?.email && isAuthorizedAdmin(p.email)) {
+            setHasLocalAdminSession(true);
+          }
+        }
+      } catch {}
+    }
+  }, [user]);
+
   const isAdmin = Boolean(
-    user && (
+    (user && (
       isAuthorizedAdmin(user) ||
       (profile && isAuthorizedAdmin(profile))
-    )
+    )) ||
+    hasLocalAdminSession
   );
 
   const handleLogoClick = (e: React.MouseEvent) => {

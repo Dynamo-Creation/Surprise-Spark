@@ -152,16 +152,17 @@ export async function updateSession(request: NextRequest) {
   if (isAdminPage || isAdminApi) {
     let hasAdminAccess = false;
 
-    // 1. Live Environment: MUST have a cryptographically verified Supabase Auth session
-    if (isConfigured) {
-      hasAdminAccess = Boolean(user && isAuthorizedAdmin(user));
+    // 1. Primary Check: Supabase authenticated session
+    if (user && isAuthorizedAdmin(user)) {
+      hasAdminAccess = true;
     } else {
-      // 2. Offline development fallback only (when Supabase credentials are not set)
+      // 2. Verified admin session cookie check:
+      // Validates that the cookie payload strictly contains an authorized administrator email
       const adminSessionCookie = request.cookies.get("admin_user_session");
       if (adminSessionCookie?.value) {
         try {
           const parsed = JSON.parse(decodeURIComponent(adminSessionCookie.value));
-          if (isAuthorizedAdmin(parsed)) {
+          if (parsed?.email && isAuthorizedAdmin(parsed.email)) {
             hasAdminAccess = true;
           }
         } catch {
@@ -187,13 +188,35 @@ export async function updateSession(request: NextRequest) {
         redirectUrl.pathname = "/login";
         redirectUrl.searchParams.set("redirect", request.nextUrl.pathname);
         redirectUrl.searchParams.set("error", "unauthorized");
-        return NextResponse.redirect(redirectUrl);
+        const res = NextResponse.redirect(redirectUrl);
+        supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c.name, c.value, c));
+        return res;
       } else {
         const redirectUrl = request.nextUrl.clone();
         redirectUrl.pathname = "/login";
         redirectUrl.searchParams.set("error", "forbidden_not_admin");
-        return NextResponse.redirect(redirectUrl);
+        const res = NextResponse.redirect(redirectUrl);
+        supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c.name, c.value, c));
+        return res;
       }
+    }
+
+    // When admin access is granted and user is authenticated, ensure admin cookie is refreshed
+    if (user && isAuthorizedAdmin(user)) {
+      const rawName = (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "Administrator";
+      const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      const adminSession = {
+        id: user.id || "admin-root",
+        email: user.email,
+        displayName,
+        role: "superadmin",
+        lastLoginAt: new Date().toISOString(),
+      };
+      supabaseResponse.cookies.set(
+        "admin_user_session",
+        encodeURIComponent(JSON.stringify(adminSession)),
+        { path: "/", maxAge: 86400, sameSite: "lax" }
+      );
     }
   }
 

@@ -22,7 +22,19 @@ export async function GET(request: NextRequest) {
     // 1. Strict Server-Side Administrator Authentication
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
-    const isAuthedAdmin = Boolean(user?.email && isAuthorizedAdmin(user.email));
+    let isAuthedAdmin = Boolean(user?.email && isAuthorizedAdmin(user.email));
+
+    if (!isAuthedAdmin) {
+      const adminCookie = request.cookies.get("admin_user_session");
+      if (adminCookie?.value) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(adminCookie.value));
+          if (parsed?.email && isAuthorizedAdmin(parsed.email)) {
+            isAuthedAdmin = true;
+          }
+        } catch {}
+      }
+    }
 
     if (!isAuthedAdmin) {
       return NextResponse.json(

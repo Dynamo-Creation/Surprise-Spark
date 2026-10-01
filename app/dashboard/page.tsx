@@ -25,6 +25,7 @@ import {
   Calendar,
   AlertTriangle,
   Gift,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/useAuth";
+import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
 import { createClient } from "@/lib/supabase/client";
 import {
   listDrafts,
@@ -292,6 +294,33 @@ export default function DashboardPage() {
         <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl bg-slate-900 text-white text-xs font-semibold shadow-2xl border border-slate-700 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200">
           <Sparkles className="w-4 h-4 text-pink-400 shrink-0" />
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Administrator Quick Launch Banner */}
+      {Boolean(profile?.isAdmin || isAuthorizedAdmin(user)) && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-950/70 via-indigo-950/60 to-slate-900 border border-purple-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-purple-950/30 animate-in fade-in">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-400">Executive Console</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <p className="text-sm font-bold text-white">Administrator Access Active</p>
+              <p className="text-xs text-slate-400">View real users, live telemetry, and manage platform templates.</p>
+            </div>
+          </div>
+          <Link href="/admin">
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-purple-600/30 whitespace-nowrap cursor-pointer"
+            >
+              Open Admin Console →
+            </Button>
+          </Link>
         </div>
       )}
 

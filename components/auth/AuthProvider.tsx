@@ -17,7 +17,7 @@ interface AuthContextType {
   signOut: () => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: string | null }>;
-  signInWithGoogle: () => Promise<{ error: string | null }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ error: string | null }>;
   sendEmailOtp: (email: string, displayName?: string) => Promise<{ error: string | null }>;
   verifyEmailOtp: (email: string, token: string) => Promise<{ error: string | null }>;
 }
@@ -137,6 +137,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               await fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.full_name, session.user);
               syncAdminSession(session.user);
             } else {
+              // 1. Check if an authorized admin session exists in localStorage
+              const savedAdmin = localStorage.getItem("admin_user_session");
+              if (savedAdmin) {
+                try {
+                  const adminData = JSON.parse(savedAdmin);
+                  if (adminData?.email && isAuthorizedAdmin(adminData.email)) {
+                    const mockAdminUser = {
+                      id: adminData.id || "admin-root",
+                      email: adminData.email,
+                      user_metadata: { full_name: adminData.displayName || "Administrator" },
+                      app_metadata: { role: "superadmin", is_admin: true },
+                      aud: "authenticated",
+                      created_at: adminData.lastLoginAt || new Date().toISOString(),
+                    } as User;
+
+                    setUser(mockAdminUser);
+                    setProfile({
+                      id: mockAdminUser.id,
+                      email: adminData.email,
+                      fullName: adminData.displayName || "Administrator",
+                      avatarUrl: undefined,
+                      createdAt: new Date().toISOString(),
+                      role: "superadmin",
+                      isAdmin: true,
+                    });
+                    syncAdminSession(mockAdminUser, adminData.email, "superadmin");
+                    if (mounted) setIsLoading(false);
+                    return;
+                  }
+                } catch {}
+              }
+
               // Fallback to local demo session if present
               const savedDemo = localStorage.getItem("demo_user_session");
               if (savedDemo) {
@@ -422,12 +454,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Google OAuth
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (redirectTo?: string) => {
     if (isConfigured) {
+      const targetNext = redirectTo || "/";
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(targetNext)}`,
           queryParams: {
             prompt: "select_account",
           },

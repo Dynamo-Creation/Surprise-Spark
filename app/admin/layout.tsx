@@ -24,8 +24,25 @@ export default function AdminLayout({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [metricsMode, setMetricsMode] = useState<AdminMetricsMode>("live");
 
+  const [hasValidLocalSession, setHasValidLocalSession] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("admin_user_session");
+        if (raw) {
+          const p = JSON.parse(raw);
+          if (p?.email && isAuthorizedAdmin(p.email)) {
+            setHasValidLocalSession(true);
+          }
+        }
+      } catch {}
+    }
+  }, []);
+
   const authorized = Boolean(
-    user && (isAuthorizedAdmin(user) || (profile && isAuthorizedAdmin(profile)))
+    (user && (isAuthorizedAdmin(user) || (profile && isAuthorizedAdmin(profile)))) ||
+    hasValidLocalSession
   );
 
   // Strict Client-Side Admin Guard: If not an authorized administrator, redirect immediately
