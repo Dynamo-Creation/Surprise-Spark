@@ -312,3 +312,32 @@ Remaining Critical/High Risks:        0
 | [`app/api/og/route.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/api/og/route.tsx) | Clamped `name` and `sender` parameters to 50 characters and stripped control characters to prevent resource exhaustion. |
 | [`next.config.ts`](file:///f:/Interactive%20Surprise%20Platform/next.config.ts) | Added comprehensive HTTP security headers: CSP (WebGL/Three.js compatible), HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy. |
 | [`supabase/migrations/20260927000002_published_surprises_security.sql`](file:///f:/Interactive%20Surprise%20Platform/supabase/migrations/20260927000002_published_surprises_security.sql) | Created migration defining `published_surprises` table with typed constraints, indexes, update triggers, and granular Row Level Security (RLS) policies. |
+| [`supabase/migrations/20261002000001_admin_real_data_telemetry.sql`](file:///f:/Interactive%20Surprise%20Platform/supabase/migrations/20261002000001_admin_real_data_telemetry.sql) | Added secure, zero-credential RPC aggregation procedures for real admin telemetry and user accounting. |
+| [`supabase/migrations/20261002000002_security_hardening.sql`](file:///f:/Interactive%20Surprise%20Platform/supabase/migrations/20261002000002_security_hardening.sql) | Eliminated mutable search path risks, revoked unneeded trigger RPC executions, hardened RLS policies with subquery InitPlans, restricted direct audio uploads, and established 16 foreign key covering B-tree indexes. |
+
+---
+
+## 12. Supabase Cloud Security Audit & Hardening (Phase 2 - October 2, 2026)
+
+A dedicated, direct security audit of the production Supabase project (`unpumpwsxyjvfqwtslss`) was conducted using Supabase Security and Performance Advisors, PostgreSQL system catalog inspection, and Storage bucket policy audits:
+
+### Security Remediations Applied:
+1. **Search Path Hijacking Protection (`function_search_path_mutable`):**
+   - Replaced trigger function `public.set_updated_at()` with explicit `SET search_path = public`.
+   - Hardened `public.is_admin()` and `public.is_superadmin()` with explicit `SET search_path = public, auth`.
+2. **Unrestricted Trigger RPC Revocation:**
+   - Revoked `EXECUTE ON FUNCTION public.handle_new_user()` from `PUBLIC`, `anon`, and `authenticated` roles. This prevents external internet callers from triggering profile creations via PostgREST `/rest/v1/rpc/handle_new_user`. The function now executes exclusively via PostgreSQL internal user creation triggers.
+3. **Admin Function Isolation:**
+   - Revoked `EXECUTE` on `public.is_admin()` and `public.is_superadmin()` from `PUBLIC` and `anon`.
+   - Admin telemetry procedures `public.get_admin_dashboard_metrics()` and `public.get_admin_users_overview()` strictly enforce caller identity: `auth.uid() IS NOT NULL` and verification against `public.is_admin()`.
+4. **Complete RLS Coverage for System Catalog Tables:**
+   - Added administrative management policies (`FOR ALL USING (public.is_admin())`) across `assets`, `music_tracks`, `themes`, `scene_objects`, `scene_triggers`, `asset_slots`, `asset_versions`, `template_asset_assignments`, `profiles`, and `audit_logs`.
+   - Every single table in the `public` schema has `rowsecurity = true` enforced.
+5. **Storage Bucket Access Hardening:**
+   - `user-photos` bucket is verified strictly private (`public: false`), restricted to authenticated users isolated within their own folder path (`(storage.foldername(name))[1] = auth.uid()::text`).
+   - `music` bucket direct upload policy altered from `{public}` to `{authenticated}` only, closing off anonymous direct storage upload avenues.
+6. **InitPlan RLS Performance & Security Optimization:**
+   - Replaced volatile `auth.uid()` calls across all policies with `(select auth.uid())`, optimizing evaluation from per-row into single subquery InitPlans.
+7. **Covering Relational Indexes:**
+   - Added 16 covering B-Tree indexes across all foreign key relationships (`audit_logs`, `scene_objects`, `scenes`, `surprises`, `templates`, etc.), reducing query latencies and preventing full table scans.
+
