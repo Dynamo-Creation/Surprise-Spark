@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getAdminSessionFromRequest } from "@/lib/admin/adminAuth";
+import { getAdminSessionFromRequest, isAuthorizedAdmin } from "@/lib/admin/adminAuth";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -54,8 +55,11 @@ const PUBLIC_ASSET_EXTENSIONS = new Set([
 export async function POST(request: NextRequest) {
   try {
     // 1. Enforce Server-Side Administrator Authorization
-    const adminSession = getAdminSessionFromRequest(request);
-    if (!adminSession) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+    const isAuthedAdmin = Boolean(user?.email && isAuthorizedAdmin(user.email));
+
+    if (!isAuthedAdmin) {
       return NextResponse.json(
         { success: false, error: "Unauthorized: Admin privileges required." },
         { status: 403 }

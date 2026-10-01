@@ -27,7 +27,7 @@ interface AdminFunnelVisualizerProps {
 }
 
 export function AdminFunnelVisualizer({
-  totalVisitors = 4250,
+  totalVisitors = 39,
 }: AdminFunnelVisualizerProps) {
   const steps: FunnelStep[] = [
     {

@@ -12,6 +12,8 @@ import {
   Sparkles,
   Calendar,
   Lock,
+  RotateCw,
+  Loader2,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,53 +27,31 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [users, setUsers] = useState<AdminUserAccount[]>(adminStore.listUsers());
+  const [isLoading, setIsLoading] = useState(true);
   const [statusToast, setStatusToast] = useState<string | null>(null);
 
-  // Sync authenticated session user so sonu25580@gmail.com is always displayed with superadmin role
-  useEffect(() => {
-    if (user?.email) {
-      setUsers((prev) => {
-        const next = [...prev];
-        const currentEmail = user.email!.toLowerCase();
-        const idx = next.findIndex(
-          (u) =>
-            u.email.toLowerCase() === currentEmail ||
-            u.email.toLowerCase() === "admin@surprisespark.app"
-        );
-        const rawName =
-          (user.user_metadata?.full_name as string) ||
-          profile?.fullName ||
-          user.email!.split("@")[0] ||
-          "Sonu";
-        const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-
-        if (idx !== -1) {
-          next[idx] = {
-            ...next[idx],
-            id: user.id || next[idx].id,
-            email: user.email!,
-            displayName: formattedName,
-            role: "superadmin",
-            status: "verified",
-          };
-        } else {
-          next.unshift({
-            id: user.id,
-            displayName: formattedName,
-            email: user.email!,
-            role: "superadmin",
-            status: "verified",
-            registrationDate: user.created_at || new Date().toISOString(),
-            lastActivityAt: new Date().toISOString(),
-            surprisesCount: 22,
-            publishedCount: 22,
-            templateUsage: ["sweet-celebration", "whispers-of-love"],
-          });
-        }
-        return next;
-      });
+  const loadRealUsers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/admin/users");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.users) && json.users.length > 0) {
+        setUsers(json.users);
+        adminStore.setRealUsers(json.users);
+      } else {
+        setUsers(adminStore.listUsers());
+      }
+    } catch (err) {
+      console.warn("[Admin Users] Live fetch fallback to local store:", err);
+      setUsers(adminStore.listUsers());
+    } finally {
+      setIsLoading(false);
     }
-  }, [user, profile]);
+  };
+
+  useEffect(() => {
+    loadRealUsers();
+  }, [user]);
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
@@ -112,10 +92,23 @@ export default function AdminUsersPage() {
           </p>
         </div>
 
-        {/* Privacy Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-medium">
-          <Lock className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Zero-Credential Safe: Passwords & secrets strictly hidden</span>
+        {/* Action Controls & Privacy Badge */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={loadRealUsers}
+            disabled={isLoading}
+            className="text-xs bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-bold"
+            leftIcon={<RotateCw className={`w-3.5 h-3.5 text-purple-400 ${isLoading ? "animate-spin" : ""}`} />}
+          >
+            {isLoading ? "Syncing..." : "Sync Live Data"}
+          </Button>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-medium">
+            <Lock className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Zero-Credential Safe: Passwords & secrets strictly hidden</span>
+          </div>
         </div>
       </div>
 
@@ -177,7 +170,14 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {filteredUsers.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="p-12 text-center text-slate-400">
+                    <Loader2 className="w-6 h-6 animate-spin text-purple-500 mx-auto mb-2" />
+                    <p className="text-xs font-semibold">Loading real verified accounts from Supabase...</p>
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-500">
                     No users matching criteria.

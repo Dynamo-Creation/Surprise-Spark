@@ -69,11 +69,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-pink-600 transition-colors">
-                  Admin Console
-                </Link>
-              </li>
-              <li>
                 <Link href="/privacy" className="hover:text-pink-600 transition-colors font-medium">
                   Privacy Center
                 </Link>

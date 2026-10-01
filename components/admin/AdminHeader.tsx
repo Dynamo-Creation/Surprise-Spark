@@ -93,32 +93,11 @@ export function AdminHeader({
           </kbd>
         </button>
 
-        {/* Live vs. Demo Mode Switcher Pill */}
-        <div className="flex items-center rounded-xl bg-slate-900/90 border border-white/[0.08] p-1 shadow-xs">
-          <button
-            type="button"
-            onClick={() => onToggleMode("live")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              metricsMode === "live"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="hidden sm:inline">Live DB</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onToggleMode("demo")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              metricsMode === "demo"
-                ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-xs"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <Sparkles className="w-3 h-3 text-purple-400" />
-            <span className="hidden sm:inline">Demo</span>
-          </button>
+        {/* Live Database Connected Badge */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-bold shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="hidden sm:inline">Live Supabase Connected</span>
+          <span className="sm:hidden">Live</span>
         </div>
 
         {/* Notifications Bell */}

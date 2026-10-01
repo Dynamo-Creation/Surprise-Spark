@@ -152,11 +152,11 @@ export async function updateSession(request: NextRequest) {
   if (isAdminPage || isAdminApi) {
     let hasAdminAccess = false;
 
-    // 1. Verify authenticated user directly
-    if (user && isAuthorizedAdmin(user)) {
-      hasAdminAccess = true;
+    // 1. Live Environment: MUST have a cryptographically verified Supabase Auth session
+    if (isConfigured) {
+      hasAdminAccess = Boolean(user && isAuthorizedAdmin(user));
     } else {
-      // 2. Check admin session cookie, strictly validating the email against known admin list
+      // 2. Offline development fallback only (when Supabase credentials are not set)
       const adminSessionCookie = request.cookies.get("admin_user_session");
       if (adminSessionCookie?.value) {
         try {
