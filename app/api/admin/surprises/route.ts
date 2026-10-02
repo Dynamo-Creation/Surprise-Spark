@@ -13,14 +13,9 @@ export async function GET(request: NextRequest) {
     let isAuthedAdmin = Boolean(user?.email && isAuthorizedAdmin(user.email));
 
     if (!isAuthedAdmin) {
-      const adminCookie = request.cookies.get("admin_user_session");
-      if (adminCookie?.value) {
-        try {
-          const parsed = JSON.parse(decodeURIComponent(adminCookie.value));
-          if (parsed?.email && isAuthorizedAdmin(parsed.email)) {
-            isAuthedAdmin = true;
-          }
-        } catch {}
+      const signedAdminSession = await getAdminSessionFromRequest(request);
+      if (signedAdminSession?.email && isAuthorizedAdmin(signedAdminSession.email)) {
+        isAuthedAdmin = true;
       }
     }
 

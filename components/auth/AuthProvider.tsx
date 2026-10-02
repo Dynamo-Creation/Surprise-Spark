@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { User } from "@supabase/supabase-js";
+import { User, type AuthChangeEvent, type Session } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { UserProfile } from "@/types/user";
 import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
@@ -52,13 +52,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         lastLoginAt: new Date().toISOString(),
       };
       localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
-      document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
+      // In offline / local fallback mode, set cookie for client-side routing.
+      // In production, signed httpOnly cookie is set exclusively by the server.
+      if (!isConfigured) {
+        document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
+      }
     } else {
       // User is authenticated but NOT an administrator -> PURGE any stale admin session cookie immediately!
       localStorage.removeItem("admin_user_session");
       document.cookie = "admin_user_session=; path=/; max-age=0; SameSite=Lax";
     }
-  }, []);
+  }, [isConfigured]);
 
   // Fetch or construct profile
   const fetchProfile = useCallback(async (userId: string, userEmail?: string, userName?: string, authUser?: User | null) => {
@@ -252,7 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isConfigured) {
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
         if (!mounted) return;
         if (session?.user) {
           setUser(session.user);
@@ -413,6 +417,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Reset Password
   const resetPassword = async (email: string) => {
+    const gmailCheck = validateEmailSecurity(email);
+    if (!gmailCheck.isValid) {
+      return { error: gmailCheck.error || "Only @gmail.com accounts are supported." };
+    }
+
     if (isConfigured) {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
@@ -457,40 +466,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async (redirectTo?: string) => {
     if (isConfigured) {
       const targetNext = redirectTo || "/";
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(targetNext)}`,
           queryParams: {
             prompt: "select_account",
           },
-          skipBrowserRedirect: true,
         },
       });
       if (error) return { error: error.message };
-
-      if (data?.url) {
-        try {
-          // Pre-verify that Google provider is enabled in Supabase so the user isn't redirected to a raw 400 JSON page
-          const probe = await fetch(data.url);
-          if (probe.status === 400) {
-            const errData = await probe.json().catch(() => null);
-            if (errData?.msg?.includes("provider is not enabled") || errData?.error_code === "validation_failed") {
-              return {
-                error:
-                  "Google Sign-In is not enabled yet in your Supabase project (unpumpwsxyjvfqwtslss). Please enable Google in Supabase Dashboard (Authentication > Providers > Google).",
-              };
-            }
-          }
-        } catch {
-          // Ignore network/CORS probe failures and proceed to redirect
-        }
-
-        window.location.href = data.url;
-        return { error: null };
-      }
-
-      return { error: "Failed to generate Google authentication URL." };
+      return { error: null };
     }
 
     // Local fallback message

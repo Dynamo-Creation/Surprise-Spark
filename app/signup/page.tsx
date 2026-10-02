@@ -11,13 +11,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { PandaMascot, MascotReaction } from "@/components/mascot/PandaMascot";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { validateEmailSecurity } from "@/lib/security/email-security";
+import { getSafeRedirectUrl } from "@/lib/security/sanitizer";
 
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
-  // Default redirect target: homepage top hero section ("/")
-  const targetDestination = redirect && redirect !== "/signup" && redirect !== "/dashboard" ? redirect : "/";
+  // Default redirect target: homepage top hero section ("/") with open-redirect defense
+  const targetDestination = getSafeRedirectUrl(redirect, "/");
 
   const { user, signInWithGoogle, sendEmailOtp, verifyEmailOtp } = useAuth();
 
@@ -131,7 +132,7 @@ function SignupForm() {
     setError(null);
     setIsGoogleLoading(true);
     try {
-      const { error: googleError } = await signInWithGoogle();
+      const { error: googleError } = await signInWithGoogle(targetDestination);
       if (googleError) {
         setError(googleError);
       }

@@ -345,3 +345,38 @@ A dedicated, direct security audit of the production Supabase project (`unpumpws
 7. **Covering Relational Indexes:**
    - Added 16 covering B-Tree indexes across all foreign key relationships (`audit_logs`, `scene_objects`, `scenes`, `surprises`, `templates`, etc.), reducing query latencies and preventing full table scans.
 
+---
+
+## 13. Authentication, Account Creation & Session Integrity Security Audit (Phase 3 - October 3, 2026)
+
+A dedicated security review and penetration hardening was conducted focusing on user authentication, account creation workflows, OAuth callback handling, and session state integrity:
+
+### 1. Google OAuth & PKCE Race Condition Elimination:
+- **Vulnerability Remediated:** Previously, duplicate authentication attempts were triggered due to an exploratory `fetch(data.url)` call alongside `skipBrowserRedirect: true`. This consumed the PKCE code verifier prematurely, returning `400: bad_code_verifier` on the initial attempt and requiring a second login.
+- **Hardening Applied:** Streamlined `signInWithOAuth` in [`components/auth/AuthProvider.tsx`](file:///f:/Interactive%20Surprise%20Platform/components/auth/AuthProvider.tsx) to standard single-request browser navigation with `select_account` prompt. Supabase browser client was also converted to a module-level singleton in [`lib/supabase/client.ts`](file:///f:/Interactive%20Surprise%20Platform/lib/supabase/client.ts) to prevent auth listener churn and duplicate handshakes.
+
+### 2. Host Header Poisoning & Multi-Tenant Spoofing Defense:
+- **Location:** [`app/auth/callback/route.ts`](file:///f:/Interactive%20Surprise%20Platform/app/auth/callback/route.ts)
+- **Vulnerability Remediated:** The OAuth callback previously trusted wildcard `*.vercel.app` subdomains in the `X-Forwarded-Host` header. A malicious actor could deploy an arbitrary Vercel site (`evil-attacker.vercel.app`), inject `X-Forwarded-Host: evil-attacker.vercel.app`, and redirect users post-authentication.
+- **Hardening Applied:** Replaced wildcard matching with an explicit allowlist: exact production domain (`surprise-spark-dynamo18.vercel.app`), configured environment hosts (`NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`), `localhost`, and official domains (`*.surprisespark.app`, `*.partnerincrime.app`).
+
+### 3. Universal Open Redirect Elimination:
+- **Locations:** [`lib/security/sanitizer.ts`](file:///f:/Interactive%20Surprise%20Platform/lib/security/sanitizer.ts), [`app/signup/page.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/signup/page.tsx), [`app/login/page.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/login/page.tsx), [`app/auth/callback/route.ts`](file:///f:/Interactive%20Surprise%20Platform/app/auth/callback/route.ts), and [`lib/supabase/middleware.ts`](file:///f:/Interactive%20Surprise%20Platform/lib/supabase/middleware.ts).
+- **Vulnerability Remediated:** The signup page accepted unvalidated `redirect` parameters (`targetDestination = redirect || "/"`), allowing attackers to craft phishing links redirecting visitors to external URLs post-registration (`/signup?redirect=//evil.com`). Middleware also used unvalidated `redirectUrl.pathname = targetRedirect`.
+- **Hardening Applied:** Implemented centralized `getSafeRedirectUrl()` in `lib/security/sanitizer.ts`. It strictly requires local relative paths starting with `/`, blocks protocol-relative (`//`), backslashes (`/\`), URI schemes (`:`), encoded traversal vectors, and recursive loops (`/login`, `/signup`). Applied consistently across all auth endpoints and middleware.
+
+### 4. Native Web Crypto HMAC-SHA256 Admin Cookie Signing:
+- **Locations:** [`lib/admin/adminAuth.ts`](file:///f:/Interactive%20Surprise%20Platform/lib/admin/adminAuth.ts), [`lib/supabase/middleware.ts`](file:///f:/Interactive%20Surprise%20Platform/lib/supabase/middleware.ts), and [`app/auth/callback/route.ts`](file:///f:/Interactive%20Surprise%20Platform/app/auth/callback/route.ts).
+- **Vulnerability Remediated:** Admin cookie signatures previously fell back to `NEXT_PUBLIC_SUPABASE_ANON_KEY` or a static string if `ADMIN_COOKIE_SECRET` was omitted. Because `NEXT_PUBLIC_` keys are exposed to browsers, an attacker could sign forged admin session cookies.
+- **Hardening Applied:** Completely removed all public anon key fallbacks and static secrets. Migrated to native `globalThis.crypto.subtle` (zero Node.js module dependencies, 100% Edge Runtime and Node.js compatible). The signing engine derives keys exclusively from server-side environment variables (`ADMIN_COOKIE_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`) or generates a cryptographically secure 256-bit random secret in server memory (`crypto.getRandomValues`). All admin cookies are issued with `httpOnly: true, secure: true, sameSite: "lax"`.
+
+### 5. Admin API Authentication Hardening:
+- **Locations:** [`app/api/admin/metrics/route.ts`](file:///f:/Interactive%20Surprise%20Platform/app/api/admin/metrics/route.ts), [`app/api/admin/users/route.ts`](file:///f:/Interactive%20Surprise%20Platform/app/api/admin/users/route.ts), and [`app/api/admin/surprises/route.ts`](file:///f:/Interactive%20Surprise%20Platform/app/api/admin/surprises/route.ts).
+- **Vulnerability Remediated:** Handlers previously inspected fallback cookies using insecure `JSON.parse(decodeURIComponent(adminCookie.value))` without cryptographic signature checks.
+- **Hardening Applied:** Completely removed unsigned JSON cookie parsing. All three routes now strictly enforce authenticated Supabase user sessions (`user && isAuthorizedAdmin(user.email)`) or cryptographically verified HMAC signatures via `await getAdminSessionFromRequest(request)`.
+
+### 6. Gmail-Only Account Validation & Rate Limiting:
+- **Locations:** [`app/login/page.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/login/page.tsx), [`app/signup/page.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/signup/page.tsx), [`app/forgot-password/page.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/forgot-password/page.tsx), [`components/auth/AuthProvider.tsx`](file:///f:/Interactive%20Surprise%20Platform/components/auth/AuthProvider.tsx), and [`lib/supabase/middleware.ts`](file:///f:/Interactive%20Surprise%20Platform/lib/supabase/middleware.ts).
+- **Hardening Applied:** Enforced strict RFC 5322 `@gmail.com` validation across all authentication pathways (login, registration, OTP delivery, and password reset). Disposable email providers and malformed inputs are rejected immediately before touching the database or external auth providers. Rate limiting in middleware enforces a sliding window of 20 requests per minute per IP across all auth endpoints.
+
+

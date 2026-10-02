@@ -79,3 +79,53 @@ export function sanitizePersonalization<T extends PersonalizationInput>(input: T
     special_date: sanitizeText(input.special_date, 20),
   };
 }
+
+/**
+ * Validates and normalizes redirect URLs to prevent Open Redirect vulnerabilities.
+ * Allows ONLY safe, local relative paths (e.g., "/dashboard", "/create?draft=123").
+ * Explicitly rejects:
+ * - Empty or non-string inputs
+ * - Absolute URLs with schemes (http://, https://, javascript:, data:, etc.)
+ * - Protocol-relative URLs (//example.com)
+ * - Backslash-prefixed paths (/\example.com or \example.com)
+ * - Encoded slash/backslash tricks (/%2f, /%5c, etc.)
+ * - Recursive redirect loops to auth pages (/login, /signup, /auth/callback)
+ */
+export function getSafeRedirectUrl(rawRedirect: string | null | undefined, defaultFallback = "/"): string {
+  if (!rawRedirect || typeof rawRedirect !== "string") {
+    return defaultFallback;
+  }
+
+  let decoded = rawRedirect.trim();
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch {
+    return defaultFallback;
+  }
+
+  // Reject empty, protocol-relative, backslash attacks, or URI schemes
+  if (
+    !decoded.startsWith("/") ||
+    decoded.startsWith("//") ||
+    decoded.startsWith("/\\") ||
+    decoded.startsWith("\\") ||
+    decoded.includes(":") || // Blocks http:, https:, javascript:, data:, etc.
+    decoded.includes("\r") ||
+    decoded.includes("\n")
+  ) {
+    return defaultFallback;
+  }
+
+  // Prevent redirect loops back to auth pages
+  const normalizedPath = decoded.split("?")[0].toLowerCase();
+  if (
+    normalizedPath === "/login" ||
+    normalizedPath === "/signup" ||
+    normalizedPath === "/auth/callback"
+  ) {
+    return defaultFallback;
+  }
+
+  return decoded;
+}
+

@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, sanitizeSupabaseUrl, sanitizeSupabaseKey } from "./config";
-import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
+import { isAuthorizedAdmin, signAdminSession } from "@/lib/admin/adminAuth";
 import { rateLimiter } from "@/lib/security/rateLimiter";
+import { getSafeRedirectUrl } from "@/lib/security/sanitizer";
 
 export async function updateSession(request: NextRequest) {
   // Rate Limiting Security Check
@@ -12,6 +13,11 @@ export async function updateSession(request: NextRequest) {
     "127.0.0.1";
 
   const pathname = request.nextUrl.pathname;
+
+  // Direct pass-through for OAuth callback to avoid session race conditions and latency
+  if (pathname.startsWith("/auth/callback")) {
+    return NextResponse.next({ request });
+  }
 
   // 1. Strict rate limit on auth endpoints (prevent brute-force logins)
   if (
@@ -39,20 +45,7 @@ export async function updateSession(request: NextRequest) {
 
   // 2. Protect internal test/diagnostic routes in production
   if (pathname.startsWith("/api/test/") && process.env.NODE_ENV === "production") {
-    let isTestAdmin = false;
-    const adminCookie = request.cookies.get("admin_user_session");
-    if (adminCookie?.value) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(adminCookie.value));
-        if (isAuthorizedAdmin(parsed)) isTestAdmin = true;
-      } catch {}
-    }
-    if (!isTestAdmin) {
-      return new NextResponse(
-        JSON.stringify({ error: "Not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // Will be strictly validated after user session lookup below
   }
 
   // 3. Strict rate limit on file upload endpoints
@@ -143,6 +136,17 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // Protect internal test/diagnostic routes in production
+  if (pathname.startsWith("/api/test/") && process.env.NODE_ENV === "production") {
+    const isTestAdmin = Boolean(user && isAuthorizedAdmin(user));
+    if (!isTestAdmin) {
+      return new NextResponse(
+        JSON.stringify({ error: "Not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+  }
+
   // Admin Route Protection: Both /admin UI pages and /api/admin API routes require authorized administrator
   // Note: /api/admin/templates/preview is an iframe HTML preview renderer accessible to creators and previewers
   const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
@@ -155,9 +159,8 @@ export async function updateSession(request: NextRequest) {
     // 1. Primary Check: Supabase authenticated session
     if (user && isAuthorizedAdmin(user)) {
       hasAdminAccess = true;
-    } else {
-      // 2. Verified admin session cookie check:
-      // Validates that the cookie payload strictly contains an authorized administrator email
+    } else if (!isConfigured) {
+      // 2. Local development fallback only when live Supabase is not configured:
       const adminSessionCookie = request.cookies.get("admin_user_session");
       if (adminSessionCookie?.value) {
         try {
@@ -201,21 +204,22 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
-    // When admin access is granted and user is authenticated, ensure admin cookie is refreshed
-    if (user && isAuthorizedAdmin(user)) {
-      const rawName = (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "Administrator";
+    // When admin access is granted and user is authenticated, ensure admin cookie is refreshed with cryptographic signature
+    if (user && user.email && isAuthorizedAdmin(user)) {
+      const rawName = (user.user_metadata?.full_name as string) || user.email.split("@")[0] || "Administrator";
       const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
       const adminSession = {
         id: user.id || "admin-root",
         email: user.email,
         displayName,
-        role: "superadmin",
+        role: "superadmin" as const,
         lastLoginAt: new Date().toISOString(),
       };
+      const signedCookie = await signAdminSession(adminSession);
       supabaseResponse.cookies.set(
         "admin_user_session",
-        encodeURIComponent(JSON.stringify(adminSession)),
-        { path: "/", maxAge: 86400, sameSite: "lax" }
+        signedCookie,
+        { path: "/", maxAge: 86400, sameSite: "lax", httpOnly: true, secure: process.env.NODE_ENV === "production" }
       );
     }
   }
@@ -234,14 +238,12 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute =
     request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup";
   if (isAuthRoute && user) {
-    const targetRedirect = request.nextUrl.searchParams.get("redirect") || "/dashboard";
+    const rawRedirect = request.nextUrl.searchParams.get("redirect");
+    const targetRedirect = getSafeRedirectUrl(rawRedirect, "/dashboard");
     const isAdmin = isAuthorizedAdmin(user);
     // If user is admin trying to access admin, or if already logged in with no blocking error
     if ((isAdmin && targetRedirect.startsWith("/admin")) || !request.nextUrl.searchParams.has("error")) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = targetRedirect;
-      redirectUrl.searchParams.delete("error");
-      redirectUrl.searchParams.delete("redirect");
+      const redirectUrl = new URL(targetRedirect, request.nextUrl.origin);
       return NextResponse.redirect(redirectUrl);
     }
   }

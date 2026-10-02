@@ -12,19 +12,7 @@ import { PandaMascot, MascotReaction } from "@/components/mascot/PandaMascot";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { validateEmailSecurity } from "@/lib/security/email-security";
 import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
-
-function getSafeRedirectUrl(rawRedirect: string | null): string {
-  if (!rawRedirect) return "/";
-  // Strict open-redirect defense: must be a local pathname, not protocol-relative (//) or backslash (/\)
-  if (!rawRedirect.startsWith("/") || rawRedirect.startsWith("//") || rawRedirect.startsWith("/\\")) {
-    return "/";
-  }
-  // Prevent redirect loop
-  if (rawRedirect === "/login" || rawRedirect.startsWith("/login?")) {
-    return "/";
-  }
-  return rawRedirect;
-}
+import { getSafeRedirectUrl } from "@/lib/security/sanitizer";
 
 function LoginForm() {
   const router = useRouter();
@@ -52,6 +40,8 @@ function LoginForm() {
       ? "Access Denied: Your account does not have administrator privileges."
       : errorParam === "unauthorized"
       ? "Please sign in with an administrator account to continue."
+      : errorParam === "auth-code-error"
+      ? "Authentication verification failed or session expired. Please sign in again."
       : null
   );
 
@@ -134,7 +124,6 @@ function LoginForm() {
             lastLoginAt: new Date().toISOString(),
           };
           localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
-          document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
         }
         setIsRedirecting(true);
         router.refresh();
@@ -256,7 +245,6 @@ function LoginForm() {
                   lastLoginAt: new Date().toISOString(),
                 };
                 localStorage.setItem("admin_user_session", JSON.stringify(adminSession));
-                document.cookie = `admin_user_session=${encodeURIComponent(JSON.stringify(adminSession))}; path=/; max-age=86400; SameSite=Lax`;
                 window.location.href = "/admin";
               }}
             >

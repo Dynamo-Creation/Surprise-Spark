@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { validateEmailSecurity } from "@/lib/security/email-security";
 
 export default function ForgotPasswordPage() {
   const { resetPassword } = useAuth();
@@ -20,8 +21,9 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
 
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setError("Please enter a valid email address.");
+    const validation = validateEmailSecurity(email);
+    if (!validation.isValid) {
+      setError(validation.error || "Only @gmail.com addresses are supported.");
       return;
     }
 

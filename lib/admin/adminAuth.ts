@@ -82,28 +82,90 @@ export function isAuthorizedAdmin(roleOrUser?: unknown): boolean {
   return false;
 }
 
+// Server-side persistent memory secret fallback if ADMIN_COOKIE_SECRET / SUPABASE_SERVICE_ROLE_KEY is not set
+let memoryAdminSecret: string | null = null;
+function getAdminSigningSecret(): string {
+  if (process.env.ADMIN_COOKIE_SECRET) {
+    return process.env.ADMIN_COOKIE_SECRET;
+  }
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return process.env.SUPABASE_SERVICE_ROLE_KEY;
+  }
+  if (!memoryAdminSecret) {
+    const bytes = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(bytes);
+    memoryAdminSecret = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  return memoryAdminSecret;
+}
+
 /**
- * Parses and verifies admin credentials from incoming request cookies.
- * Disallows untrusted client headers and validates email against authorized list.
+ * Signs an admin user session payload with HMAC-SHA256 using standard Web Crypto API.
+ * Compatible with Edge Runtime, Node.js, and browser environments.
+ * Output format: base64url(payload).base64url(signature)
  */
-export function getAdminSessionFromRequest(
+export async function signAdminSession(session: AdminUserSession): Promise<string> {
+  const payload = JSON.stringify(session);
+  const enc = new TextEncoder();
+  const payloadB64 = Buffer.from(payload, "utf-8").toString("base64url");
+  const secret = getAdminSigningSecret();
+
+  const key = await globalThis.crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const sigBuffer = await globalThis.crypto.subtle.sign("HMAC", key, enc.encode(payload));
+  const signatureB64 = Buffer.from(sigBuffer).toString("base64url");
+  return `${payloadB64}.${signatureB64}`;
+}
+
+/**
+ * Parses and cryptographically verifies admin credentials from incoming request cookies.
+ * Disallows unsigned cookies, verifies HMAC signature with constant-time Web Crypto verification,
+ * and validates email against the authorized administrator whitelist.
+ */
+export async function getAdminSessionFromRequest(
   request: NextRequest
-): AdminUserSession | null {
+): Promise<AdminUserSession | null> {
   // Check dedicated admin session cookie
   const adminCookie = request.cookies.get("admin_user_session");
   if (adminCookie?.value) {
     try {
       // Expected format: base64url(payload).base64url(signature)
-      const [payloadB64, signatureB64] = adminCookie.value.split('.');
+      const parts = adminCookie.value.split(".");
+      if (parts.length !== 2) return null;
+      const [payloadB64, signatureB64] = parts;
       if (!payloadB64 || !signatureB64) return null;
-      const payload = Buffer.from(payloadB64, 'base64url').toString('utf-8');
-      const expectedSig = require('crypto').createHmac('sha256', process.env.ADMIN_COOKIE_SECRET || 'fallback-secret')
-        .update(payload)
-        .digest('base64url');
-      if (!require('crypto').timingSafeEqual(Buffer.from(signatureB64), Buffer.from(expectedSig))) {
-        // Signature mismatch – possible tampering
+
+      const payload = Buffer.from(payloadB64, "base64url").toString("utf-8");
+      const secret = getAdminSigningSecret();
+      const enc = new TextEncoder();
+
+      const key = await globalThis.crypto.subtle.importKey(
+        "raw",
+        enc.encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["verify"]
+      );
+
+      const signatureBytes = Buffer.from(signatureB64, "base64url");
+      const isValid = await globalThis.crypto.subtle.verify(
+        "HMAC",
+        key,
+        signatureBytes,
+        enc.encode(payload)
+      );
+
+      if (!isValid) {
+        // Signature mismatch – possible tampering or forgery attempt
         return null;
       }
+
       const parsed = JSON.parse(payload);
       const email = typeof parsed?.email === "string" ? parsed.email.toLowerCase().trim() : "";
       const role = typeof parsed?.role === "string" ? parsed.role.toLowerCase().trim() : "";
@@ -125,3 +187,4 @@ export function getAdminSessionFromRequest(
 
   return null;
 }
+

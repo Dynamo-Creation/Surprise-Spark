@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getAdminSessionFromRequest, isAuthorizedAdmin } from "@/lib/admin/adminAuth";
+import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";

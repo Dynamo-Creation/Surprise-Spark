@@ -31,7 +31,7 @@ export interface DraftSurprise {
   audioUrl?: string;
   audioStartTime?: number;
   audioDuration?: number;
-  goldenConfig?: Record<string, unknown>;
+  goldenConfig?: Record<string, unknown> | any;
   introEyebrow?: string;
   introHint?: string;
   line1?: string;
