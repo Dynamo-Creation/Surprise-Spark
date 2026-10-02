@@ -13,7 +13,10 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
       const decodedNext = decodeURIComponent(next);
-      const cleanNext = decodedNext.startsWith("/") ? decodedNext : `/${decodedNext}`;
+      let cleanNext = "/";
+      if (decodedNext.startsWith("/") && !decodedNext.startsWith("//") && !decodedNext.startsWith("/\\")) {
+        cleanNext = decodedNext;
+      }
       const targetUrl = isLocalEnv
         ? `${origin}${cleanNext}`
         : forwardedHost

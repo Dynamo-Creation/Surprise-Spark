@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { sanitizeText, sanitizeUrl } from "@/lib/security/sanitizer";
 
 export const runtime = "nodejs";
@@ -70,18 +71,36 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-// 3. User Authentication & Ownership Verification (IDOR Defense)
-let currentUserId: string | null = null;
-try {
-  const { data: { user } } = await supabase.auth.getUser();
-  currentUserId = user?.id || null;
-} catch {
-  currentUserId = null;
-}
-// Enforce authentication for creating/updating a surprise
-if (!currentUserId) {
-  return NextResponse.json({ error: "Authentication required to create or modify a surprise." }, { status: 401 });
-}
+    // 3. User Authentication & Ownership Verification (Strict IDOR Defense)
+    let currentUserId: string | null = null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUserId = user?.id || null;
+    } catch {
+      currentUserId = null;
+    }
+
+    // Fallback for local development demo session if Supabase is unconfigured in .env.local
+    if (!currentUserId && !isSupabaseConfigured()) {
+      const demoCookie = request.cookies.get("demo_user_session");
+      if (demoCookie?.value) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(demoCookie.value));
+          if (parsed && (parsed.id || parsed.email)) {
+            currentUserId = parsed.id || "demo-user-1";
+          }
+        } catch {}
+      }
+    }
+
+    // Enforce authentication for creating or modifying a surprise
+    if (!currentUserId) {
+      return NextResponse.json(
+        { error: "Authentication required. Please sign in or create an account to publish your surprise." },
+        { status: 401 }
+      );
+    }
+
     const { data: existingRecord } = await supabase
       .from("published_surprises")
       .select("user_id, public_id")
@@ -89,8 +108,8 @@ if (!currentUserId) {
       .maybeSingle();
 
     if (existingRecord) {
-      // If previously published by an authenticated user, only that owner can update it
-      if (existingRecord.user_id && existingRecord.user_id !== currentUserId) {
+      // Only the verified creator/owner can modify an existing surprise
+      if (existingRecord.user_id !== currentUserId) {
         return NextResponse.json(
           { error: "Forbidden: You do not have permission to modify this surprise." },
           { status: 403 }

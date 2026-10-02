@@ -314,6 +314,10 @@ Remaining Critical/High Risks:        0
 | [`supabase/migrations/20260927000002_published_surprises_security.sql`](file:///f:/Interactive%20Surprise%20Platform/supabase/migrations/20260927000002_published_surprises_security.sql) | Created migration defining `published_surprises` table with typed constraints, indexes, update triggers, and granular Row Level Security (RLS) policies. |
 | [`supabase/migrations/20261002000001_admin_real_data_telemetry.sql`](file:///f:/Interactive%20Surprise%20Platform/supabase/migrations/20261002000001_admin_real_data_telemetry.sql) | Added secure, zero-credential RPC aggregation procedures for real admin telemetry and user accounting. |
 | [`supabase/migrations/20261002000002_security_hardening.sql`](file:///f:/Interactive%20Surprise%20Platform/supabase/migrations/20261002000002_security_hardening.sql) | Eliminated mutable search path risks, revoked unneeded trigger RPC executions, hardened RLS policies with subquery InitPlans, restricted direct audio uploads, and established 16 foreign key covering B-tree indexes. |
+| [`app/create/page.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/create/page.tsx) | Enforced mandatory authenticated user verification before cloud publishing; eliminated "Publish as Guest" bypass and dummy session injection; wrapped draft state with lossless autosave return; added cloud sync error verification. |
+| [`app/login/page.tsx`](file:///f:/Interactive%20Surprise%20Platform/app/login/page.tsx) | Implemented strict relative URI validation for `redirect` query parameter (`getSafeRedirectUrl`), blocking protocol-relative (`//`) and backslash (`/\`) Open Redirect attacks. |
+| [`app/auth/callback/route.ts`](file:///f:/Interactive%20Surprise%20Platform/app/auth/callback/route.ts) | Sanitized OAuth `next` query parameter against open redirects, guaranteeing external domains cannot hijack authentication returns. |
+| [`lib/creator/draftStorage.ts`](file:///f:/Interactive%20Surprise%20Platform/lib/creator/draftStorage.ts) | Added safe draft resolution for `"latest"` / `"current"` keywords ensuring seamless post-login draft restoration; eliminated `any` types. |
 
 ---
 

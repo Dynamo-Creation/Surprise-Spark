@@ -31,7 +31,7 @@ export interface DraftSurprise {
   audioUrl?: string;
   audioStartTime?: number;
   audioDuration?: number;
-  goldenConfig?: Record<string, any>;
+  goldenConfig?: Record<string, unknown>;
   introEyebrow?: string;
   introHint?: string;
   line1?: string;
@@ -66,6 +66,10 @@ export function listDrafts(): DraftSurprise[] {
 
 export function getDraft(id: string): DraftSurprise | null {
   const drafts = listDrafts();
+  if (id === "latest" || id === "current") {
+    if (drafts.length === 0) return null;
+    return [...drafts].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0] || null;
+  }
   return drafts.find((d) => d.id === id || d.publicId === id) || null;
 }
 

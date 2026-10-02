@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Sparkles,
   Gift,
@@ -14,7 +15,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
-import { MOCK_TEMPLATES } from "@/lib/constants";
 import { ALL_BIRTHDAY_TEMPLATES } from "@/lib/engine/templates";
 import { templateRegistry } from "@/lib/engine/templateRegistry";
 import { isTemplateDeleted } from "@/lib/admin/adminStore";
@@ -31,7 +31,6 @@ import {
 import { StudioLiveCanvas } from "@/components/creator/StudioLiveCanvas";
 
 function CreateStudioContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
@@ -234,26 +233,19 @@ function CreateStudioContent() {
       setDraftSaveFeedback(true);
       setTimeout(() => setDraftSaveFeedback(false), 2500);
     }
+
+    return draft;
   };
 
-  // Handle Publish Flow
+  // Handle Publish Flow (Enforces authentication before publishing)
   const handlePublish = async () => {
-    let activeUserId = user?.id;
-    if (!activeUserId && typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("demo_user_session");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          activeUserId = parsed.id;
-        }
-      } catch {
-        // ignore
+    // 1. Strict Authentication Gate: Require authenticated account
+    if (!user?.id) {
+      const saved = handleSaveCurrentDraft(false);
+      if (saved?.id) {
+        setDraftId(saved.id);
       }
-    }
-
-    if (!activeUserId) {
       setShowLoginPrompt(true);
-      handleSaveCurrentDraft(false);
       return;
     }
 
@@ -283,7 +275,7 @@ function CreateStudioContent() {
       const draft = saveDraft({
         id: draftId || undefined,
         publicId: publicId || undefined,
-        userId: activeUserId,
+        userId: user.id,
         templateSlug: selectedTemplateSlug,
         recipientName: cleanRecipient,
         senderName: cleanSender,
@@ -309,37 +301,43 @@ function CreateStudioContent() {
       });
 
       // Synchronize published surprise to Supabase cloud published_surprises
-      try {
-        await fetch("/api/surprises", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            publicId: draft.publicId,
-            templateSlug: selectedTemplateSlug,
-            recipientName: cleanRecipient,
-            senderName: cleanSender,
-            customMessage: cleanMessage,
-            endearment: isGolden ? goldenConfig.recipientEndearment : undefined,
-            question: isGolden ? goldenConfig.proposalQuestion : undefined,
-            dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
-            audioUrl: safeAudioUrl,
-            photos: genericConfig.photos,
-            metadata: {
-              ...(isGolden ? { goldenConfig } : {}),
-              introEyebrow: genericConfig.introEyebrow,
-              introHint: genericConfig.introHint,
-              line1: genericConfig.line1,
-              line2: genericConfig.line2,
-              kineticSub: genericConfig.kineticSub,
-              wishEyebrow: genericConfig.wishEyebrow,
-              theme: genericConfig.theme,
-              audioStartTime: customAudioStartTime,
-              audioDuration: customAudioDuration,
-            },
-          }),
-        });
-      } catch (err) {
-        console.warn("[Publish Flow] Cloud sync notice (proceeding with local & URL backup):", err);
+      const response = await fetch("/api/surprises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          publicId: draft.publicId,
+          templateSlug: selectedTemplateSlug,
+          recipientName: cleanRecipient,
+          senderName: cleanSender,
+          customMessage: cleanMessage,
+          endearment: isGolden ? goldenConfig.recipientEndearment : undefined,
+          question: isGolden ? goldenConfig.proposalQuestion : undefined,
+          dodgeText: isGolden ? goldenConfig.dodgeTooltipText : undefined,
+          audioUrl: safeAudioUrl,
+          photos: genericConfig.photos,
+          metadata: {
+            ...(isGolden ? { goldenConfig } : {}),
+            introEyebrow: genericConfig.introEyebrow,
+            introHint: genericConfig.introHint,
+            line1: genericConfig.line1,
+            line2: genericConfig.line2,
+            kineticSub: genericConfig.kineticSub,
+            wishEyebrow: genericConfig.wishEyebrow,
+            theme: genericConfig.theme,
+            audioStartTime: customAudioStartTime,
+            audioDuration: customAudioDuration,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        if (response.status === 401) {
+          setShowLoginPrompt(true);
+          return;
+        }
+        alert(errJson?.error || "Failed to publish surprise to the cloud. Please try again.");
+        return;
       }
 
       setDraftId(draft.id);
@@ -350,6 +348,9 @@ function CreateStudioContent() {
         templateId: selectedTemplateSlug,
         surpriseId: draft.publicId,
       });
+    } catch (publishErr) {
+      console.error("[Publish Flow] Error publishing surprise:", publishErr);
+      alert("An unexpected network error occurred while publishing. Your draft has been safely saved.");
     } finally {
       setIsPublishing(false);
     }
@@ -551,7 +552,7 @@ function CreateStudioContent() {
       {showLoginPrompt && !user && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
               <Lock className="w-6 h-6" />
             </div>
             <div>
@@ -559,8 +560,12 @@ function CreateStudioContent() {
                 Account Required to Publish
               </h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                Log in or sign up to create your permanent surprise link, track views, and save memories forever. Your current draft has been saved.
+                Log in or sign up with your Google or Gmail account to generate your permanent share link, protect your surprise from tampering, and track when your recipient opens it.
               </p>
+              <div className="mt-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>Your draft is saved locally. You won&apos;t lose any customizations.</span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 justify-end pt-2">
               <Button
@@ -570,32 +575,8 @@ function CreateStudioContent() {
               >
                 Continue Editing
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-pink-400 border border-pink-500/30"
-                onClick={() => {
-                  const guestId = "guest-" + Math.random().toString(36).substring(2, 9);
-                  try {
-                    localStorage.setItem("demo_user_session", JSON.stringify({
-                      id: guestId,
-                      email: "guest@partnerincrime.app",
-                      fullName: "Guest Creator",
-                      role: "user"
-                    }));
-                  } catch {
-                    // ignore
-                  }
-                  setShowLoginPrompt(false);
-                  setTimeout(() => {
-                    handlePublish();
-                  }, 100);
-                }}
-              >
-                Publish as Guest ⚡
-              </Button>
-              <Link href={`/login?redirect=/create?draftId=${draftId || "new"}`}>
-                <Button variant="primary" size="sm">
+              <Link href={`/login?redirect=${encodeURIComponent(`/create?draftId=${draftId || "latest"}`)}`}>
+                <Button variant="primary" size="sm" className="bg-linear-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md">
                   Log In / Sign Up
                 </Button>
               </Link>

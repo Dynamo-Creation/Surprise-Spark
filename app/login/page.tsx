@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Gift, Mail, ArrowRight, AlertCircle, Loader2, Shield, Sparkles, Info } from "lucide-react";
+import { Gift, Mail, ArrowRight, AlertCircle, Loader2, Shield, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -13,12 +13,24 @@ import { OtpInput } from "@/components/auth/OtpInput";
 import { validateEmailSecurity } from "@/lib/security/email-security";
 import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
 
+function getSafeRedirectUrl(rawRedirect: string | null): string {
+  if (!rawRedirect) return "/";
+  // Strict open-redirect defense: must be a local pathname, not protocol-relative (//) or backslash (/\)
+  if (!rawRedirect.startsWith("/") || rawRedirect.startsWith("//") || rawRedirect.startsWith("/\\")) {
+    return "/";
+  }
+  // Prevent redirect loop
+  if (rawRedirect === "/login" || rawRedirect.startsWith("/login?")) {
+    return "/";
+  }
+  return rawRedirect;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
-  // Default redirect target: homepage top hero section ("/")
-  const targetDestination = redirect && redirect !== "/login" && redirect !== "/dashboard" ? redirect : "/";
+  const targetDestination = getSafeRedirectUrl(redirect);
   const errorParam = searchParams.get("error");
 
   const { user, signInWithGoogle, sendEmailOtp, verifyEmailOtp } = useAuth();
