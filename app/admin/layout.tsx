@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
-import { AdminNotificationsDrawer } from "@/components/admin/AdminNotificationsDrawer";
 import { AdminMetricsMode, adminStore } from "@/lib/admin/adminStore";
 import { useAuth } from "@/hooks/useAuth";
 import { isAuthorizedAdmin } from "@/lib/admin/adminAuth";
@@ -21,7 +20,6 @@ export default function AdminLayout({
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [metricsMode, setMetricsMode] = useState<AdminMetricsMode>("live");
 
   const [hasValidLocalSession, setHasValidLocalSession] = useState(false);
@@ -119,7 +117,6 @@ export default function AdminLayout({
           metricsMode={metricsMode}
           onToggleMode={handleToggleMode}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-          onOpenNotifications={() => setNotificationsOpen(true)}
           onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
 
@@ -138,11 +135,7 @@ export default function AdminLayout({
         }
       />
 
-      {/* Notifications Slide-over Drawer */}
-      <AdminNotificationsDrawer
-        isOpen={notificationsOpen}
-        onClose={() => setNotificationsOpen(false)}
-      />
+
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -54,6 +55,7 @@ const NAV_GROUPS: NavGroup[] = [
     category: "Audience",
     items: [
       { href: "/admin/users", label: "Users & Creators", icon: Users },
+      { href: "/admin/feedback", label: "User Feedback", icon: MessageSquare },
     ],
   },
   {

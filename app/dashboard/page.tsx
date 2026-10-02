@@ -18,7 +18,6 @@ import {
   Save,
   Trash2,
   Volume2,
-  Bell,
   CheckCircle2,
   Edit3,
   ExternalLink,
@@ -26,6 +25,7 @@ import {
   AlertTriangle,
   Gift,
   Shield,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,7 @@ import {
 } from "@/lib/creator/draftStorage";
 import { MOCK_TEMPLATES } from "@/lib/constants";
 import { ShareModal } from "@/components/creator/ShareModal";
+import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -57,6 +58,7 @@ export default function DashboardPage() {
 
   // Share modal target
   const [shareTarget, setShareTarget] = useState<DraftSurprise | null>(null);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Delete confirmation modal
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -68,7 +70,6 @@ export default function DashboardPage() {
 
   // Settings states
   const [allowSoundDefault, setAllowSoundDefault] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(true);
 
   // Strictly user-isolated surprises loader
   const loadUserSurprises = React.useCallback(async () => {
@@ -282,8 +283,6 @@ export default function DashboardPage() {
     return true;
   });
 
-  const totalViews = surprises.reduce((acc, curr) => acc + (curr.viewCount || 0), 0);
-  const totalShares = surprises.reduce((acc, curr) => acc + (curr.shareCount || 0), 0);
   const publishedCount = surprises.filter((s) => s.status === "published").length;
   const draftCount = surprises.filter((s) => s.status === "draft").length;
 
@@ -357,6 +356,15 @@ export default function DashboardPage() {
           <Button
             variant="outline"
             size="md"
+            onClick={() => setIsFeedbackOpen(true)}
+            leftIcon={<MessageSquare className="w-4 h-4 text-pink-400" />}
+            className="text-xs border-white/20 text-white hover:bg-white/10 cursor-pointer"
+          >
+            Send Feedback
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
             onClick={handleLogout}
             leftIcon={<LogOut className="w-4 h-4" />}
             className="text-xs border-white/20 text-white hover:bg-white/10 cursor-pointer"
@@ -366,47 +374,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI Stats Counters */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 border-slate-200 dark:border-slate-800">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Surprises</p>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {surprises.length}
-          </p>
-          <p className="text-[11px] text-pink-600 dark:text-pink-400 font-medium mt-1">
-            {publishedCount} live, {draftCount} drafts
-          </p>
-        </Card>
 
-        <Card className="p-5 border-slate-200 dark:border-slate-800">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Recipient Views</p>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {totalViews}
-          </p>
-          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-            Tracked on unwrapping
-          </p>
-        </Card>
-
-        <Card className="p-5 border-slate-200 dark:border-slate-800">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Shares</p>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {totalShares}
-          </p>
-          <p className="text-[11px] text-purple-600 dark:text-purple-400 font-medium mt-1">
-            WhatsApp & direct links
-          </p>
-        </Card>
-
-        <Card className="p-5 border-slate-200 dark:border-slate-800">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Security & Isolation</p>
-          <div className="flex items-center gap-1.5 mt-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-sm font-bold text-slate-900 dark:text-white">Active</span>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">Owner-only isolated storage</p>
-        </Card>
-      </div>
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
@@ -794,25 +762,29 @@ export default function DashboardPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                  <Bell className="w-4 h-4 text-purple-500" />
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-white">
-                      Email Notification on Open
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Receive an alert when your recipient opens the surprise link
-                    </p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={emailNotifications}
-                  onChange={(e) => setEmailNotifications(e.target.checked)}
-                  className="rounded border-slate-300 text-pink-600 focus:ring-pink-500 cursor-pointer"
-                />
+            </div>
+          </Card>
+
+          {/* Help & Feedback Card */}
+          <Card className="p-6 sm:p-8 space-y-4 border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-pink-500" />
+                  Help & Feedback
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
+                  Found an issue or have an idea to improve SurpriseSpark? Write directly to our team.
+                </p>
               </div>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => setIsFeedbackOpen(true)}
+                className="text-xs whitespace-nowrap cursor-pointer shrink-0"
+              >
+                Write Feedback
+              </Button>
             </div>
           </Card>
 
@@ -835,6 +807,11 @@ export default function DashboardPage() {
           </Card>
         </div>
       )}
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+      />
     </div>
   );
 }

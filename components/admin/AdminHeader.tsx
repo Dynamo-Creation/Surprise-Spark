@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Search,
-  Bell,
   Sparkles,
   Database,
   Menu,
@@ -23,7 +22,6 @@ interface AdminHeaderProps {
   metricsMode: AdminMetricsMode;
   onToggleMode: (mode: AdminMetricsMode) => void;
   onOpenCommandPalette: () => void;
-  onOpenNotifications: () => void;
   onToggleMobileMenu: () => void;
 }
 
@@ -31,7 +29,6 @@ export function AdminHeader({
   metricsMode,
   onToggleMode,
   onOpenCommandPalette,
-  onOpenNotifications,
   onToggleMobileMenu,
 }: AdminHeaderProps) {
   const pathname = usePathname();
@@ -100,15 +97,7 @@ export function AdminHeader({
           <span className="sm:hidden">Live</span>
         </div>
 
-        {/* Notifications Bell */}
-        <button
-          onClick={onOpenNotifications}
-          className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900/80 border border-transparent hover:border-white/[0.08] transition-all cursor-pointer"
-          aria-label="View notifications"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-        </button>
+
 
         <div className="hidden sm:block h-5 w-px bg-white/[0.08]" />
 

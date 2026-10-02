@@ -3,8 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Sparkles, ArrowRight, LogOut, Shield, ChevronDown, Eye } from "lucide-react";
+import { Menu, X, Sparkles, ArrowRight, LogOut, Shield, ChevronDown, Eye, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 import { BrandLogo, BrandLogoHandle } from "@/components/brand/BrandLogo";
 import { useMobileNav } from "@/hooks/useMobileNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,6 +59,7 @@ export function Navbar() {
   const logoRef = React.useRef<BrandLogoHandle>(null);
 
   const [isTemplatesOpen, setIsTemplatesOpen] = React.useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
   const [mobileTemplatesExpanded, setMobileTemplatesExpanded] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -291,6 +293,16 @@ export function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsFeedbackOpen(true)}
+                title="Send Feedback"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 hover:border-pink-300 dark:hover:border-pink-500/50 text-slate-700 dark:text-slate-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors cursor-pointer text-xs font-semibold whitespace-nowrap"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                <span className="hidden lg:inline">Feedback</span>
+              </button>
+
               <Link href="/dashboard">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 hover:border-pink-300 transition-colors cursor-pointer text-xs font-semibold whitespace-nowrap">
                   <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
@@ -463,6 +475,19 @@ export function Navbar() {
               >
                 Dashboard
               </Link>
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    close();
+                    setIsFeedbackOpen(true);
+                  }}
+                  className="w-full text-left flex items-center gap-2.5 px-4 py-3 rounded-2xl text-base font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4 text-pink-500 shrink-0" />
+                  <span>Send Feedback</span>
+                </button>
+              )}
               <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 mt-2">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Theme mode</span>
                 <ThemeToggle />
@@ -508,6 +533,12 @@ export function Navbar() {
           </div>
         </div>
       )}
+
+      {/* User Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+      />
     </header>
   );
 }
